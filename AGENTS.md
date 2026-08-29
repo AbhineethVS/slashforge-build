@@ -1,5 +1,7 @@
 # Project Agent Guide
 
+Product name: **LUMA**.
+
 ## Current phase
 
 The repository is documentation-first. Do not scaffold or implement the

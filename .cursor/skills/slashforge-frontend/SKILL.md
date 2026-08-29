@@ -1,9 +1,9 @@
 ---
 name: slashforge-frontend
-description: Designs, implements, and reviews the AI Study Workspace frontend using the project UX system. Use for React, Vite, Tailwind, shadcn/ui, responsive layout, Sources–Chat–Studio panels, PDF evidence views, chat, flashcards, quizzes, accessibility, or visual-polish work.
+description: Designs, implements, and reviews the LUMA frontend using the project UX system. Use for React, Vite, Tailwind, shadcn/ui, responsive layout, Sources–Chat–Studio panels, PDF evidence views, chat, flashcards, quizzes, accessibility, or visual-polish work.
 ---
 
-# SlashForge Frontend
+# LUMA Frontend
 
 ## Read first
 

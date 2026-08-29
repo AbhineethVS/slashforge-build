@@ -2,8 +2,8 @@
 
 ## 1. Product summary
 
-AI Study Workspace is a source-grounded revision tool for college students. It
-turns course PDFs into a workspace for cited questions, concise study material,
+**LUMA** is a source-grounded revision tool for college students. It turns
+course PDFs into a workspace for cited questions, concise study material,
 active recall, and teach-back practice.
 
 The product is not a general chatbot and is not a complete adaptive-learning

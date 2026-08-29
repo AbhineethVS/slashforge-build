@@ -44,7 +44,7 @@ demo. It must not become a second product.
 
 ### Navigation
 
-- Product wordmark on the left.
+- **LUMA** wordmark on the left.
 - Optional anchor links to How it works and Features.
 - Primary **Start studying** button on the right.
 
@@ -178,8 +178,9 @@ Only one dominant call to action should appear per state.
 
 ## 6. Visual system
 
-The exact brand name and logo remain open. Use semantic tokens so a later brand
-decision does not require component rewrites.
+The product name is **LUMA**. Use that wordmark on the landing page and in the
+workspace header. Keep colors and spacing on semantic tokens so logo refinements
+do not force component rewrites.
 
 ### Color intent
 

@@ -164,3 +164,12 @@ button links directly to `/workspace`.
 Reason: the landing page gives judges immediate product context and improves
 presentation quality without adding backend complexity. It remains static,
 short, and free of account or upload flows.
+
+## ADR-014: Product name is LUMA
+
+Status: accepted
+
+Decision: the product is named **LUMA**. Use that name in the landing wordmark,
+workspace header, README, and presentation materials.
+
+Reason: confirmed by the project owner during documentation.

@@ -31,7 +31,7 @@ retrieved from memory, answered from, and opened at the cited page.
 - Confirm the final deadline and judging format.
 - Create an OpenAI Platform API key with separate API billing or prepaid credit.
 - Confirm access to an Azure subscription or Azure student credits.
-- Choose a working product name.
+- Product name is **LUMA**.
 - Select one legally reusable polished demo PDF.
 - Select a second small PDF for upload and retrieval testing.
 - Approve this documentation before application scaffolding.

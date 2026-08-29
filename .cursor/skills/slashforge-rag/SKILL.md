@@ -3,7 +3,7 @@ name: slashforge-rag
 description: Implements and reviews page-aware PDF ingestion, in-memory NumPy retrieval, grounded OpenAI responses, citations, summaries, flashcards, quizzes, and Teach-Back behavior. Use for FastAPI, PyMuPDF, embeddings, OpenAI API, prompts, structured outputs, temporary source processing, demo assets, or RAG evaluation work.
 ---
 
-# SlashForge RAG
+# LUMA RAG
 
 ## Read first
 

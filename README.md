@@ -1,7 +1,7 @@
-# AI Study Workspace
+# LUMA
 
-Documentation-first design for a citation-grounded study assistant inspired by
-NotebookLM and Open Notebook.
+Documentation-first design for **LUMA**, a citation-grounded study assistant
+inspired by NotebookLM and Open Notebook.
 
 The application will let a student upload course PDFs, ask questions against
 those sources, open evidence at the cited page, generate revision material, and

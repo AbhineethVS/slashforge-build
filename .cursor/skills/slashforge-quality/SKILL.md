@@ -1,9 +1,9 @@
 ---
 name: slashforge-quality
-description: Tests and reviews the AI Study Workspace for correctness, groundedness, privacy, security, accessibility, performance, and demo readiness. Use when writing tests, evaluating RAG, reviewing changes, hardening uploads or authorization, checking accessibility, measuring cost, or preparing a release.
+description: Tests and reviews LUMA for correctness, groundedness, privacy, security, accessibility, performance, and demo readiness. Use when writing tests, evaluating RAG, reviewing changes, hardening uploads or authorization, checking accessibility, measuring cost, or preparing a release.
 ---
 
-# SlashForge Quality
+# LUMA Quality
 
 ## Read first
 
