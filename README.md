@@ -14,9 +14,46 @@ on the left, Chat in the center, and Studio on the right.
 
 ## Current status
 
-This repository is intentionally in the documentation phase. No application
-implementation has started. Architecture, scope, interfaces, quality gates, and
-agent guidance must be reviewed before scaffolding the product.
+Phase 0 feasibility work is underway. The repository now contains:
+
+- Page-aware PyMuPDF extraction and page-bounded chunking spikes.
+- OpenAI embedding, NumPy retrieval, and structured citation spikes.
+- Deterministic tests for unsupported PDFs, source filtering, trusted page
+  mapping, and fabricated citation rejection.
+- A minimal compiled React page served by FastAPI for the Azure deployment
+  spike.
+
+These are technical proofs, not the product UI. Phase 1 product implementation
+has not started.
+
+## Phase 0 setup
+
+```bash
+cd backend
+python -m pip install -e ".[dev]"
+python -m pytest
+
+cd ../frontend
+npm install
+npm run build
+```
+
+Run the combined local service after building the frontend:
+
+```bash
+cd backend
+python -m uvicorn luma_api.main:app --reload
+```
+
+Run extraction against a representative PDF:
+
+```bash
+cd backend
+python -m luma_spikes.cli extract ../path/to/source.pdf
+```
+
+Live retrieval and answer commands require `OPENAI_API_KEY`. The answer model
+defaults to `gpt-5-mini` and can be changed with `OPENAI_CHAT_MODEL`.
 
 ## Documentation
 

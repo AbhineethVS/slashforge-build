@@ -1,0 +1,8 @@
+.git
+.cursor
+**/__pycache__
+**/.pytest_cache
+backend/*.egg-info
+frontend/dist
+frontend/node_modules
+

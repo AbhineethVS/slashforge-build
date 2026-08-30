@@ -111,6 +111,19 @@ All spikes use representative PDFs and run before visual implementation.
 
 Exit criterion: all four spikes work in the deployed environment.
 
+Phase 0 status (2026-08-29):
+
+- Local extraction, page-bounded chunking, selected-source retrieval, citation
+  allow-listing, trusted page mapping, bounded multipart upload, and combined
+  FastAPI/compiled-React serving have deterministic tests.
+- The local suite passes with 15 tests; the frontend production build and lint
+  pass.
+- Live OpenAI retrieval and grounded-answer evaluation still require the two
+  representative PDFs, fixed known-question set, and API billing.
+- Azure deployment, cold-start, and memory observations remain outstanding.
+- Phase 0 is not complete until those live and deployed checks satisfy the exit
+  criterion.
+
 ## 6. Build phases
 
 ### Phase 1: foundation and demo assets

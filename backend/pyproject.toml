@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "luma-backend"
+version = "0.1.0"
+description = "LUMA feasibility spikes and backend"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "numpy",
+  "openai",
+  "pydantic",
+  "pymupdf",
+  "python-dotenv",
+  "python-multipart",
+  "tiktoken",
+  "uvicorn[standard]",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx",
+  "pytest",
+]
+
+[project.scripts]
+luma-spike = "luma_spikes.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/luma_spikes", "src/luma_api"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
