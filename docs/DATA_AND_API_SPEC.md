@@ -209,6 +209,12 @@ Request:
 Initial response may be structured JSON. The final contract uses
 `text/event-stream` with the events defined in `AI_RAG_SPEC.md`.
 
+The initial non-streaming response is an assistant message with
+`content_markdown`, backend-mapped `citations`, `insufficient_evidence`,
+`follow_up_questions`, `status`, and `created_at`. The request is rejected
+before retrieval if any selected source is not ready and owned by the current
+session.
+
 ### Studio
 
 - `POST /api/v1/studio/summary`

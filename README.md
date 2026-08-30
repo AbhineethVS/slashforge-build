@@ -32,9 +32,11 @@ until the product is further along. The repository now contains:
 - Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
   retryable failures, source deletion, and automatic temporary-file cleanup.
 
-Phases 1 and 2 are complete locally. The workspace opens with a ready,
-page-indexed economics source and accepts up to two temporary PDF uploads.
-Grounded chat, evidence viewer, and Studio tools are not yet connected.
+Phases 1 and 2 are complete locally, and the Phase 3 grounded-chat vertical
+slice is connected. The workspace opens with a ready economics source, accepts
+up to two temporary PDF uploads, answers against selected sources with
+backend-validated page citations, and opens cited PDFs in an evidence sheet.
+Studio tools are not yet connected.
 
 ## Phase 0 setup
 

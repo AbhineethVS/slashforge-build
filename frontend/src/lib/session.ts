@@ -1,11 +1,12 @@
 const SESSION_STORAGE_KEY = 'luma.session_id'
+const SELECTED_SOURCES_STORAGE_KEY = 'luma.selected_source_ids'
 
 export type DemoSession = {
   id: string
   created_at: string
   expires_at: string
   sources: SourceSummary[]
-  messages: unknown[]
+  messages: ChatMessage[]
   artifacts: unknown[]
   attempts: unknown[]
   suggested_questions: string[]
@@ -18,6 +19,29 @@ export type SourceSummary = {
   page_count: number
   status: 'uploading' | 'extracting' | 'embedding' | 'ready' | 'failed'
   error_code: string | null
+}
+
+export type Citation = {
+  id: string
+  chunk_id: string
+  source_id: string
+  source_name: string
+  page_start: number
+  page_end: number
+  excerpt: string
+  claim: string
+  viewer_url: string
+}
+
+export type ChatMessage = {
+  id: string
+  role: 'user' | 'assistant'
+  content_markdown: string
+  citations: Citation[]
+  insufficient_evidence?: boolean
+  follow_up_questions?: string[]
+  status: 'pending' | 'complete' | 'interrupted' | 'failed'
+  created_at: string
 }
 
 type ApiErrorResponse = {
@@ -107,6 +131,7 @@ export async function resetSession(sessionId: string): Promise<DemoSession> {
     throw await readError(response)
   }
   sessionStorage.removeItem(SESSION_STORAGE_KEY)
+  sessionStorage.removeItem(SELECTED_SOURCES_STORAGE_KEY)
   return createSession()
 }
 
@@ -134,5 +159,64 @@ export async function deleteSource(
     headers: { 'X-Session-ID': sessionId },
   })
   if (!response.ok) throw await readError(response)
+}
+
+export async function askQuestion(
+  sessionId: string,
+  question: string,
+  sourceIds: string[],
+): Promise<ChatMessage> {
+  const response = await fetch('/api/v1/chat/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({ question, source_ids: sourceIds }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as ChatMessage
+}
+
+export async function fetchSourcePdf(
+  sessionId: string,
+  sourceId: string,
+): Promise<Blob> {
+  const response = await fetch(`/api/v1/sources/${sourceId}/file`, {
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return response.blob()
+}
+
+export function restoreSelectedSourceIds(sources: SourceSummary[]): string[] {
+  const readyIds = new Set(
+    sources.filter((source) => source.status === 'ready').map((source) => source.id),
+  )
+  try {
+    const stored = JSON.parse(
+      sessionStorage.getItem(SELECTED_SOURCES_STORAGE_KEY) || '[]',
+    ) as unknown
+    if (Array.isArray(stored)) {
+      const restored = stored.filter(
+        (value): value is string =>
+          typeof value === 'string' && readyIds.has(value),
+      )
+      if (restored.length > 0) return restored
+    }
+  } catch {
+    sessionStorage.removeItem(SELECTED_SOURCES_STORAGE_KEY)
+  }
+  const bundled = sources.find(
+    (source) => source.kind === 'bundled' && source.status === 'ready',
+  )
+  return bundled ? [bundled.id] : [...readyIds].slice(0, 1)
+}
+
+export function persistSelectedSourceIds(sourceIds: string[]): void {
+  sessionStorage.setItem(
+    SELECTED_SOURCES_STORAGE_KEY,
+    JSON.stringify(sourceIds),
+  )
 }
 

@@ -4,15 +4,23 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type FormEvent,
 } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
+import { EvidencePanel } from '../components/EvidencePanel'
 import {
   ApiRequestError,
+  askQuestion,
   deleteSource,
+  persistSelectedSourceIds,
   resetSession,
   restoreOrCreateSession,
+  restoreSelectedSourceIds,
   uploadSource,
+  type ChatMessage,
+  type Citation,
   type DemoSession,
   type SourceSummary,
 } from '../lib/session'
@@ -29,6 +37,20 @@ const studioTools = [
   ['Teach Back', 'Explain a concept in your own words.'],
 ]
 
+const groundedMarkdownElements = [
+  'p',
+  'h2',
+  'h3',
+  'ul',
+  'ol',
+  'li',
+  'strong',
+  'em',
+  'blockquote',
+  'code',
+  'pre',
+]
+
 type PendingUpload = {
   file: File
   displayName: string
@@ -43,11 +65,28 @@ export function WorkspacePage() {
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
   const [sourceActionError, setSourceActionError] = useState<string | null>(null)
+  const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [question, setQuestion] = useState('')
+  const [chatState, setChatState] = useState<
+    | { status: 'idle' }
+    | { status: 'submitting'; question: string }
+    | { status: 'error'; question: string; message: string; action?: string }
+  >({ status: 'idle' })
+  const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const questionInputRef = useRef<HTMLTextAreaElement>(null)
+  const citationTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const requestSession = useCallback(() => {
     restoreOrCreateSession()
-      .then((session) => setState({ status: 'ready', session }))
+      .then((session) => {
+        const selected = restoreSelectedSourceIds(session.sources)
+        persistSelectedSourceIds(selected)
+        setSelectedSourceIds(selected)
+        setMessages(session.messages || [])
+        setState({ status: 'ready', session })
+      })
       .catch((error: unknown) =>
         setState({
           status: 'error',
@@ -80,6 +119,13 @@ export function WorkspacePage() {
       const session = await resetSession(state.session.id)
       setPendingUpload(null)
       setSourceActionError(null)
+      const selected = restoreSelectedSourceIds(session.sources)
+      persistSelectedSourceIds(selected)
+      setSelectedSourceIds(selected)
+      setMessages([])
+      setQuestion('')
+      setChatState({ status: 'idle' })
+      setActiveCitation(null)
       setState({ status: 'ready', session })
     } catch (error) {
       setState({
@@ -128,6 +174,11 @@ export function WorkspacePage() {
             }
           : current,
       )
+      setSelectedSourceIds((current) => {
+        const next = [...current, source.id]
+        persistSelectedSourceIds(next)
+        return next
+      })
       setPendingUpload(null)
     } catch (error) {
       const requestError =
@@ -159,6 +210,11 @@ export function WorkspacePage() {
     setSourceActionError(null)
     try {
       await deleteSource(state.session.id, sourceId)
+      setSelectedSourceIds((current) => {
+        const next = current.filter((id) => id !== sourceId)
+        persistSelectedSourceIds(next)
+        return next
+      })
       setState({
         status: 'ready',
         session: {
@@ -175,6 +231,80 @@ export function WorkspacePage() {
     } finally {
       setDeletingSourceId(null)
     }
+  }
+
+  function handleSourceSelection(sourceId: string, selected: boolean) {
+    setSelectedSourceIds((current) => {
+      const next = selected
+        ? [...new Set([...current, sourceId])]
+        : current.filter((id) => id !== sourceId)
+      persistSelectedSourceIds(next)
+      return next
+    })
+  }
+
+  function chooseQuestion(value: string) {
+    setQuestion(value)
+    questionInputRef.current?.focus()
+  }
+
+  async function submitQuestion(normalized: string) {
+    if (
+      state.status !== 'ready' ||
+      chatState.status === 'submitting' ||
+      selectedSourceIds.length === 0
+    ) {
+      return
+    }
+    setChatState({ status: 'submitting', question: normalized })
+    try {
+      const answer = await askQuestion(
+        state.session.id,
+        normalized,
+        selectedSourceIds,
+      )
+      const userMessage: ChatMessage = {
+        id: `user-for-${answer.id}`,
+        role: 'user',
+        content_markdown: normalized,
+        citations: [],
+        status: 'complete',
+        created_at: new Date().toISOString(),
+      }
+      setMessages((current) => [...current, userMessage, answer])
+      setQuestion('')
+      setChatState({ status: 'idle' })
+    } catch (error) {
+      const requestError =
+        error instanceof ApiRequestError
+          ? error
+          : new ApiRequestError('The grounded answer could not be generated.')
+      setChatState({
+        status: 'error',
+        question: normalized,
+        message: requestError.message,
+        action: requestError.action,
+      })
+    }
+  }
+
+  function handleAsk(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const normalized = question.trim()
+    if (normalized) void submitQuestion(normalized)
+  }
+
+  function showCitation(
+    citation: Citation,
+    trigger: HTMLButtonElement,
+  ) {
+    citationTriggerRef.current = trigger
+    setActiveCitation(citation)
+  }
+
+  function closeCitation() {
+    setActiveCitation(null)
+    window.setTimeout(() => citationTriggerRef.current?.focus(), 0)
   }
 
   return (
@@ -220,7 +350,9 @@ export function WorkspacePage() {
         const readySources = state.session.sources.filter(
           (source) => source.status === 'ready',
         )
-        const activeCount = readySources.length
+        const activeCount = readySources.filter((source) =>
+          selectedSourceIds.includes(source.id),
+        ).length
         const uploadedCount = state.session.sources.filter(
           (source) => source.kind === 'uploaded',
         ).length
@@ -273,7 +405,9 @@ export function WorkspacePage() {
                         PDF
                       </span>
                       <div>
-                        <strong>{source.display_name}</strong>
+                        <strong title={source.display_name}>
+                          {source.display_name}
+                        </strong>
                         <span className="source-kind">
                           {source.kind === 'bundled' ? 'Bundled demo' : 'Upload'}
                         </span>
@@ -285,9 +419,20 @@ export function WorkspacePage() {
                         : source.status}
                     </span>
                     <div className="source-actions">
-                      {source.kind === 'bundled' ? (
-                        <span>Included and selected</span>
-                      ) : (
+                      <label className="source-selector">
+                        <input
+                          type="checkbox"
+                          checked={selectedSourceIds.includes(source.id)}
+                          onChange={(event) =>
+                            handleSourceSelection(
+                              source.id,
+                              event.target.checked,
+                            )
+                          }
+                        />
+                        <span>Use in chat</span>
+                      </label>
+                      {source.kind === 'uploaded' && (
                         <button
                           type="button"
                           onClick={() => void handleDeleteSource(source.id)}
@@ -375,49 +520,183 @@ export function WorkspacePage() {
               </span>
             </div>
 
-            <div className="chat-empty">
-              <p className="eyebrow">Grounded study chat</p>
-              <h2>Ask your material, not the open web.</h2>
-              <p>
-                The demo source is indexed and ready. Grounded answers and page
-                citations arrive in the next build slice.
-              </p>
-              <div className="suggestion-list" aria-label="Suggested questions">
-                {state.session.suggested_questions?.map((question) => (
-                  <button key={question} type="button" disabled>
-                    {question}
-                  </button>
-                ))}
-              </div>
+            <div className="chat-content">
+              {messages.length === 0 && chatState.status === 'idle' ? (
+                <div className="chat-empty">
+                  <p className="eyebrow">Grounded study chat</p>
+                  <h2>Ask your material, not the open web.</h2>
+                  <p>
+                    Answers use only the sources you select and link back to
+                    trusted page evidence.
+                  </p>
+                  <div
+                    className="suggestion-list"
+                    aria-label="Suggested questions"
+                  >
+                    {state.session.suggested_questions?.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => chooseQuestion(suggestion)}
+                        disabled={activeCount === 0}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="chat-thread" aria-live="polite">
+                  {messages.map((message) =>
+                    message.role === 'user' ? (
+                      <section key={message.id} className="user-question">
+                        <p className="panel-kicker">You asked</p>
+                        <p>{message.content_markdown}</p>
+                      </section>
+                    ) : (
+                      <article key={message.id} className="grounded-answer">
+                        <p className="panel-kicker">Grounded answer</p>
+                        {message.insufficient_evidence && (
+                          <p className="evidence-warning">
+                            The selected material does not contain enough
+                            evidence for a supported answer.
+                          </p>
+                        )}
+                        <ReactMarkdown allowedElements={groundedMarkdownElements}>
+                          {message.content_markdown}
+                        </ReactMarkdown>
+                        {message.citations.length > 0 && (
+                          <div
+                            className="citation-list"
+                            aria-label="Answer citations"
+                          >
+                            {message.citations.map((citation, index) => (
+                              <button
+                                key={citation.id}
+                                type="button"
+                                title={`${citation.source_name}, page ${citation.page_start}: ${citation.excerpt}`}
+                                aria-label={`Citation ${index + 1}: ${citation.source_name}, page ${citation.page_start}`}
+                                onClick={(event) =>
+                                  showCitation(citation, event.currentTarget)
+                                }
+                              >
+                                [{index + 1}] {citation.source_name}, p.
+                                {citation.page_start}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {message.follow_up_questions &&
+                          message.follow_up_questions.length > 0 && (
+                            <div
+                              className="follow-up-list"
+                              aria-label="Follow-up questions"
+                            >
+                              {message.follow_up_questions.map((followUp) => (
+                                <button
+                                  key={followUp}
+                                  type="button"
+                                  onClick={() => chooseQuestion(followUp)}
+                                >
+                                  {followUp}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                      </article>
+                    ),
+                  )}
+                  {chatState.status === 'submitting' && (
+                    <>
+                      <section className="user-question">
+                        <p className="panel-kicker">You asked</p>
+                        <p>{chatState.question}</p>
+                      </section>
+                      <div className="answer-pending" role="status">
+                        <span className="loading-mark" aria-hidden="true" />
+                        Searching selected sources and validating citations…
+                      </div>
+                    </>
+                  )}
+                  {chatState.status === 'error' && (
+                    <div className="answer-error" role="alert">
+                      <strong>The answer could not be completed.</strong>
+                      <p>{chatState.message}</p>
+                      {chatState.action && <p>{chatState.action}</p>}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void submitQuestion(chatState.question)
+                          }
+                        >
+                          Retry
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuestion(chatState.question)
+                            setChatState({ status: 'idle' })
+                            questionInputRef.current?.focus()
+                          }}
+                        >
+                          Edit question
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <form className="chat-composer">
+            <form className="chat-composer" onSubmit={handleAsk}>
               <label className="sr-only" htmlFor="question">
                 Ask your selected sources
               </label>
               <textarea
+                ref={questionInputRef}
                 id="question"
                 rows={2}
+                maxLength={2000}
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
                 placeholder={
                   activeCount
-                    ? 'Grounded chat arrives in the next slice'
+                    ? 'Ask a question about your selected sources'
                     : 'Add or select a source to ask a question'
                 }
-                disabled
+                disabled={
+                  activeCount === 0 || chatState.status === 'submitting'
+                }
               />
               <div>
                 <span>
                   {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
                   selected
                 </span>
-                <button type="submit" disabled>
-                  Ask
+                <button
+                  type="submit"
+                  disabled={
+                    activeCount === 0 ||
+                    !question.trim() ||
+                    chatState.status === 'submitting'
+                  }
+                >
+                  {chatState.status === 'submitting' ? 'Working…' : 'Ask'}
                 </button>
               </div>
             </form>
           </section>
 
-          <aside className="studio-panel" aria-labelledby="studio-title">
+          {activeCitation ? (
+            <EvidencePanel
+              key={activeCitation.id}
+              citation={activeCitation}
+              sessionId={state.session.id}
+              onClose={closeCitation}
+            />
+          ) : (
+            <aside className="studio-panel" aria-labelledby="studio-title">
             <div className="panel-heading">
               <div>
                 <p className="panel-kicker">Active learning</p>
@@ -439,7 +718,8 @@ export function WorkspacePage() {
               <span aria-hidden="true" />
               Session ready
             </div>
-          </aside>
+            </aside>
+          )}
         </main>
         )
       })()}

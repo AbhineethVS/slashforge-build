@@ -209,6 +209,29 @@ Exit criteria:
 - Unknown citation IDs never reach the browser as valid evidence.
 - The bundled demo remains usable after an upload failure.
 
+Phase 3 status (2026-08-30):
+
+- Ready-source selection is persisted in browser session state and sent
+  explicitly with each question.
+- FastAPI combines only selected, session-owned indexes, embeds the query once,
+  retrieves five candidate chunks, and requests a structured grounded answer.
+- Citation chunk IDs are allow-listed against the exact retrieval set and
+  mapped to backend-owned source, page, and excerpt metadata. Invalid IDs are
+  retried once and never reach the browser.
+- Insufficient-evidence output is replaced deterministically with an
+  abstention and no citations.
+- Chat supports suggested questions, pending and retry states, safe Markdown,
+  compact citation controls, and temporary history.
+- The evidence sheet fetches PDFs with the session header, opens the cited page
+  through a temporary blob URL, retains an excerpt fallback, traps focus, and
+  restores focus when closed.
+- Automated verification passes with 38 backend and 9 frontend tests. Live
+  smoke checks returned a grounded known answer citing page 2 and correctly
+  abstained without citations on an absent question.
+- The full fixed 15-answerable/5-absent evaluation set and production SSE
+  transport remain release-hardening work; the initial non-streaming contract
+  is permitted by `AI_RAG_SPEC.md`.
+
 ### Phase 4: right Studio
 
 - Build the Studio home with Summary, Flashcards, Quiz, and Teach Back.

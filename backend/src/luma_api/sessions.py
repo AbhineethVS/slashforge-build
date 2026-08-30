@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import shutil
+from threading import Lock
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -33,6 +34,7 @@ class DemoSession:
     uploaded_sources: dict[UUID, UploadedSource] = field(default_factory=dict)
     temporary_directory: Path | None = None
     upload_in_progress: bool = False
+    generation_lock: Lock = field(default_factory=Lock, repr=False)
 
     def cleanup(self) -> None:
         self.uploaded_sources.clear()

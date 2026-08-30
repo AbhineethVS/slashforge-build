@@ -4,7 +4,7 @@ import asyncio
 import os
 import tempfile
 from contextlib import asynccontextmanager, suppress
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -24,6 +24,11 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from luma_spikes.config import load_project_environment
+from luma_spikes.citations import (
+    InvalidCitationError,
+    generate_grounded_answer,
+)
+from luma_spikes.models import Chunk, GroundedAnswer
 from luma_spikes.pdf import (
     MAX_PAGES,
     MAX_PDF_BYTES,
@@ -33,15 +38,24 @@ from luma_spikes.pdf import (
 )
 from luma_spikes.retrieval import Embedder, OpenAIEmbedder
 
+from .chat import SelectedIndex, answer_from_sources
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
-from .schemas import ErrorResponse, HealthResponse, SessionResponse, SourceSummary
+from .schemas import (
+    ChatMessageResponse,
+    ChatRequest,
+    ErrorResponse,
+    HealthResponse,
+    SessionResponse,
+    SourceSummary,
+)
 from .sessions import (
     DemoSession,
     SessionCapacityError,
     SessionExpiredError,
     SessionNotFoundError,
     SessionStore,
+    utc_now,
 )
 from .sources import (
     MAX_EMBEDDING_BYTES_PER_SESSION,
@@ -110,6 +124,9 @@ def create_app(
     frontend_dist: Path | None = None,
     demo_catalog: BundledDemoCatalog | None = None,
     embedder_factory: Callable[[], Embedder] | None = None,
+    answer_generator: (
+        Callable[[str, Sequence[Chunk]], GroundedAnswer] | None
+    ) = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
     catalog = demo_catalog
@@ -150,6 +167,52 @@ def create_app(
         if embedder_factory is not None:
             return embedder_factory()
         return OpenAIEmbedder(OpenAI(timeout=60.0, max_retries=2))
+
+    def generate_answer(
+        question: str,
+        chunks: Sequence[Chunk],
+    ) -> GroundedAnswer:
+        if answer_generator is not None:
+            return answer_generator(question, chunks)
+        return generate_grounded_answer(
+            client=OpenAI(timeout=60.0, max_retries=1),
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
+            question=question,
+            chunks=chunks,
+        )
+
+    def selected_indexes(
+        session: DemoSession,
+        source_ids: Sequence[UUID],
+    ) -> list[SelectedIndex]:
+        selected: list[SelectedIndex] = []
+        for source_id in source_ids:
+            if catalog is not None and source_id == catalog.source_id:
+                selected.append(
+                    SelectedIndex(
+                        source_id=source_id,
+                        source_name=catalog.manifest.display_name,
+                        index=catalog.index,
+                    )
+                )
+                continue
+            uploaded = session.uploaded_sources.get(source_id)
+            if uploaded is None:
+                raise ApiError(
+                    status.HTTP_404_NOT_FOUND,
+                    "SOURCE_NOT_READY",
+                    "A selected source is unavailable in this session.",
+                    False,
+                    "Select a ready source and try again.",
+                )
+            selected.append(
+                SelectedIndex(
+                    source_id=source_id,
+                    source_name=uploaded.display_name,
+                    index=uploaded.index,
+                )
+            )
+        return selected
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -447,6 +510,114 @@ def create_app(
             )
         source.file_path.unlink(missing_ok=True)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @application.get("/api/v1/chat/messages")
+    def list_chat_messages(
+        session: DemoSession = Depends(current_session),
+    ) -> list[dict[str, object]]:
+        return session.messages
+
+    @application.post(
+        "/api/v1/chat/messages",
+        response_model=ChatMessageResponse,
+        responses={
+            404: {"model": ErrorResponse},
+            409: {"model": ErrorResponse},
+            429: {"model": ErrorResponse},
+            502: {"model": ErrorResponse},
+            503: {"model": ErrorResponse},
+        },
+    )
+    def create_chat_message(
+        request: ChatRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ChatMessageResponse:
+        if not session.generation_lock.acquire(blocking=False):
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "Another answer is already being generated.",
+                True,
+                "Wait for the current answer to finish and try again.",
+            )
+        try:
+            sources = selected_indexes(session, request.source_ids)
+            result = answer_from_sources(
+                question=request.question,
+                sources=sources,
+                embedder=create_embedder(),
+                generate=generate_answer,
+            )
+            created_at = utc_now()
+            session.messages.append(
+                {
+                    "id": str(uuid4()),
+                    "role": "user",
+                    "content_markdown": request.question,
+                    "citations": [],
+                    "status": "complete",
+                    "created_at": created_at,
+                }
+            )
+            response = ChatMessageResponse(
+                id=uuid4(),
+                role="assistant",
+                content_markdown=result.answer.answer_markdown,
+                citations=[
+                    citation.model_dump(mode="json")
+                    for citation in result.citations
+                ],
+                insufficient_evidence=result.answer.insufficient_evidence,
+                follow_up_questions=result.answer.follow_up_questions,
+                status="complete",
+                created_at=created_at,
+            )
+            session.messages.append(response.model_dump(mode="json"))
+            return response
+        except ApiError:
+            raise
+        except RateLimitError as error:
+            raise ApiError(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "AI_RATE_LIMITED",
+                "The answer service is temporarily busy.",
+                True,
+                "Wait a moment and ask again.",
+            ) from error
+        except AuthenticationError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_BILLING_UNAVAILABLE",
+                "Grounded answers are temporarily unavailable.",
+                False,
+                "Keep using the bundled material or contact the demo owner.",
+            ) from error
+        except (APIConnectionError, APITimeoutError, APIStatusError) as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "The answer service could not be reached.",
+                True,
+                "Retry the question in a moment.",
+            ) from error
+        except (InvalidCitationError, ValueError) as error:
+            raise ApiError(
+                status.HTTP_502_BAD_GATEWAY,
+                "AI_OUTPUT_INVALID",
+                "The grounded answer could not be validated.",
+                True,
+                "Retry the question.",
+            ) from error
+        except OpenAIError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "Grounded answers are temporarily unavailable.",
+                True,
+                "Retry the question later.",
+            ) from error
+        finally:
+            session.generation_lock.release()
 
     @application.post("/api/v1/spike/upload")
     async def upload_spike(

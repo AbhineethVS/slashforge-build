@@ -271,5 +271,125 @@ describe('WorkspacePage', () => {
       },
     )
   })
+
+  it('selects sources and submits a grounded question', async () => {
+    const answer = {
+      id: '88563a22-8bba-4d4d-8b56-5227729b27ee',
+      role: 'assistant',
+      content_markdown: '**Explicit cost** is a direct monetary payment.',
+      citations: [
+        {
+          id: 'citation-1',
+          chunk_id: '83479ac1-c190-46ec-a835-b21ed5e8d005',
+          source_id: session.sources[0].id,
+          source_name: session.sources[0].display_name,
+          page_start: 5,
+          page_end: 5,
+          excerpt: 'Explicit cost is the money expenditure incurred.',
+          claim: 'Explicit costs are direct monetary payments.',
+          viewer_url: `/api/v1/sources/${session.sources[0].id}/file#page=5`,
+        },
+      ],
+      insufficient_evidence: false,
+      follow_up_questions: ['How does implicit cost differ?'],
+      status: 'complete',
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(answer), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(new Blob(['%PDF-evidence'], { type: 'application/pdf' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/pdf' },
+        }),
+      )
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:evidence'),
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    })
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    const suggestion = await screen.findByRole('button', {
+      name: 'What is the difference between explicit and implicit cost?',
+    })
+    fireEvent.click(suggestion)
+    const input = screen.getByRole('textbox', {
+      name: 'Ask your selected sources',
+    })
+    expect(input).toHaveValue(
+      'What is the difference between explicit and implicit cost?',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }))
+
+    expect(
+      await screen.findByText('Explicit cost', { selector: 'strong' }),
+    ).toBeInTheDocument()
+    const citation = screen.getByRole('button', {
+      name: 'Citation 1: Economics - Theory of Cost.pdf, page 5',
+    })
+    fireEvent.click(citation)
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Economics - Theory of Cost.pdf',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/Explicit cost is the money/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close evidence' }))
+    await waitFor(() => expect(citation).toHaveFocus())
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/chat/messages',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-ID': session.id,
+        },
+      }),
+    )
+  })
+
+  it('requires at least one selected source before asking', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(session), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('heading', { name: 'Sources' })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Use in chat' }))
+
+    expect(screen.getByText('0 active sources')).toBeInTheDocument()
+    expect(
+      screen.getByRole('textbox', { name: 'Ask your selected sources' }),
+    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Ask' })).toBeDisabled()
+  })
 })
 
