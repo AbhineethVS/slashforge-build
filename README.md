@@ -14,17 +14,20 @@ on the left, Chat in the center, and Studio on the right.
 
 ## Current status
 
-Phase 0 feasibility work is underway. The repository now contains:
+Phase 0 local feasibility work is complete and cloud deployment is deferred
+until the product is further along. The repository now contains:
 
 - Page-aware PyMuPDF extraction and page-bounded chunking spikes.
 - OpenAI embedding, NumPy retrieval, and structured citation spikes.
 - Deterministic tests for unsupported PDFs, source filtering, trusted page
   mapping, and fabricated citation rejection.
-- A minimal compiled React page served by FastAPI for the Azure deployment
-  spike.
+- A FastAPI service that serves the compiled React application.
+- A bounded temporary session lifecycle with restore, expiry, cleanup, and
+  reset behavior.
+- The LUMA landing page and responsive Sources–Chat–Studio workspace shell.
 
-These are technical proofs, not the product UI. Phase 1 product implementation
-has not started.
+Phase 1 foundation work is underway. The bundled demo source, source upload,
+grounded chat, evidence viewer, and Studio tools are not yet connected.
 
 ## Phase 0 setup
 

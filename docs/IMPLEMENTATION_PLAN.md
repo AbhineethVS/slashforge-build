@@ -116,13 +116,16 @@ Phase 0 status (2026-08-29):
 - Local extraction, page-bounded chunking, selected-source retrieval, citation
   allow-listing, trusted page mapping, bounded multipart upload, and combined
   FastAPI/compiled-React serving have deterministic tests.
-- The local suite passes with 15 tests; the frontend production build and lint
-  pass.
+- The current local suite passes with 21 backend and 4 frontend tests; the
+  frontend production build and lint pass.
 - Live OpenAI retrieval and grounded-answer evaluation still require the two
   representative PDFs, fixed known-question set, and API billing.
 - Azure deployment, cold-start, and memory observations remain outstanding.
 - Phase 0 is not complete until those live and deployed checks satisfy the exit
   criterion.
+- Cloud deployment was deliberately deferred on 2026-08-30 so it does not
+  block product implementation; the outstanding Spike D checks remain required
+  before release.
 
 ## 6. Build phases
 
@@ -145,6 +148,17 @@ Exit criteria:
 - The application opens with a ready demo source.
 - Reset returns to the original demo state.
 - No OpenAI key is present in frontend output.
+
+Phase 1 status (2026-08-30):
+
+- React routes now provide a static landing page and a responsive
+  Sources–Chat–Studio workspace shell.
+- FastAPI now creates, restores, refreshes, expires, bounds, and resets
+  temporary in-memory sessions through the documented session header.
+- The browser restores the opaque session from `sessionStorage`, recovers from
+  expiry, and exposes loading, retry, ready, and reset states.
+- Direct SPA fallback for `/workspace` is covered by a backend test.
+- Bundled demo asset generation and startup attachment remain outstanding.
 
 ### Phase 2: Sources panel and temporary upload
 
