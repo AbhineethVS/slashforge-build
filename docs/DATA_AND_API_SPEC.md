@@ -228,6 +228,13 @@ session.
 Generation requests include selected `source_ids`. Quiz requests may include
 question count and difficulty, but the server enforces safe bounds.
 
+Summary responses contain cited sections and revision questions. Flashcard
+responses contain five to ten unique cited cards. Quiz generation requests
+seven to ten candidates, discards candidates with invalid evidence or
+structure, and returns five cited questions. Each quiz question includes a
+`demo_response` presentation aid; the browser still requires confidence and
+submission before revealing feedback.
+
 ### Attempts
 
 - `POST /api/v1/artifacts/{artifact_id}/attempts`

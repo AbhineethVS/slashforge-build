@@ -148,12 +148,18 @@ Only one dominant call to action should appear per state.
 
 - The default Studio view uses compact tool cards for Summary, Flashcards,
   Quiz, and Teach Back.
-- A tool opens in place within Studio with a clear Back to Studio action.
+- Summary opens in place within Studio with a clear Back to Studio action.
+- Flashcards and Quiz open in a large, centered Practice overlay. The workspace
+  remains visible under restrained dimming and background blur.
+- Closing Practice returns focus to its Studio launcher. Generated decks and
+  quizzes remain in a compact Studio list and can be reopened.
 - The active source count and source names are visible before generation.
 - Summary uses sections with citations, not one unbroken paragraph.
-- Flashcards support flip, previous/next, and shuffle without decorative 3D
-  motion.
+- Flashcards show one large card at a time and support reveal, previous/next,
+  shuffle, touch swipe, and keyboard navigation without decorative 3D motion.
 - Quiz shows one question at a time and follows the confidence flow below.
+- Evidence opens over the right side of Practice and restores the exact card
+  or question when closed.
 - Tool state survives opening a citation or temporarily collapsing Studio.
 - Avoid placing all generated artifacts in the center Chat transcript.
 
@@ -161,6 +167,8 @@ Only one dominant call to action should appear per state.
 
 - Show one question at a time.
 - Do not reveal correctness until confidence is selected.
+- A clearly labeled Fill demo answer action may supply a generated sample
+  response for presentations, but it does not bypass confidence or submission.
 - Confidence uses three labeled choices, not color-only icons.
 - Feedback visually separates result, explanation, and source evidence.
 - Progress shows question number, not an artificial percentage mastery claim.

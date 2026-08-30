@@ -36,7 +36,9 @@ Phases 1 and 2 are complete locally, and the Phase 3 grounded-chat vertical
 slice is connected. The workspace opens with a ready economics source, accepts
 up to two temporary PDF uploads, answers against selected sources with
 backend-validated page citations, and opens cited PDFs in an evidence sheet.
-Studio tools are not yet connected.
+Studio generates cited summaries plus focused Flashcard and Quiz practice
+experiences. Teach-Back and deterministic misconception tracking remain for
+the next phase.
 
 ## Phase 0 setup
 

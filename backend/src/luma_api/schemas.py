@@ -59,6 +59,26 @@ class ChatMessageResponse(BaseModel):
     created_at: datetime
 
 
+class ArtifactRequest(BaseModel):
+    source_ids: list[UUID] = Field(min_length=1, max_length=3)
+
+    @field_validator("source_ids")
+    @classmethod
+    def require_unique_artifact_sources(cls, value: list[UUID]) -> list[UUID]:
+        if len(set(value)) != len(value):
+            raise ValueError("Source IDs must be unique.")
+        return value
+
+
+class ArtifactResponse(BaseModel):
+    id: UUID
+    type: Literal["summary", "flashcards", "quiz"]
+    title: str
+    content: dict[str, Any]
+    source_ids: list[UUID]
+    created_at: datetime
+
+
 class SessionResponse(BaseModel):
     id: UUID
     created_at: datetime

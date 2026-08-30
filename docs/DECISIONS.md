@@ -193,3 +193,26 @@ Consequences:
 - A ready source is attached only after every embedding succeeds.
 - The API can later move to background jobs or streamed stage events without
   changing the stored source and index structures.
+
+## ADR-016: Use a focused Practice overlay for active recall
+
+Status: accepted
+
+Decision: Studio remains the launcher and temporary artifact library. Cited
+summaries open within the right panel, while Flashcards and Quiz open in a
+large centered Practice overlay with restrained backdrop dimming and blur.
+Generated decks and quizzes remain listed in Studio for reopening.
+
+Reason: reading a summary fits the narrow Studio panel, but card recall,
+written answers, confidence selection, and feedback require more space and
+focus. Keeping the workspace visible preserves context without forcing these
+activities into Chat.
+
+Consequences:
+
+- Practice traps focus, supports Escape, and restores focus to its launcher.
+- Flashcards provide explicit controls, keyboard navigation, and touch swipe.
+- Quiz feedback remains hidden until answer and confidence submission.
+- A labeled demo-answer aid may fill a sample response for presentations but
+  cannot skip confidence or submission.
+- Citation evidence temporarily overlays Practice and restores its exact state.

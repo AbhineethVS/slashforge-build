@@ -5,23 +5,33 @@ import {
   useState,
   type ChangeEvent,
   type FormEvent,
+  type PointerEvent as ReactPointerEvent,
 } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
 import { EvidencePanel } from '../components/EvidencePanel'
+import { StudioPanel } from '../components/StudioPanel'
 import {
   ApiRequestError,
   askQuestion,
+  constrainPanelWidths,
   deleteSource,
+  MAX_SOURCES_WIDTH,
+  MAX_STUDIO_WIDTH,
+  MIN_SOURCES_WIDTH,
+  MIN_STUDIO_WIDTH,
+  persistPanelWidths,
   persistSelectedSourceIds,
   resetSession,
   restoreOrCreateSession,
+  restorePanelWidths,
   restoreSelectedSourceIds,
   uploadSource,
   type ChatMessage,
   type Citation,
   type DemoSession,
+  type PanelWidths,
   type SourceSummary,
 } from '../lib/session'
 
@@ -29,13 +39,6 @@ type WorkspaceState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'ready'; session: DemoSession }
-
-const studioTools = [
-  ['Summary', 'Build a cited revision brief.'],
-  ['Flashcards', 'Recall key ideas from your sources.'],
-  ['Quiz', 'Test understanding and confidence.'],
-  ['Teach Back', 'Explain a concept in your own words.'],
-]
 
 const groundedMarkdownElements = [
   'p',
@@ -74,9 +77,99 @@ export function WorkspacePage() {
     | { status: 'error'; question: string; message: string; action?: string }
   >({ status: 'idle' })
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>(() =>
+    restorePanelWidths(),
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
   const questionInputRef = useRef<HTMLTextAreaElement>(null)
   const citationTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const workspaceGridRef = useRef<HTMLElement>(null)
+  const panelWidthsRef = useRef(panelWidths)
+  const resizeDragRef = useRef<{
+    edge: 'sources' | 'studio'
+    startX: number
+    startWidths: PanelWidths
+  } | null>(null)
+
+  useEffect(() => {
+    panelWidthsRef.current = panelWidths
+  }, [panelWidths])
+
+  useEffect(() => {
+    function syncToViewport() {
+      const available = workspaceGridRef.current?.clientWidth
+      if (!available) return
+      setPanelWidths((current) => {
+        const next = constrainPanelWidths(current, available)
+        if (next.sources === current.sources && next.studio === current.studio) {
+          return current
+        }
+        persistPanelWidths(next)
+        return next
+      })
+    }
+    syncToViewport()
+    window.addEventListener('resize', syncToViewport)
+    return () => window.removeEventListener('resize', syncToViewport)
+  }, [])
+
+  function beginPanelResize(
+    edge: 'sources' | 'studio',
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) {
+    event.preventDefault()
+    resizeDragRef.current = {
+      edge,
+      startX: event.clientX,
+      startWidths: panelWidthsRef.current,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    document.body.classList.add('is-resizing-panels')
+  }
+
+  function movePanelResize(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = resizeDragRef.current
+    const grid = workspaceGridRef.current
+    if (!drag || !grid) return
+
+    const available = grid.clientWidth
+    const delta = event.clientX - drag.startX
+    let next: PanelWidths
+    if (drag.edge === 'sources') {
+      next = constrainPanelWidths(
+        {
+          sources: Math.min(
+            MAX_SOURCES_WIDTH,
+            Math.max(MIN_SOURCES_WIDTH, drag.startWidths.sources + delta),
+          ),
+          studio: drag.startWidths.studio,
+        },
+        available,
+      )
+    } else {
+      next = constrainPanelWidths(
+        {
+          sources: drag.startWidths.sources,
+          studio: Math.min(
+            MAX_STUDIO_WIDTH,
+            Math.max(MIN_STUDIO_WIDTH, drag.startWidths.studio - delta),
+          ),
+        },
+        available,
+      )
+    }
+    setPanelWidths(next)
+  }
+
+  function endPanelResize(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!resizeDragRef.current) return
+    resizeDragRef.current = null
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    document.body.classList.remove('is-resizing-panels')
+    persistPanelWidths(panelWidthsRef.current)
+  }
 
   const requestSession = useCallback(() => {
     restoreOrCreateSession()
@@ -353,13 +446,22 @@ export function WorkspacePage() {
         const activeCount = readySources.filter((source) =>
           selectedSourceIds.includes(source.id),
         ).length
+        const selectedSources = readySources.filter((source) =>
+          selectedSourceIds.includes(source.id),
+        )
         const uploadedCount = state.session.sources.filter(
           (source) => source.kind === 'uploaded',
         ).length
         const uploadLimitReached = uploadedCount >= 2
 
         return (
-        <main className="workspace-grid">
+        <main
+          ref={workspaceGridRef}
+          className="workspace-grid"
+          style={{
+            gridTemplateColumns: `${panelWidths.sources}px 6px minmax(0, 1fr) 6px ${panelWidths.studio}px`,
+          }}
+        >
           <aside className="sources-panel" aria-labelledby="sources-title">
             <div className="panel-heading">
               <div>
@@ -508,6 +610,36 @@ export function WorkspacePage() {
               reset, or a server restart.
             </p>
           </aside>
+
+          <div
+            className="panel-resizer"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize Sources and Chat panels"
+            aria-valuemin={MIN_SOURCES_WIDTH}
+            aria-valuemax={MAX_SOURCES_WIDTH}
+            aria-valuenow={panelWidths.sources}
+            tabIndex={0}
+            onPointerDown={(event) => beginPanelResize('sources', event)}
+            onPointerMove={movePanelResize}
+            onPointerUp={endPanelResize}
+            onPointerCancel={endPanelResize}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+              event.preventDefault()
+              const available = workspaceGridRef.current?.clientWidth || 1200
+              const delta = event.key === 'ArrowRight' ? 16 : -16
+              const next = constrainPanelWidths(
+                {
+                  sources: panelWidths.sources + delta,
+                  studio: panelWidths.studio,
+                },
+                available,
+              )
+              setPanelWidths(next)
+              persistPanelWidths(next)
+            }}
+          />
 
           <section className="chat-panel" aria-labelledby="chat-title">
             <div className="panel-heading chat-heading">
@@ -688,38 +820,53 @@ export function WorkspacePage() {
             </form>
           </section>
 
-          {activeCitation ? (
-            <EvidencePanel
-              key={activeCitation.id}
-              citation={activeCitation}
+          <div
+            className="panel-resizer"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize Chat and Studio panels"
+            aria-valuemin={MIN_STUDIO_WIDTH}
+            aria-valuemax={MAX_STUDIO_WIDTH}
+            aria-valuenow={panelWidths.studio}
+            tabIndex={0}
+            onPointerDown={(event) => beginPanelResize('studio', event)}
+            onPointerMove={movePanelResize}
+            onPointerUp={endPanelResize}
+            onPointerCancel={endPanelResize}
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+              event.preventDefault()
+              const available = workspaceGridRef.current?.clientWidth || 1200
+              const delta = event.key === 'ArrowLeft' ? 16 : -16
+              const next = constrainPanelWidths(
+                {
+                  sources: panelWidths.sources,
+                  studio: panelWidths.studio + delta,
+                },
+                available,
+              )
+              setPanelWidths(next)
+              persistPanelWidths(next)
+            }}
+          />
+
+          <div className="studio-region">
+            <StudioPanel
+              key={state.session.id}
               sessionId={state.session.id}
-              onClose={closeCitation}
+              selectedSources={selectedSources}
+              initialArtifacts={state.session.artifacts}
+              onCitation={showCitation}
             />
-          ) : (
-            <aside className="studio-panel" aria-labelledby="studio-title">
-            <div className="panel-heading">
-              <div>
-                <p className="panel-kicker">Active learning</p>
-                <h1 id="studio-title">Studio</h1>
-              </div>
-            </div>
-            <p className="studio-intro">
-              Create study tools from the sources you select.
-            </p>
-            <div className="studio-tools">
-              {studioTools.map(([title, description]) => (
-                <button key={title} type="button" disabled>
-                  <strong>{title}</strong>
-                  <span>{description}</span>
-                </button>
-              ))}
-            </div>
-            <div className="session-ready" role="status">
-              <span aria-hidden="true" />
-              Session ready
-            </div>
-            </aside>
-          )}
+            {activeCitation && (
+              <EvidencePanel
+                key={activeCitation.id}
+                citation={activeCitation}
+                sessionId={state.session.id}
+                onClose={closeCitation}
+              />
+            )}
+          </div>
         </main>
         )
       })()}

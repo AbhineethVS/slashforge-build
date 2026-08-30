@@ -248,6 +248,30 @@ Exit criteria:
 - Every factual artifact links back to valid evidence.
 - Flashcards and quiz are keyboard-operable.
 
+Phase 4 status (2026-08-30):
+
+- Studio generates source-scoped cited summaries, flashcard decks, and mixed
+  five-question quizzes through strict structured OpenAI outputs.
+- Artifact evidence IDs are allow-listed against retrieved chunks. Summary
+  sections must all validate; invalid flashcard and quiz candidates are
+  discarded before retaining a usable set.
+- Summary remains in Studio. Flashcards and Quiz open in a large, focused
+  Practice overlay with restrained backdrop blur and remain available in
+  Studio for reopening.
+- Flashcards support reveal, previous/next, shuffle, arrow keys, Space/Enter,
+  and touch swipe.
+- Quiz requires an answer and Low/Medium/High confidence before revealing
+  feedback. A labeled Fill demo answer presentation aid never bypasses that
+  sequence.
+- Citations open authenticated evidence without losing the active card or
+  question. Generated artifacts remain temporary, session-scoped, restorable,
+  deletable, and reset with the session.
+- Desktop Sources–Chat and Chat–Studio boundaries are drag-resizable, keyboard
+  operable, and persisted in `sessionStorage` within safe panel widths.
+- Automated verification passes with 43 backend and 15 frontend tests. Live
+  generation produced a five-section cited summary, eight cited flashcards,
+  and a validated five-question mixed quiz with citations and demo responses.
+
 ### Phase 5: misconception loop and polish
 
 - Add deterministic confidence classifications.

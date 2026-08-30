@@ -38,6 +38,14 @@ from luma_spikes.pdf import (
 )
 from luma_spikes.retrieval import Embedder, OpenAIEmbedder
 
+from .artifacts import (
+    ArtifactKind,
+    InvalidArtifactError,
+    RawArtifact,
+    generate_raw_artifact,
+    materialize_artifact,
+    retrieve_artifact_chunks,
+)
 from .chat import SelectedIndex, answer_from_sources
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
@@ -46,6 +54,8 @@ from .schemas import (
     ChatRequest,
     ErrorResponse,
     HealthResponse,
+    ArtifactRequest,
+    ArtifactResponse,
     SessionResponse,
     SourceSummary,
 )
@@ -126,6 +136,9 @@ def create_app(
     embedder_factory: Callable[[], Embedder] | None = None,
     answer_generator: (
         Callable[[str, Sequence[Chunk]], GroundedAnswer] | None
+    ) = None,
+    artifact_generator: (
+        Callable[[ArtifactKind, Sequence[Chunk]], RawArtifact] | None
     ) = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
@@ -213,6 +226,114 @@ def create_app(
                 )
             )
         return selected
+
+    def generate_artifact(
+        kind: ArtifactKind,
+        chunks: Sequence[Chunk],
+    ) -> RawArtifact:
+        if artifact_generator is not None:
+            return artifact_generator(kind, chunks)
+        return generate_raw_artifact(
+            client=OpenAI(timeout=90.0, max_retries=1),
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
+            kind=kind,
+            chunks=chunks,
+        )
+
+    def create_studio_artifact(
+        *,
+        kind: ArtifactKind,
+        request: ArtifactRequest,
+        session: DemoSession,
+    ) -> ArtifactResponse:
+        if not session.generation_lock.acquire(blocking=False):
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "Another AI task is already running.",
+                True,
+                "Wait for it to finish and try again.",
+            )
+        try:
+            sources = selected_indexes(session, request.source_ids)
+            chunks = retrieve_artifact_chunks(
+                kind=kind,
+                sources=sources,
+                embedder=create_embedder(),
+            )
+            title: str | None = None
+            content: dict | None = None
+            last_error: InvalidArtifactError | None = None
+            for _ in range(2):
+                raw = generate_artifact(kind, chunks)
+                try:
+                    title, content = materialize_artifact(
+                        kind=kind,
+                        raw=raw,
+                        chunks=chunks,
+                        sources=sources,
+                    )
+                    break
+                except InvalidArtifactError as error:
+                    last_error = error
+            if title is None or content is None:
+                raise last_error or InvalidArtifactError(
+                    "The artifact could not be validated."
+                )
+            artifact = ArtifactResponse(
+                id=uuid4(),
+                type=kind,
+                title=title,
+                content=content,
+                source_ids=request.source_ids,
+                created_at=utc_now(),
+            )
+            session.artifacts.append(artifact.model_dump(mode="json"))
+            return artifact
+        except ApiError:
+            raise
+        except RateLimitError as error:
+            raise ApiError(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "AI_RATE_LIMITED",
+                "Studio generation is temporarily busy.",
+                True,
+                "Wait a moment and try again.",
+            ) from error
+        except AuthenticationError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_BILLING_UNAVAILABLE",
+                "Studio generation is temporarily unavailable.",
+                False,
+                "Use existing study material or contact the demo owner.",
+            ) from error
+        except (APIConnectionError, APITimeoutError, APIStatusError) as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "The Studio service could not be reached.",
+                True,
+                "Retry generation in a moment.",
+            ) from error
+        except (InvalidArtifactError, ValueError) as error:
+            raise ApiError(
+                status.HTTP_502_BAD_GATEWAY,
+                "AI_OUTPUT_INVALID",
+                "The generated study tool could not be validated.",
+                True,
+                "Generate it again.",
+            ) from error
+        except OpenAIError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "Studio generation is temporarily unavailable.",
+                True,
+                "Retry generation later.",
+            ) from error
+        finally:
+            session.generation_lock.release()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -618,6 +739,110 @@ def create_app(
             ) from error
         finally:
             session.generation_lock.release()
+
+    @application.post(
+        "/api/v1/studio/summary",
+        response_model=ArtifactResponse,
+    )
+    def create_summary(
+        request: ArtifactRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        return create_studio_artifact(
+            kind="summary",
+            request=request,
+            session=session,
+        )
+
+    @application.post(
+        "/api/v1/studio/flashcards",
+        response_model=ArtifactResponse,
+    )
+    def create_flashcards(
+        request: ArtifactRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        return create_studio_artifact(
+            kind="flashcards",
+            request=request,
+            session=session,
+        )
+
+    @application.post(
+        "/api/v1/studio/quiz",
+        response_model=ArtifactResponse,
+    )
+    def create_quiz(
+        request: ArtifactRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        return create_studio_artifact(
+            kind="quiz",
+            request=request,
+            session=session,
+        )
+
+    @application.get(
+        "/api/v1/studio/artifacts",
+        response_model=list[ArtifactResponse],
+    )
+    def list_artifacts(
+        session: DemoSession = Depends(current_session),
+    ) -> list[ArtifactResponse]:
+        return [
+            ArtifactResponse.model_validate(artifact)
+            for artifact in session.artifacts
+        ]
+
+    @application.get(
+        "/api/v1/artifacts/{artifact_id}",
+        response_model=ArtifactResponse,
+    )
+    def get_artifact(
+        artifact_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        artifact = next(
+            (
+                item
+                for item in session.artifacts
+                if item.get("id") == str(artifact_id)
+            ),
+            None,
+        )
+        if artifact is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The study artifact was not found in this session.",
+                False,
+                "Return to Studio and choose an available artifact.",
+            )
+        return ArtifactResponse.model_validate(artifact)
+
+    @application.delete(
+        "/api/v1/artifacts/{artifact_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    def delete_artifact(
+        artifact_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> Response:
+        original_count = len(session.artifacts)
+        session.artifacts = [
+            item
+            for item in session.artifacts
+            if item.get("id") != str(artifact_id)
+        ]
+        if len(session.artifacts) == original_count:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The study artifact was not found in this session.",
+                False,
+                "Refresh Studio and try again.",
+            )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     @application.post("/api/v1/spike/upload")
     async def upload_spike(

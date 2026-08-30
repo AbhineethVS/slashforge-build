@@ -1,5 +1,19 @@
 const SESSION_STORAGE_KEY = 'luma.session_id'
 const SELECTED_SOURCES_STORAGE_KEY = 'luma.selected_source_ids'
+const PANEL_WIDTHS_STORAGE_KEY = 'luma.panel_widths'
+
+export const DEFAULT_SOURCES_WIDTH = 260
+export const DEFAULT_STUDIO_WIDTH = 330
+export const MIN_SOURCES_WIDTH = 200
+export const MAX_SOURCES_WIDTH = 420
+export const MIN_STUDIO_WIDTH = 260
+export const MAX_STUDIO_WIDTH = 560
+export const MIN_CHAT_WIDTH = 360
+
+export type PanelWidths = {
+  sources: number
+  studio: number
+}
 
 export type DemoSession = {
   id: string
@@ -7,7 +21,7 @@ export type DemoSession = {
   expires_at: string
   sources: SourceSummary[]
   messages: ChatMessage[]
-  artifacts: unknown[]
+  artifacts: StudioArtifact[]
   attempts: unknown[]
   suggested_questions: string[]
 }
@@ -43,6 +57,67 @@ export type ChatMessage = {
   status: 'pending' | 'complete' | 'interrupted' | 'failed'
   created_at: string
 }
+
+export type SummaryArtifact = {
+  id: string
+  type: 'summary'
+  title: string
+  content: {
+    sections: {
+      title: string
+      content_markdown: string
+      citations: Citation[]
+    }[]
+    revision_questions: string[]
+  }
+  source_ids: string[]
+  created_at: string
+}
+
+export type FlashcardArtifact = {
+  id: string
+  type: 'flashcards'
+  title: string
+  content: {
+    cards: {
+      id: string
+      front: string
+      back_markdown: string
+      concept_label: string
+      difficulty: 'recall' | 'understanding' | 'application'
+      citations: Citation[]
+    }[]
+  }
+  source_ids: string[]
+  created_at: string
+}
+
+export type QuizArtifact = {
+  id: string
+  type: 'quiz'
+  title: string
+  content: {
+    questions: {
+      id: string
+      type: 'mcq' | 'short_answer'
+      prompt: string
+      options: string[]
+      expected_answer: string
+      explanation_markdown: string
+      demo_response: string
+      concept_label: string
+      difficulty: 'recall' | 'understanding' | 'application'
+      citations: Citation[]
+    }[]
+  }
+  source_ids: string[]
+  created_at: string
+}
+
+export type StudioArtifact =
+  | SummaryArtifact
+  | FlashcardArtifact
+  | QuizArtifact
 
 type ApiErrorResponse = {
   error?: {
@@ -218,5 +293,94 @@ export function persistSelectedSourceIds(sourceIds: string[]): void {
     SELECTED_SOURCES_STORAGE_KEY,
     JSON.stringify(sourceIds),
   )
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+export function restorePanelWidths(): PanelWidths {
+  try {
+    const stored = JSON.parse(
+      sessionStorage.getItem(PANEL_WIDTHS_STORAGE_KEY) || 'null',
+    ) as Partial<PanelWidths> | null
+    if (
+      stored &&
+      typeof stored.sources === 'number' &&
+      typeof stored.studio === 'number'
+    ) {
+      return {
+        sources: clamp(
+          Math.round(stored.sources),
+          MIN_SOURCES_WIDTH,
+          MAX_SOURCES_WIDTH,
+        ),
+        studio: clamp(
+          Math.round(stored.studio),
+          MIN_STUDIO_WIDTH,
+          MAX_STUDIO_WIDTH,
+        ),
+      }
+    }
+  } catch {
+    sessionStorage.removeItem(PANEL_WIDTHS_STORAGE_KEY)
+  }
+  return {
+    sources: DEFAULT_SOURCES_WIDTH,
+    studio: DEFAULT_STUDIO_WIDTH,
+  }
+}
+
+export function persistPanelWidths(widths: PanelWidths): void {
+  sessionStorage.setItem(PANEL_WIDTHS_STORAGE_KEY, JSON.stringify(widths))
+}
+
+export function constrainPanelWidths(
+  widths: PanelWidths,
+  availableWidth: number,
+): PanelWidths {
+  let sources = clamp(widths.sources, MIN_SOURCES_WIDTH, MAX_SOURCES_WIDTH)
+  let studio = clamp(widths.studio, MIN_STUDIO_WIDTH, MAX_STUDIO_WIDTH)
+  if (availableWidth > MIN_CHAT_WIDTH) {
+    const maxSides = availableWidth - MIN_CHAT_WIDTH
+    if (sources + studio > maxSides) {
+      const overflow = sources + studio - maxSides
+      const reduceStudio = Math.min(studio - MIN_STUDIO_WIDTH, overflow)
+      studio -= reduceStudio
+      sources -= overflow - reduceStudio
+    }
+  }
+  return {
+    sources: clamp(sources, MIN_SOURCES_WIDTH, MAX_SOURCES_WIDTH),
+    studio: clamp(studio, MIN_STUDIO_WIDTH, MAX_STUDIO_WIDTH),
+  }
+}
+
+export async function generateStudioArtifact(
+  sessionId: string,
+  kind: StudioArtifact['type'],
+  sourceIds: string[],
+): Promise<StudioArtifact> {
+  const response = await fetch(`/api/v1/studio/${kind}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({ source_ids: sourceIds }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as StudioArtifact
+}
+
+export async function deleteStudioArtifact(
+  sessionId: string,
+  artifactId: string,
+): Promise<void> {
+  const response = await fetch(`/api/v1/artifacts/${artifactId}`, {
+    method: 'DELETE',
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
 }
 

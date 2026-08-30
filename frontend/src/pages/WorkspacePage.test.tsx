@@ -56,7 +56,14 @@ describe('WorkspacePage', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Sources' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Studio' })).toBeInTheDocument()
-    expect(screen.getByText('Economics - Theory of Cost.pdf')).toBeInTheDocument()
+    expect(
+      screen.getByRole('separator', {
+        name: 'Resize Chat and Studio panels',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByText('Economics - Theory of Cost.pdf').length,
+    ).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('1 active source')).toBeInTheDocument()
     expect(
       screen.getByRole('button', {
@@ -390,6 +397,167 @@ describe('WorkspacePage', () => {
       screen.getByRole('textbox', { name: 'Ask your selected sources' }),
     ).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Ask' })).toBeDisabled()
+  })
+
+  it('generates flashcards in a large practice overlay', async () => {
+    const flashcards = {
+      id: 'c828a8f4-6136-4931-9393-6747c1aaf45e',
+      type: 'flashcards',
+      title: 'Theory of Cost cards',
+      content: {
+        cards: Array.from({ length: 6 }, (_, index) => ({
+          id: `card-${index}`,
+          front: `Card question ${index + 1}`,
+          back_markdown: `**Card answer ${index + 1}**`,
+          concept_label: 'Costs',
+          difficulty: 'recall',
+          citations: [],
+        })),
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(flashcards), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /Flashcards/ }))
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Theory of Cost cards' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Card question 1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal answer' }))
+    expect(screen.getByText('Card answer 1')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByText('Card question 2')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(screen.getByText('Generated study tools')).toBeInTheDocument()
+    expect(screen.getByText('6 flashcards')).toBeInTheDocument()
+  })
+
+  it('uses a demo quiz answer without revealing feedback early', async () => {
+    const quiz = {
+      id: 'ed4d3f55-00c5-4db1-bf08-438e0d9fbb93',
+      type: 'quiz',
+      title: 'Theory of Cost quiz',
+      content: {
+        questions: Array.from({ length: 5 }, (_, index) => ({
+          id: `question-${index}`,
+          type: 'mcq',
+          prompt: `Quiz prompt ${index + 1}?`,
+          options: ['Correct answer', 'Option B', 'Option C', 'Option D'],
+          expected_answer: 'Correct answer',
+          explanation_markdown: `Explanation ${index + 1}`,
+          demo_response: 'Correct answer',
+          concept_label: 'Costs',
+          difficulty: 'understanding',
+          citations: [],
+        })),
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(quiz), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    await screen.findByRole('dialog', { name: 'Theory of Cost quiz' })
+
+    expect(screen.queryByText('Expected answer')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Fill demo answer/ }))
+    expect(screen.getByRole('radio', { name: 'Correct answer' })).toBeChecked()
+    fireEvent.click(screen.getByRole('radio', { name: 'Low' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
+
+    expect(screen.getByText('Expected answer')).toBeInTheDocument()
+    expect(screen.getByText('Correct')).toBeInTheDocument()
+    expect(screen.getByText('Explanation 1')).toBeInTheDocument()
+  })
+
+  it('keeps cited summaries inside Studio', async () => {
+    const summary = {
+      id: '7c1d2a66-d399-4c82-9e0e-504494ae3a55',
+      type: 'summary',
+      title: 'Theory of Cost summary',
+      content: {
+        sections: [
+          {
+            title: 'Explicit cost',
+            content_markdown: 'Direct monetary payments.',
+            citations: [],
+          },
+          {
+            title: 'Implicit cost',
+            content_markdown: 'Opportunity cost of owned inputs.',
+            citations: [],
+          },
+        ],
+        revision_questions: ['How do the two costs differ?'],
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(summary), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Summary/ }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Theory of Cost summary' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Direct monetary payments.')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Back to Studio' }),
+    ).toBeInTheDocument()
   })
 })
 
