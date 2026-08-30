@@ -29,10 +29,12 @@ until the product is further along. The repository now contains:
   embeddings for *Economics - Theory of Cost.pdf* (43 pages).
 - Session startup attachment of the ready bundled source, suggested questions,
   and authenticated PDF serving at `/api/v1/sources/{source_id}/file`.
+- Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
+  retryable failures, source deletion, and automatic temporary-file cleanup.
 
-Phase 1 foundation work is complete through the bundled demo assets slice.
-The workspace opens with a ready, page-indexed economics source. Source upload,
-grounded chat, evidence viewer, and Studio tools are not yet connected.
+Phases 1 and 2 are complete locally. The workspace opens with a ready,
+page-indexed economics source and accepts up to two temporary PDF uploads.
+Grounded chat, evidence viewer, and Studio tools are not yet connected.
 
 ## Phase 0 setup
 

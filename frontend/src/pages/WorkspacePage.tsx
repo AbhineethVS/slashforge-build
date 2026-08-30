@@ -1,10 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react'
 import { Link } from 'react-router-dom'
 
 import {
+  ApiRequestError,
+  deleteSource,
   resetSession,
   restoreOrCreateSession,
+  uploadSource,
   type DemoSession,
+  type SourceSummary,
 } from '../lib/session'
 
 type WorkspaceState =
@@ -19,9 +29,21 @@ const studioTools = [
   ['Teach Back', 'Explain a concept in your own words.'],
 ]
 
+type PendingUpload = {
+  file: File
+  displayName: string
+  status: SourceSummary['status']
+  message?: string
+  action?: string
+}
+
 export function WorkspacePage() {
   const [state, setState] = useState<WorkspaceState>({ status: 'loading' })
   const [isResetting, setIsResetting] = useState(false)
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null)
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
+  const [sourceActionError, setSourceActionError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const requestSession = useCallback(() => {
     restoreOrCreateSession()
@@ -56,6 +78,8 @@ export function WorkspacePage() {
     setIsResetting(true)
     try {
       const session = await resetSession(state.session.id)
+      setPendingUpload(null)
+      setSourceActionError(null)
       setState({ status: 'ready', session })
     } catch (error) {
       setState({
@@ -65,6 +89,91 @@ export function WorkspacePage() {
       })
     } finally {
       setIsResetting(false)
+    }
+  }
+
+  async function processUpload(file: File) {
+    if (state.status !== 'ready') return
+    setSourceActionError(null)
+    setPendingUpload({
+      file,
+      displayName: file.name,
+      status: 'uploading',
+    })
+    const extractingTimer = window.setTimeout(
+      () =>
+        setPendingUpload((current) =>
+          current ? { ...current, status: 'extracting' } : current,
+        ),
+      200,
+    )
+    const embeddingTimer = window.setTimeout(
+      () =>
+        setPendingUpload((current) =>
+          current ? { ...current, status: 'embedding' } : current,
+        ),
+      700,
+    )
+
+    try {
+      const source = await uploadSource(state.session.id, file)
+      setState((current) =>
+        current.status === 'ready'
+          ? {
+              status: 'ready',
+              session: {
+                ...current.session,
+                sources: [...current.session.sources, source],
+              },
+            }
+          : current,
+      )
+      setPendingUpload(null)
+    } catch (error) {
+      const requestError =
+        error instanceof ApiRequestError
+          ? error
+          : new ApiRequestError('The PDF could not be uploaded.')
+      setPendingUpload({
+        file,
+        displayName: file.name,
+        status: 'failed',
+        message: requestError.message,
+        action: requestError.action,
+      })
+    } finally {
+      window.clearTimeout(extractingTimer)
+      window.clearTimeout(embeddingTimer)
+    }
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file) void processUpload(file)
+  }
+
+  async function handleDeleteSource(sourceId: string) {
+    if (state.status !== 'ready') return
+    setDeletingSourceId(sourceId)
+    setSourceActionError(null)
+    try {
+      await deleteSource(state.session.id, sourceId)
+      setState({
+        status: 'ready',
+        session: {
+          ...state.session,
+          sources: state.session.sources.filter(
+            (source) => source.id !== sourceId,
+          ),
+        },
+      })
+    } catch (error) {
+      setSourceActionError(
+        error instanceof Error ? error.message : 'The source could not be deleted.',
+      )
+    } finally {
+      setDeletingSourceId(null)
     }
   }
 
@@ -112,6 +221,10 @@ export function WorkspacePage() {
           (source) => source.status === 'ready',
         )
         const activeCount = readySources.length
+        const uploadedCount = state.session.sources.filter(
+          (source) => source.kind === 'uploaded',
+        ).length
+        const uploadLimitReached = uploadedCount >= 2
 
         return (
         <main className="workspace-grid">
@@ -121,9 +234,23 @@ export function WorkspacePage() {
                 <p className="panel-kicker">Library</p>
                 <h1 id="sources-title">Sources</h1>
               </div>
-              <button className="add-source" type="button" disabled>
-                Add source
+              <button
+                className="add-source"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={pendingUpload !== null || uploadLimitReached}
+              >
+                {uploadLimitReached ? '2 uploads added' : 'Add source'}
               </button>
+              <input
+                ref={fileInputRef}
+                className="sr-only"
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={handleFileChange}
+                aria-label="Choose a PDF source"
+                disabled={pendingUpload !== null || uploadLimitReached}
+              />
             </div>
 
             {state.session.sources.length === 0 ? (
@@ -157,14 +284,83 @@ export function WorkspacePage() {
                         ? `Ready · ${source.page_count} pages`
                         : source.status}
                     </span>
+                    <div className="source-actions">
+                      {source.kind === 'bundled' ? (
+                        <span>Included and selected</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteSource(source.id)}
+                          disabled={deletingSourceId === source.id}
+                        >
+                          {deletingSourceId === source.id
+                            ? 'Removing…'
+                            : 'Remove'}
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
+                {pendingUpload && (
+                  <li className={`source-card source-${pendingUpload.status}`}>
+                    <div className="source-card-header">
+                      <span className="file-mark" aria-hidden="true">
+                        PDF
+                      </span>
+                      <div>
+                        <strong>{pendingUpload.displayName}</strong>
+                        <span className="source-kind">Temporary upload</span>
+                      </div>
+                    </div>
+                    <div className="source-progress" aria-hidden="true">
+                      <span />
+                    </div>
+                    <p
+                      className="source-status"
+                      role={pendingUpload.status === 'failed' ? 'alert' : 'status'}
+                      aria-live="polite"
+                    >
+                      {pendingUpload.status === 'failed'
+                        ? pendingUpload.message
+                        : `${pendingUpload.status} PDF…`}
+                    </p>
+                    {pendingUpload.action && (
+                      <p className="source-recovery">{pendingUpload.action}</p>
+                    )}
+                    {pendingUpload.status === 'failed' && (
+                      <div className="source-actions">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const file = pendingUpload.file
+                            setPendingUpload(null)
+                            window.setTimeout(() => void processUpload(file), 0)
+                          }}
+                        >
+                          Retry
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingUpload(null)}
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                )}
               </ul>
             )}
 
+            {sourceActionError && (
+              <p className="source-action-error" role="alert">
+                {sourceActionError}
+              </p>
+            )}
             <p className="temporary-note">
-              Sources and activity are temporary and may disappear after one
-              hour of inactivity or a server restart.
+              Uploaded PDFs are sent to OpenAI for indexing. Uploads and
+              activity are temporary and disappear after one hour of inactivity,
+              reset, or a server restart.
             </p>
           </aside>
 

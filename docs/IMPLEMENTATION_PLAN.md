@@ -179,6 +179,20 @@ Exit criteria:
 - Invalid files fail with a useful action.
 - Deleting or resetting removes temporary data.
 
+Phase 2 status (2026-08-30):
+
+- The Sources panel accepts PDF uploads and presents uploading, extracting,
+  embedding, ready, and failed states with retry and remove actions.
+- FastAPI validates MIME type, magic bytes, size, encryption, readable text,
+  per-file pages, total session pages, source count, chunk count, and embedding
+  memory before attaching a ready source.
+- Uploaded PDFs, chunks, and NumPy indexes are isolated to the current session
+  and removed on source deletion, reset, expiry, or process restart.
+- The bundled demo remains ready after upload failures, and uploaded files are
+  served only through the session-checked source route.
+- Phase 2 exit criteria pass locally with backend integration tests and
+  frontend component tests.
+
 ### Phase 3: center Chat and evidence
 
 - Build the center Chat panel and anchored composer.

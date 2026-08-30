@@ -4,7 +4,13 @@ from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import shutil
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
+
+if TYPE_CHECKING:
+    from .sources import UploadedSource
 
 SESSION_TTL = timedelta(minutes=60)
 MAX_ACTIVE_SESSIONS = 100
@@ -24,6 +30,15 @@ class DemoSession:
     messages: list[dict[str, object]] = field(default_factory=list)
     artifacts: list[dict[str, object]] = field(default_factory=list)
     attempts: list[dict[str, object]] = field(default_factory=list)
+    uploaded_sources: dict[UUID, UploadedSource] = field(default_factory=dict)
+    temporary_directory: Path | None = None
+    upload_in_progress: bool = False
+
+    def cleanup(self) -> None:
+        self.uploaded_sources.clear()
+        if self.temporary_directory is not None:
+            shutil.rmtree(self.temporary_directory, ignore_errors=True)
+            self.temporary_directory = None
 
 
 class SessionNotFoundError(LookupError):
@@ -75,6 +90,7 @@ class SessionStore:
                 raise SessionExpiredError("The temporary session expired.")
             raise SessionNotFoundError("The temporary session was not found.")
         if session.expires_at <= now:
+            session.cleanup()
             del self._sessions[session_id]
             self._mark_expired(session_id)
             raise SessionExpiredError("The temporary session expired.")
@@ -83,7 +99,8 @@ class SessionStore:
         return session
 
     def delete(self, session_id: UUID) -> None:
-        self.get(session_id, refresh=False)
+        session = self.get(session_id, refresh=False)
+        session.cleanup()
         del self._sessions[session_id]
 
     def cleanup_expired(self, *, now: datetime | None = None) -> int:
@@ -94,6 +111,7 @@ class SessionStore:
             if session.expires_at <= comparison_time
         ]
         for session_id in expired:
+            self._sessions[session_id].cleanup()
             del self._sessions[session_id]
             self._mark_expired(session_id)
         return len(expired)

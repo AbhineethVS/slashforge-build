@@ -22,23 +22,51 @@ export type SourceSummary = {
 
 type ApiErrorResponse = {
   error?: {
+    code?: string
     message?: string
+    retryable?: boolean
+    action?: string
   }
 }
 
-async function readError(response: Response): Promise<string> {
+export class ApiRequestError extends Error {
+  code: string
+  retryable: boolean
+  action?: string
+
+  constructor(
+    message: string,
+    {
+      code = 'REQUEST_FAILED',
+      retryable = false,
+      action,
+    }: { code?: string; retryable?: boolean; action?: string } = {},
+  ) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.code = code
+    this.retryable = retryable
+    this.action = action
+  }
+}
+
+async function readError(response: Response): Promise<ApiRequestError> {
   const fallback = `Request failed with status ${response.status}.`
   try {
     const body = (await response.json()) as ApiErrorResponse
-    return body.error?.message || fallback
+    return new ApiRequestError(body.error?.message || fallback, {
+      code: body.error?.code,
+      retryable: body.error?.retryable,
+      action: body.error?.action,
+    })
   } catch {
-    return fallback
+    return new ApiRequestError(fallback)
   }
 }
 
 async function createSession(): Promise<DemoSession> {
   const response = await fetch('/api/v1/session', { method: 'POST' })
-  if (!response.ok) throw new Error(await readError(response))
+  if (!response.ok) throw await readError(response)
   const session = (await response.json()) as DemoSession
   sessionStorage.setItem(SESSION_STORAGE_KEY, session.id)
   return session
@@ -58,7 +86,7 @@ async function restoreOrCreate(): Promise<DemoSession> {
     sessionStorage.removeItem(SESSION_STORAGE_KEY)
     return createSession()
   }
-  throw new Error(await readError(response))
+  throw await readError(response)
 }
 
 export function restoreOrCreateSession(): Promise<DemoSession> {
@@ -76,9 +104,35 @@ export async function resetSession(sessionId: string): Promise<DemoSession> {
     headers: { 'X-Session-ID': sessionId },
   })
   if (!response.ok && response.status !== 404 && response.status !== 410) {
-    throw new Error(await readError(response))
+    throw await readError(response)
   }
   sessionStorage.removeItem(SESSION_STORAGE_KEY)
   return createSession()
+}
+
+export async function uploadSource(
+  sessionId: string,
+  file: File,
+): Promise<SourceSummary> {
+  const body = new FormData()
+  body.append('file', file)
+  const response = await fetch('/api/v1/sources', {
+    method: 'POST',
+    headers: { 'X-Session-ID': sessionId },
+    body,
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as SourceSummary
+}
+
+export async function deleteSource(
+  sessionId: string,
+  sourceId: string,
+): Promise<void> {
+  const response = await fetch(`/api/v1/sources/${sourceId}`, {
+    method: 'DELETE',
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
 }
 

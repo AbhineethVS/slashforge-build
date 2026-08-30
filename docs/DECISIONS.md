@@ -173,3 +173,23 @@ Decision: the product is named **LUMA**. Use that name in the landing wordmark,
 workspace header, README, and presentation materials.
 
 Reason: confirmed by the project owner during documentation.
+
+## ADR-015: Process initial uploads in one request
+
+Status: accepted
+
+Decision: the first upload implementation holds `POST /api/v1/sources` open
+while FastAPI validates, extracts, chunks, and embeds the PDF. The browser
+shows coarse stage progress during that request. A failed attempt leaves no
+attached source; Retry posts the retained browser `File` again.
+
+Reason: source ingestion is short and bounded in the hackathon scope. A
+single-request pipeline keeps attachment atomic and avoids adding a queue,
+worker, polling protocol, or durable job state.
+
+Consequences:
+
+- Uploads are limited to one in flight per session.
+- A ready source is attached only after every embedding succeeds.
+- The API can later move to background jobs or streamed stage events without
+  changing the stored source and index structures.

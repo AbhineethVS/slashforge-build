@@ -177,9 +177,18 @@ Stable user-facing error codes include:
 ### Sources
 
 - `GET /api/v1/sources`
+  - Returns the bundled source followed by session-owned uploaded source
+    summaries.
 - `POST /api/v1/sources`
-  - Multipart PDF upload processed within the current temporary session.
+  - Accepts a multipart PDF in the `file` field and processes it within the
+    current temporary session.
+  - The first implementation holds the request open through extraction,
+    chunking, and embedding, then returns the ready source summary with `201`.
+  - A failed attempt is removed atomically. Retry repeats the same `POST`
+    rather than reusing a partial source.
 - `DELETE /api/v1/sources/{source_id}`
+  - Removes a session-owned uploaded source and returns `204`.
+  - The immutable bundled source cannot be deleted through this route.
 - `GET /api/v1/sources/{source_id}/file`
   - Streams a bundled or session-owned temporary PDF to the viewer.
 
@@ -235,7 +244,10 @@ model-assisted judgments, stored with `unscored` when confidence is inadequate.
 - Deploy one application instance.
 - Permit one upload-processing operation per session.
 - Permit one generation operation per session.
-- Cap sessions, sources, PDF bytes, pages, chunks, and total embedding memory.
+- Permit at most two uploaded sources, 20 MB and 50 pages per PDF, and 100
+  uploaded pages per session.
+- Cap each uploaded source at 250 chunks and each session at 5 MB of uploaded
+  embedding matrices.
 - Reject duplicate in-flight requests instead of adding a queue.
 
 ## 9. Retention

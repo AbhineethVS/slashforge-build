@@ -12,6 +12,7 @@ PDF_SIGNATURE = b"%PDF-"
 MAX_PDF_BYTES = 20 * 1024 * 1024
 MAX_PAGES = 50
 MIN_DOCUMENT_CHARACTERS = 40
+MAX_DOCUMENT_CHARACTERS = 2_000_000
 
 
 class PdfSpikeError(ValueError):
@@ -34,6 +35,7 @@ def extract_pdf(
     max_bytes: int = MAX_PDF_BYTES,
     max_pages: int = MAX_PAGES,
     min_characters: int = MIN_DOCUMENT_CHARACTERS,
+    max_characters: int = MAX_DOCUMENT_CHARACTERS,
 ) -> ExtractedDocument:
     if not path.is_file():
         raise PdfSpikeError("SOURCE_PROCESSING_FAILED", "The PDF does not exist.")
@@ -66,10 +68,16 @@ def extract_pdf(
     finally:
         document.close()
 
-    if sum(page.character_count for page in pages) < min_characters:
+    character_count = sum(page.character_count for page in pages)
+    if character_count < min_characters:
         raise PdfSpikeError(
             "SOURCE_TEXT_NOT_FOUND",
             "The PDF does not contain enough readable text.",
+        )
+    if character_count > max_characters:
+        raise PdfSpikeError(
+            "SOURCE_PROCESSING_FAILED",
+            "The PDF contains too much extracted text.",
         )
 
     return ExtractedDocument(path=path, page_count=len(pages), pages=pages)

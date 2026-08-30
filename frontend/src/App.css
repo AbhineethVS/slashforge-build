@@ -530,6 +530,8 @@
 }
 
 .source-list {
+  display: grid;
+  gap: 10px;
   padding: 0;
   list-style: none;
 }
@@ -564,15 +566,84 @@
 }
 
 .source-status {
+  margin: 0;
   color: var(--color-teal);
   font-size: 0.72rem;
+  line-height: 1.4;
   text-transform: none;
 }
 
-.source-list span {
-  color: var(--color-teal);
-  font-size: 0.72rem;
-  text-transform: capitalize;
+.source-progress {
+  height: 3px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+.source-progress span {
+  display: block;
+  width: 25%;
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 220ms ease;
+}
+
+.source-extracting .source-progress span {
+  width: 55%;
+}
+
+.source-embedding .source-progress span {
+  width: 85%;
+}
+
+.source-failed .source-progress span {
+  width: 100%;
+  background: #a3443d;
+}
+
+.source-failed .source-status,
+.source-action-error {
+  color: #8e342e;
+}
+
+.source-recovery,
+.source-action-error {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.source-action-error {
+  margin-top: 12px;
+  color: #8e342e;
+}
+
+.source-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.source-actions span {
+  color: var(--color-muted);
+  font-size: 0.65rem;
+}
+
+.source-actions button {
+  padding: 4px 0;
+  color: var(--color-primary);
+  background: transparent;
+  border: 0;
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.source-actions button:disabled {
+  color: var(--color-faint);
 }
 
 .chat-panel {
@@ -795,10 +866,9 @@
   }
 
   .workspace-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 250px minmax(0, 1fr);
   }
 
-  .sources-panel,
   .studio-panel {
     display: none;
   }
@@ -896,6 +966,21 @@
 
   .workspace-title {
     display: none;
+  }
+
+  .workspace-grid {
+    display: block;
+    overflow-y: auto;
+  }
+
+  .workspace-grid > * {
+    overflow: visible;
+  }
+
+  .sources-panel {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .chat-panel {

@@ -2,21 +2,40 @@ from __future__ import annotations
 
 import asyncio
 import os
+import tempfile
 from contextlib import asynccontextmanager, suppress
+from collections.abc import Callable
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends, FastAPI, Header, Response, UploadFile, status
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    OpenAI,
+    OpenAIError,
+    RateLimitError,
+)
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from luma_spikes.config import load_project_environment
-from luma_spikes.pdf import MAX_PDF_BYTES, PDF_SIGNATURE
+from luma_spikes.pdf import (
+    MAX_PAGES,
+    MAX_PDF_BYTES,
+    PDF_SIGNATURE,
+    PdfSpikeError,
+    extract_pdf,
+)
+from luma_spikes.retrieval import Embedder, OpenAIEmbedder
 
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
-from .schemas import ErrorResponse, HealthResponse, SessionResponse
+from .schemas import ErrorResponse, HealthResponse, SessionResponse, SourceSummary
 from .sessions import (
     DemoSession,
     SessionCapacityError,
@@ -24,8 +43,55 @@ from .sessions import (
     SessionNotFoundError,
     SessionStore,
 )
+from .sources import (
+    MAX_EMBEDDING_BYTES_PER_SESSION,
+    MAX_UPLOADED_PAGES,
+    MAX_UPLOADED_SOURCES,
+    SourceLimitError,
+    build_uploaded_source,
+)
 
 load_project_environment()
+
+
+def _pdf_api_error(error: PdfSpikeError) -> ApiError:
+    details = {
+        "SOURCE_TOO_LARGE": (
+            status.HTTP_413_CONTENT_TOO_LARGE,
+            "The PDF exceeds 20 MB.",
+            "Choose a PDF smaller than 20 MB.",
+        ),
+        "SOURCE_PAGE_LIMIT": (
+            status.HTTP_413_CONTENT_TOO_LARGE,
+            "The PDF exceeds the remaining page limit for this session.",
+            "Choose a shorter PDF or delete an uploaded source.",
+        ),
+        "SOURCE_TYPE_UNSUPPORTED": (
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            "The file is not a valid PDF.",
+            "Choose a digitally generated PDF.",
+        ),
+        "SOURCE_ENCRYPTED": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Encrypted PDFs are not supported.",
+            "Remove the password and upload the PDF again.",
+        ),
+        "SOURCE_TEXT_NOT_FOUND": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "This PDF does not contain enough readable text.",
+            "Upload a digitally generated PDF instead.",
+        ),
+        "SOURCE_PROCESSING_FAILED": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "The PDF could not be processed.",
+            "Check that the file opens normally and retry the upload.",
+        ),
+    }
+    status_code, message, action = details.get(
+        error.code,
+        details["SOURCE_PROCESSING_FAILED"],
+    )
+    return ApiError(status_code, error.code, message, False, action)
 
 
 class SPAStaticFiles(StaticFiles):
@@ -43,6 +109,7 @@ def create_app(
     session_store: SessionStore | None = None,
     frontend_dist: Path | None = None,
     demo_catalog: BundledDemoCatalog | None = None,
+    embedder_factory: Callable[[], Embedder] | None = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
     catalog = demo_catalog
@@ -58,11 +125,14 @@ def create_app(
         session.sources = [catalog.source_summary()]
 
     def session_payload(session: DemoSession) -> SessionResponse:
+        uploaded = [
+            source.summary() for source in session.uploaded_sources.values()
+        ]
         return SessionResponse(
             id=session.id,
             created_at=session.created_at,
             expires_at=session.expires_at,
-            sources=session.sources,
+            sources=[*session.sources, *uploaded],
             messages=session.messages,
             artifacts=session.artifacts,
             attempts=session.attempts,
@@ -72,7 +142,14 @@ def create_app(
         )
 
     def session_owns_source(session: DemoSession, source_id: UUID) -> bool:
-        return any(item.get("id") == str(source_id) for item in session.sources)
+        return source_id in session.uploaded_sources or any(
+            item.get("id") == str(source_id) for item in session.sources
+        )
+
+    def create_embedder() -> Embedder:
+        if embedder_factory is not None:
+            return embedder_factory()
+        return OpenAIEmbedder(OpenAI(timeout=60.0, max_retries=2))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -173,6 +250,204 @@ def create_app(
         store.delete(session.id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+    @application.get("/api/v1/sources", response_model=list[SourceSummary])
+    def list_sources(
+        session: DemoSession = Depends(current_session),
+    ) -> list[SourceSummary]:
+        return session_payload(session).sources
+
+    @application.post(
+        "/api/v1/sources",
+        response_model=SourceSummary,
+        status_code=status.HTTP_201_CREATED,
+        responses={
+            409: {"model": ErrorResponse},
+            413: {"model": ErrorResponse},
+            415: {"model": ErrorResponse},
+            422: {"model": ErrorResponse},
+            429: {"model": ErrorResponse},
+            503: {"model": ErrorResponse},
+        },
+    )
+    async def upload_source(
+        file: UploadFile,
+        session: DemoSession = Depends(current_session),
+    ) -> dict[str, object]:
+        if file.content_type != "application/pdf":
+            raise ApiError(
+                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                "SOURCE_TYPE_UNSUPPORTED",
+                "Only PDF uploads are supported.",
+                False,
+                "Choose a digitally generated PDF.",
+            )
+        if len(session.uploaded_sources) >= MAX_UPLOADED_SOURCES:
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "This session already has two uploaded sources.",
+                False,
+                "Delete an uploaded source before adding another.",
+            )
+        if session.upload_in_progress:
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "Another source is already being processed.",
+                True,
+                "Wait for the current upload to finish and try again.",
+            )
+
+        session.upload_in_progress = True
+        source_id = uuid4()
+        display_name = Path((file.filename or "upload.pdf").replace("\\", "/")).name
+        display_name = display_name[:255] or "upload.pdf"
+        if session.temporary_directory is None:
+            session.temporary_directory = Path(tempfile.mkdtemp(prefix="luma-upload-"))
+        file_path = session.temporary_directory / f"{uuid4()}.pdf"
+
+        try:
+            size = 0
+            signature = b""
+            with file_path.open("wb") as stream:
+                while data := await file.read(64 * 1024):
+                    if not signature:
+                        signature = data[: len(PDF_SIGNATURE)]
+                    size += len(data)
+                    if size > MAX_PDF_BYTES:
+                        raise ApiError(
+                            status.HTTP_413_CONTENT_TOO_LARGE,
+                            "SOURCE_TOO_LARGE",
+                            "The PDF exceeds 20 MB.",
+                            False,
+                            "Choose a PDF smaller than 20 MB.",
+                        )
+                    stream.write(data)
+
+            if signature != PDF_SIGNATURE:
+                raise ApiError(
+                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    "SOURCE_TYPE_UNSUPPORTED",
+                    "The file is not a valid PDF.",
+                    False,
+                    "Choose a digitally generated PDF.",
+                )
+
+            pages_used = sum(
+                source.page_count for source in session.uploaded_sources.values()
+            )
+            remaining_pages = MAX_UPLOADED_PAGES - pages_used
+            if remaining_pages <= 0:
+                raise ApiError(
+                    status.HTTP_413_CONTENT_TOO_LARGE,
+                    "SOURCE_PAGE_LIMIT",
+                    "This session has reached its 100 uploaded-page limit.",
+                    False,
+                    "Delete an uploaded source before adding another.",
+                )
+
+            document = await run_in_threadpool(
+                extract_pdf,
+                file_path,
+                max_pages=min(MAX_PAGES, remaining_pages),
+            )
+            uploaded = await run_in_threadpool(
+                build_uploaded_source,
+                source_id=source_id,
+                display_name=display_name,
+                file_path=file_path,
+                mime_type=file.content_type,
+                size_bytes=size,
+                document=document,
+                embedder=create_embedder(),
+            )
+            embedding_bytes = uploaded.index.matrix.nbytes + sum(
+                source.index.matrix.nbytes
+                for source in session.uploaded_sources.values()
+            )
+            if embedding_bytes > MAX_EMBEDDING_BYTES_PER_SESSION:
+                raise SourceLimitError(
+                    "The uploaded sources exceed this session's search-memory limit.",
+                    "Delete an uploaded source or choose a shorter PDF.",
+                )
+            session.uploaded_sources[source_id] = uploaded
+            return uploaded.summary()
+        except ApiError:
+            file_path.unlink(missing_ok=True)
+            raise
+        except PdfSpikeError as error:
+            file_path.unlink(missing_ok=True)
+            raise _pdf_api_error(error) from error
+        except SourceLimitError as error:
+            file_path.unlink(missing_ok=True)
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "SOURCE_PROCESSING_FAILED",
+                str(error),
+                False,
+                error.action,
+            ) from error
+        except RateLimitError as error:
+            file_path.unlink(missing_ok=True)
+            raise ApiError(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "AI_RATE_LIMITED",
+                "The embedding service is temporarily busy.",
+                True,
+                "Wait a moment and retry this upload.",
+            ) from error
+        except AuthenticationError as error:
+            file_path.unlink(missing_ok=True)
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_BILLING_UNAVAILABLE",
+                "PDF indexing is temporarily unavailable.",
+                False,
+                "Use the bundled demo source or contact the demo owner.",
+            ) from error
+        except (APIConnectionError, APITimeoutError, APIStatusError) as error:
+            file_path.unlink(missing_ok=True)
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "SOURCE_PROCESSING_FAILED",
+                "The PDF could not be indexed right now.",
+                True,
+                "Retry the upload in a moment.",
+            ) from error
+        except OpenAIError as error:
+            file_path.unlink(missing_ok=True)
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "SOURCE_PROCESSING_FAILED",
+                "PDF indexing is temporarily unavailable.",
+                True,
+                "Use the bundled demo source or retry later.",
+            ) from error
+        finally:
+            session.upload_in_progress = False
+            await file.close()
+
+    @application.delete(
+        "/api/v1/sources/{source_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+        responses={404: {"model": ErrorResponse}},
+    )
+    def delete_source(
+        source_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> Response:
+        source = session.uploaded_sources.pop(source_id, None)
+        if source is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The uploaded source was not found in this session.",
+                False,
+                "Refresh the workspace and try again.",
+            )
+        source.file_path.unlink(missing_ok=True)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
     @application.post("/api/v1/spike/upload")
     async def upload_spike(
         file: UploadFile,
@@ -195,7 +470,7 @@ def create_app(
             size += len(data)
             if size > MAX_PDF_BYTES:
                 raise ApiError(
-                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    status.HTTP_413_CONTENT_TOO_LARGE,
                     "SOURCE_TOO_LARGE",
                     "The PDF exceeds 20 MB.",
                     False,
@@ -223,6 +498,13 @@ def create_app(
         source_id: UUID,
         session: DemoSession = Depends(current_session),
     ) -> FileResponse:
+        uploaded = session.uploaded_sources.get(source_id)
+        if uploaded is not None:
+            return FileResponse(
+                uploaded.file_path,
+                media_type=uploaded.mime_type,
+                filename=uploaded.display_name,
+            )
         if catalog is None or not session_owns_source(session, source_id):
             raise ApiError(
                 status.HTTP_404_NOT_FOUND,
