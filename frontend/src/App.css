@@ -536,10 +536,37 @@
 
 .source-list li {
   display: grid;
-  gap: 4px;
+  gap: 8px;
   padding: 12px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.source-card-header {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.source-card-header strong {
+  display: block;
+  font-size: 0.82rem;
+}
+
+.source-kind {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.source-status {
+  color: var(--color-teal);
+  font-size: 0.72rem;
+  text-transform: none;
 }
 
 .source-list span {

@@ -8,6 +8,7 @@ export type DemoSession = {
   messages: unknown[]
   artifacts: unknown[]
   attempts: unknown[]
+  suggested_questions: string[]
 }
 
 export type SourceSummary = {

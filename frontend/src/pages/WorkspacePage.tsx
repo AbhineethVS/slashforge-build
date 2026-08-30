@@ -107,7 +107,13 @@ export function WorkspacePage() {
         </main>
       )}
 
-      {state.status === 'ready' && (
+      {state.status === 'ready' && (() => {
+        const readySources = state.session.sources.filter(
+          (source) => source.status === 'ready',
+        )
+        const activeCount = readySources.length
+
+        return (
         <main className="workspace-grid">
           <aside className="sources-panel" aria-labelledby="sources-title">
             <div className="panel-heading">
@@ -125,18 +131,32 @@ export function WorkspacePage() {
                 <span className="empty-file" aria-hidden="true">
                   PDF
                 </span>
-                <h2>Demo source coming next</h2>
+                <h2>No sources attached</h2>
                 <p>
-                  The session foundation is ready. A bundled, page-indexed
-                  source will be attached in the next Phase 1 slice.
+                  The bundled demo source could not be loaded. Restart the
+                  session or check the server logs.
                 </p>
               </div>
             ) : (
               <ul className="source-list">
                 {state.session.sources.map((source) => (
-                  <li key={source.id}>
-                    <strong>{source.display_name}</strong>
-                    <span>{source.status}</span>
+                  <li key={source.id} className="source-card">
+                    <div className="source-card-header">
+                      <span className="file-mark" aria-hidden="true">
+                        PDF
+                      </span>
+                      <div>
+                        <strong>{source.display_name}</strong>
+                        <span className="source-kind">
+                          {source.kind === 'bundled' ? 'Bundled demo' : 'Upload'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="source-status">
+                      {source.status === 'ready'
+                        ? `Ready · ${source.page_count} pages`
+                        : source.status}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -154,23 +174,24 @@ export function WorkspacePage() {
                 <p className="panel-kicker">Selected material</p>
                 <h1 id="chat-title">Chat</h1>
               </div>
-              <span className="source-count">0 active sources</span>
+              <span className="source-count">
+                {activeCount} active {activeCount === 1 ? 'source' : 'sources'}
+              </span>
             </div>
 
             <div className="chat-empty">
               <p className="eyebrow">Grounded study chat</p>
               <h2>Ask your material, not the open web.</h2>
               <p>
-                Once the demo source is attached, answers will include trusted
-                page citations and abstain when evidence is missing.
+                The demo source is indexed and ready. Grounded answers and page
+                citations arrive in the next build slice.
               </p>
-              <div className="suggestion-list" aria-label="Example questions">
-                <button type="button" disabled>
-                  Explain the central idea in simple terms
-                </button>
-                <button type="button" disabled>
-                  Compare the two key approaches
-                </button>
+              <div className="suggestion-list" aria-label="Suggested questions">
+                {state.session.suggested_questions?.map((question) => (
+                  <button key={question} type="button" disabled>
+                    {question}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -181,11 +202,18 @@ export function WorkspacePage() {
               <textarea
                 id="question"
                 rows={2}
-                placeholder="Add or select a source to ask a question"
+                placeholder={
+                  activeCount
+                    ? 'Grounded chat arrives in the next slice'
+                    : 'Add or select a source to ask a question'
+                }
                 disabled
               />
               <div>
-                <span>0 sources selected</span>
+                <span>
+                  {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
+                  selected
+                </span>
                 <button type="submit" disabled>
                   Ask
                 </button>
@@ -217,7 +245,8 @@ export function WorkspacePage() {
             </div>
           </aside>
         </main>
-      )}
+        )
+      })()}
     </div>
   )
 }

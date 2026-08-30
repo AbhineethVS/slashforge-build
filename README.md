@@ -25,8 +25,13 @@ until the product is further along. The repository now contains:
 - A bounded temporary session lifecycle with restore, expiry, cleanup, and
   reset behavior.
 - The LUMA landing page and responsive Sources–Chat–Studio workspace shell.
+- A bundled demo catalog (`demo_assets/`) with precomputed chunks and
+  embeddings for *Economics - Theory of Cost.pdf* (43 pages).
+- Session startup attachment of the ready bundled source, suggested questions,
+  and authenticated PDF serving at `/api/v1/sources/{source_id}/file`.
 
-Phase 1 foundation work is underway. The bundled demo source, source upload,
+Phase 1 foundation work is complete through the bundled demo assets slice.
+The workspace opens with a ready, page-indexed economics source. Source upload,
 grounded chat, evidence viewer, and Studio tools are not yet connected.
 
 ## Phase 0 setup
@@ -57,6 +62,13 @@ python -m luma_spikes.cli extract ../path/to/source.pdf
 
 Live retrieval and answer commands require `OPENAI_API_KEY`. The answer model
 defaults to `gpt-5-mini` and can be changed with `OPENAI_CHAT_MODEL`.
+
+Rebuild bundled demo assets after changing the source PDF:
+
+```bash
+cd backend
+python -m luma_api.demo_assets ../demo.pdf
+```
 
 ## Documentation
 

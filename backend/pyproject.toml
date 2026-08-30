@@ -27,6 +27,7 @@ dev = [
 
 [project.scripts]
 luma-spike = "luma_spikes.cli:main"
+luma-build-demo = "luma_api.demo_assets:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/luma_spikes", "src/luma_api"]

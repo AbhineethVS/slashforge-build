@@ -8,10 +8,23 @@ const session = {
   id: 'c47dcf01-ea9a-47d9-b4cc-80a7bf8c12f8',
   created_at: '2026-08-30T00:00:00Z',
   expires_at: '2026-08-30T01:00:00Z',
-  sources: [],
+  sources: [
+    {
+      id: '8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f',
+      display_name: 'Economics - Theory of Cost.pdf',
+      kind: 'bundled',
+      page_count: 43,
+      status: 'ready',
+      error_code: null,
+    },
+  ],
   messages: [],
   artifacts: [],
   attempts: [],
+  suggested_questions: [
+    'What is the difference between explicit and implicit cost?',
+    'Explain the relation between total cost, total fixed cost, and total variable cost.',
+  ],
 }
 
 describe('WorkspacePage', () => {
@@ -43,6 +56,13 @@ describe('WorkspacePage', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Sources' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Studio' })).toBeInTheDocument()
+    expect(screen.getByText('Economics - Theory of Cost.pdf')).toBeInTheDocument()
+    expect(screen.getByText('1 active source')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: 'What is the difference between explicit and implicit cost?',
+      }),
+    ).toBeInTheDocument()
     expect(sessionStorage.getItem('luma.session_id')).toBe(session.id)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/session', { method: 'POST' })
   })

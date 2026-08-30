@@ -158,7 +158,11 @@ Phase 1 status (2026-08-30):
 - The browser restores the opaque session from `sessionStorage`, recovers from
   expiry, and exposes loading, retry, ready, and reset states.
 - Direct SPA fallback for `/workspace` is covered by a backend test.
-- Bundled demo asset generation and startup attachment remain outstanding.
+- Bundled demo assets are built from the public economics notes PDF and loaded
+  at FastAPI startup. New sessions attach the ready source, expose suggested
+  questions, and serve the bundled PDF through the documented source file route.
+- Phase 1 exit criteria are satisfied locally except Azure deployment refresh
+  checks, which remain deferred.
 
 ### Phase 2: Sources panel and temporary upload
 

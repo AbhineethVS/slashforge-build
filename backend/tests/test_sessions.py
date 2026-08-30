@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from luma_api.main import create_app
 from luma_api.sessions import SessionStore
+from tests.demo_fixtures import write_test_demo_assets
 
 
 @dataclass
@@ -17,8 +18,9 @@ class MutableClock:
         return self.value
 
 
-def test_session_create_restore_and_reset() -> None:
-    client = TestClient(create_app(frontend_dist=None))
+def test_session_create_restore_and_reset(tmp_path) -> None:
+    catalog = write_test_demo_assets(tmp_path / "demo_assets")
+    client = TestClient(create_app(frontend_dist=None, demo_catalog=catalog))
 
     created = client.post("/api/v1/session")
     session_id = created.json()["id"]
@@ -28,7 +30,7 @@ def test_session_create_restore_and_reset() -> None:
     missing = client.get("/api/v1/session", headers=headers)
 
     assert created.status_code == 201
-    assert created.json()["sources"] == []
+    assert created.json()["sources"][0]["status"] == "ready"
     assert restored.status_code == 200
     assert restored.json()["id"] == session_id
     assert deleted.status_code == 204
@@ -36,10 +38,13 @@ def test_session_create_restore_and_reset() -> None:
     assert missing.json()["error"]["code"] == "SESSION_NOT_FOUND"
 
 
-def test_session_access_refreshes_the_ttl() -> None:
+def test_session_access_refreshes_the_ttl(tmp_path) -> None:
     clock = MutableClock(datetime(2026, 8, 30, tzinfo=timezone.utc))
     store = SessionStore(ttl=timedelta(minutes=60), clock=clock)
-    client = TestClient(create_app(session_store=store, frontend_dist=None))
+    catalog = write_test_demo_assets(tmp_path / "demo_assets")
+    client = TestClient(
+        create_app(session_store=store, frontend_dist=None, demo_catalog=catalog)
+    )
     created = client.post("/api/v1/session").json()
 
     clock.value += timedelta(minutes=30)
@@ -54,10 +59,13 @@ def test_session_access_refreshes_the_ttl() -> None:
     )
 
 
-def test_expired_session_returns_stable_error() -> None:
+def test_expired_session_returns_stable_error(tmp_path) -> None:
     clock = MutableClock(datetime(2026, 8, 30, tzinfo=timezone.utc))
     store = SessionStore(ttl=timedelta(minutes=60), clock=clock)
-    client = TestClient(create_app(session_store=store, frontend_dist=None))
+    catalog = write_test_demo_assets(tmp_path / "demo_assets")
+    client = TestClient(
+        create_app(session_store=store, frontend_dist=None, demo_catalog=catalog)
+    )
     session_id = client.post("/api/v1/session").json()["id"]
 
     clock.value += timedelta(minutes=61)
@@ -70,9 +78,12 @@ def test_expired_session_returns_stable_error() -> None:
     assert response.json()["error"]["code"] == "SESSION_EXPIRED"
 
 
-def test_active_sessions_are_bounded() -> None:
+def test_active_sessions_are_bounded(tmp_path) -> None:
     store = SessionStore(max_sessions=1)
-    client = TestClient(create_app(session_store=store, frontend_dist=None))
+    catalog = write_test_demo_assets(tmp_path / "demo_assets")
+    client = TestClient(
+        create_app(session_store=store, frontend_dist=None, demo_catalog=catalog)
+    )
     assert client.post("/api/v1/session").status_code == 201
 
     response = client.post("/api/v1/session")

@@ -8,11 +8,13 @@ from uuid import UUID
 
 from fastapi import Depends, FastAPI, Header, Response, UploadFile, status
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from luma_spikes.config import load_project_environment
 from luma_spikes.pdf import MAX_PDF_BYTES, PDF_SIGNATURE
 
+from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
 from .schemas import ErrorResponse, HealthResponse, SessionResponse
 from .sessions import (
@@ -40,8 +42,37 @@ def create_app(
     *,
     session_store: SessionStore | None = None,
     frontend_dist: Path | None = None,
+    demo_catalog: BundledDemoCatalog | None = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
+    catalog = demo_catalog
+    if catalog is None:
+        try:
+            catalog = load_catalog()
+        except FileNotFoundError:
+            catalog = None
+
+    def attach_bundled_demo(session: DemoSession) -> None:
+        if catalog is None:
+            return
+        session.sources = [catalog.source_summary()]
+
+    def session_payload(session: DemoSession) -> SessionResponse:
+        return SessionResponse(
+            id=session.id,
+            created_at=session.created_at,
+            expires_at=session.expires_at,
+            sources=session.sources,
+            messages=session.messages,
+            artifacts=session.artifacts,
+            attempts=session.attempts,
+            suggested_questions=(
+                catalog.suggested_questions() if catalog is not None else []
+            ),
+        )
+
+    def session_owns_source(session: DemoSession, source_id: UUID) -> bool:
+        return any(item.get("id") == str(source_id) for item in session.sources)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -61,6 +92,7 @@ def create_app(
     application = FastAPI(title="LUMA", version="0.1.0", lifespan=lifespan)
     application.add_exception_handler(ApiError, api_error_response)
     application.state.session_store = store
+    application.state.demo_catalog = catalog
 
     def current_session(
         x_session_id: str | None = Header(default=None, alias="X-Session-ID"),
@@ -117,7 +149,8 @@ def create_app(
                 True,
                 "Wait a moment and try again.",
             ) from error
-        return SessionResponse.model_validate(session, from_attributes=True)
+        attach_bundled_demo(session)
+        return session_payload(session)
 
     @application.get(
         "/api/v1/session",
@@ -127,7 +160,7 @@ def create_app(
     def get_session(
         session: DemoSession = Depends(current_session),
     ) -> SessionResponse:
-        return SessionResponse.model_validate(session, from_attributes=True)
+        return session_payload(session)
 
     @application.delete(
         "/api/v1/session",
@@ -184,6 +217,33 @@ def create_app(
             "size_bytes": size,
             "status": "accepted",
         }
+
+    @application.get("/api/v1/sources/{source_id}/file")
+    def get_source_file(
+        source_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> FileResponse:
+        if catalog is None or not session_owns_source(session, source_id):
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The requested source is not available in this session.",
+                False,
+                "Select a ready source and try again.",
+            )
+        if source_id != catalog.source_id:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The requested source is not available in this session.",
+                False,
+                "Select a ready source and try again.",
+            )
+        return FileResponse(
+            catalog.pdf_path,
+            media_type="application/pdf",
+            filename=catalog.manifest.display_name,
+        )
 
     default_frontend_dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"
     resolved_frontend_dist = frontend_dist or Path(

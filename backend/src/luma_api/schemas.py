@@ -15,6 +15,7 @@ class SessionResponse(BaseModel):
     messages: list[dict[str, Any]]
     artifacts: list[dict[str, Any]]
     attempts: list[dict[str, Any]]
+    suggested_questions: list[str] = []
 
 
 class ErrorBody(BaseModel):
