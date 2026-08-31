@@ -286,6 +286,27 @@ Exit criteria:
 - A high-confidence wrong answer produces a confident-misconception signal.
 - The full demo works at desktop and mobile breakpoints.
 
+Phase 5 status (2026-08-31):
+
+- Quiz attempts are stored in the temporary session and classified by
+  deterministic backend code as mastered, lucky guess, needs practice,
+  confident misconception, or unscored. Short answers remain formative
+  comparisons rather than receiving an unreliable semantic grade.
+- Studio aggregates concept-level attempt signals, prioritizes misconceptions,
+  and recommends a weak concept for the next Teach-Back activity.
+- Teach-Back retrieves selected-source evidence, generates a cited rubric, and
+  groups feedback into Covered, Missing, and Check this idea. Every feedback
+  citation is validated against the supplied chunk allow-list.
+- Tablet and mobile Sources and Studio controls now open independent,
+  full-height sheets while Chat remains the dominant workspace.
+- Expired sessions explain that temporary work was cleared. Loading, retry,
+  generation, attempt-save, and empty-progress states preserve usable work.
+- The bundled economics source includes citation-validated cached Summary,
+  Flashcards, and Quiz artifacts used automatically when live generation is
+  unavailable.
+- Automated verification passes with 48 backend and 18 frontend tests, plus
+  the frontend production build and lint checks.
+
 ### Phase 6: hardening and presentation
 
 - Run file-abuse, prompt-injection, session-isolation, and API-failure tests.

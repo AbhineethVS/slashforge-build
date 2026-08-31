@@ -22,7 +22,7 @@ export type DemoSession = {
   sources: SourceSummary[]
   messages: ChatMessage[]
   artifacts: StudioArtifact[]
-  attempts: unknown[]
+  attempts: Attempt[]
   suggested_questions: string[]
 }
 
@@ -63,6 +63,7 @@ export type SummaryArtifact = {
   type: 'summary'
   title: string
   content: {
+    fallback?: boolean
     sections: {
       title: string
       content_markdown: string
@@ -79,6 +80,7 @@ export type FlashcardArtifact = {
   type: 'flashcards'
   title: string
   content: {
+    fallback?: boolean
     cards: {
       id: string
       front: string
@@ -97,6 +99,7 @@ export type QuizArtifact = {
   type: 'quiz'
   title: string
   content: {
+    fallback?: boolean
     questions: {
       id: string
       type: 'mcq' | 'short_answer'
@@ -114,10 +117,69 @@ export type QuizArtifact = {
   created_at: string
 }
 
+export type LearningClassification =
+  | 'mastered'
+  | 'lucky_guess'
+  | 'needs_practice'
+  | 'confident_misconception'
+  | 'unscored'
+
+export type Attempt = {
+  id: string
+  artifact_id: string
+  activity_type: 'quiz' | 'teach_back'
+  concept_label: string | null
+  confidence: 1 | 2 | 3 | null
+  is_correct: boolean | null
+  classification: LearningClassification
+  feedback: string
+  created_at: string
+}
+
+export type ConceptProgress = {
+  concept_label: string
+  attempt_count: number
+  classification: LearningClassification
+  mastered: number
+  lucky_guess: number
+  needs_practice: number
+  confident_misconception: number
+  unscored: number
+}
+
+export type Progress = {
+  total_attempts: number
+  concepts: ConceptProgress[]
+  recommended_concept: string | null
+  recommendation: string
+}
+
+type TeachBackPoint = {
+  text: string
+  citations: Citation[]
+}
+
+export type TeachBackArtifact = {
+  id: string
+  type: 'teach_back'
+  title: string
+  content: {
+    concept: string
+    rubric_points: TeachBackPoint[]
+    covered: TeachBackPoint[]
+    missing: TeachBackPoint[]
+    check_this: TeachBackPoint[]
+    next_prompt: string
+  }
+  source_ids: string[]
+  created_at: string
+}
+
 export type StudioArtifact =
   | SummaryArtifact
   | FlashcardArtifact
   | QuizArtifact
+  | TeachBackArtifact
 
 type ApiErrorResponse = {
   error?: {
@@ -172,6 +234,7 @@ async function createSession(): Promise<DemoSession> {
 }
 
 let pendingRestore: Promise<DemoSession> | null = null
+let sessionRecoveryNotice: string | null = null
 
 async function restoreOrCreate(): Promise<DemoSession> {
   const sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY)
@@ -183,6 +246,10 @@ async function restoreOrCreate(): Promise<DemoSession> {
   if (response.ok) return (await response.json()) as DemoSession
   if (response.status === 404 || response.status === 410) {
     sessionStorage.removeItem(SESSION_STORAGE_KEY)
+    sessionRecoveryNotice =
+      response.status === 410
+        ? 'Your temporary session expired. A fresh session was opened with the bundled demo; temporary work was cleared.'
+        : 'The previous temporary session was unavailable. A fresh demo session was opened.'
     return createSession()
   }
   throw await readError(response)
@@ -195,6 +262,12 @@ export function restoreOrCreateSession(): Promise<DemoSession> {
     })
   }
   return pendingRestore
+}
+
+export function takeSessionRecoveryNotice(): string | null {
+  const notice = sessionRecoveryNotice
+  sessionRecoveryNotice = null
+  return notice
 }
 
 export async function resetSession(sessionId: string): Promise<DemoSession> {
@@ -358,7 +431,7 @@ export function constrainPanelWidths(
 
 export async function generateStudioArtifact(
   sessionId: string,
-  kind: StudioArtifact['type'],
+  kind: 'summary' | 'flashcards' | 'quiz',
   sourceIds: string[],
 ): Promise<StudioArtifact> {
   const response = await fetch(`/api/v1/studio/${kind}`, {
@@ -371,6 +444,59 @@ export async function generateStudioArtifact(
   })
   if (!response.ok) throw await readError(response)
   return (await response.json()) as StudioArtifact
+}
+
+export async function submitQuizAttempt(
+  sessionId: string,
+  artifactId: string,
+  questionId: string,
+  responseText: string,
+  confidence: 1 | 2 | 3,
+): Promise<Attempt> {
+  const response = await fetch(`/api/v1/artifacts/${artifactId}/attempts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({
+      question_id: questionId,
+      response_text: responseText,
+      confidence,
+    }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as Attempt
+}
+
+export async function fetchProgress(sessionId: string): Promise<Progress> {
+  const response = await fetch('/api/v1/studio/progress', {
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as Progress
+}
+
+export async function generateTeachBack(
+  sessionId: string,
+  sourceIds: string[],
+  concept: string,
+  explanation: string,
+): Promise<TeachBackArtifact> {
+  const response = await fetch('/api/v1/studio/teach-back', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({
+      source_ids: sourceIds,
+      concept,
+      explanation,
+    }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as TeachBackArtifact
 }
 
 export async function deleteStudioArtifact(

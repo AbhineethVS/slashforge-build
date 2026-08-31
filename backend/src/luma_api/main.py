@@ -49,6 +49,18 @@ from .artifacts import (
 from .chat import SelectedIndex, answer_from_sources
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
+from .learning import (
+    AttemptRequest,
+    AttemptResponse,
+    ProgressResponse,
+    RawTeachBack,
+    TeachBackRequest,
+    build_progress,
+    generate_raw_teach_back,
+    materialize_teach_back,
+    record_quiz_attempt,
+    retrieve_teach_back_chunks,
+)
 from .schemas import (
     ChatMessageResponse,
     ChatRequest,
@@ -139,6 +151,9 @@ def create_app(
     ) = None,
     artifact_generator: (
         Callable[[ArtifactKind, Sequence[Chunk]], RawArtifact] | None
+    ) = None,
+    teach_back_generator: (
+        Callable[[str, str, Sequence[Chunk]], RawTeachBack] | None
     ) = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
@@ -240,6 +255,46 @@ def create_app(
             chunks=chunks,
         )
 
+    def generate_teach_back(
+        concept: str,
+        explanation: str,
+        chunks: Sequence[Chunk],
+    ) -> RawTeachBack:
+        if teach_back_generator is not None:
+            return teach_back_generator(concept, explanation, chunks)
+        return generate_raw_teach_back(
+            client=OpenAI(timeout=90.0, max_retries=1),
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
+            concept=concept,
+            explanation=explanation,
+            chunks=chunks,
+        )
+
+    def cached_demo_artifact(
+        *,
+        kind: ArtifactKind,
+        request: ArtifactRequest,
+        session: DemoSession,
+    ) -> ArtifactResponse | None:
+        if (
+            catalog is None
+            or request.source_ids != [catalog.source_id]
+        ):
+            return None
+        cached = catalog.fallback_artifact(kind)
+        if cached is None:
+            return None
+        artifact = ArtifactResponse(
+            id=uuid4(),
+            type=kind,
+            title=str(cached["title"]),
+            content=dict(cached["content"]),
+            source_ids=request.source_ids,
+            created_at=utc_now(),
+        )
+        session.artifacts.append(artifact.model_dump(mode="json"))
+        return artifact
+
     def create_studio_artifact(
         *,
         kind: ArtifactKind,
@@ -293,6 +348,11 @@ def create_app(
         except ApiError:
             raise
         except RateLimitError as error:
+            cached = cached_demo_artifact(
+                kind=kind, request=request, session=session
+            )
+            if cached is not None:
+                return cached
             raise ApiError(
                 status.HTTP_429_TOO_MANY_REQUESTS,
                 "AI_RATE_LIMITED",
@@ -301,6 +361,11 @@ def create_app(
                 "Wait a moment and try again.",
             ) from error
         except AuthenticationError as error:
+            cached = cached_demo_artifact(
+                kind=kind, request=request, session=session
+            )
+            if cached is not None:
+                return cached
             raise ApiError(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "AI_BILLING_UNAVAILABLE",
@@ -309,6 +374,11 @@ def create_app(
                 "Use existing study material or contact the demo owner.",
             ) from error
         except (APIConnectionError, APITimeoutError, APIStatusError) as error:
+            cached = cached_demo_artifact(
+                kind=kind, request=request, session=session
+            )
+            if cached is not None:
+                return cached
             raise ApiError(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "AI_OUTPUT_INVALID",
@@ -317,6 +387,11 @@ def create_app(
                 "Retry generation in a moment.",
             ) from error
         except (InvalidArtifactError, ValueError) as error:
+            cached = cached_demo_artifact(
+                kind=kind, request=request, session=session
+            )
+            if cached is not None:
+                return cached
             raise ApiError(
                 status.HTTP_502_BAD_GATEWAY,
                 "AI_OUTPUT_INVALID",
@@ -325,6 +400,11 @@ def create_app(
                 "Generate it again.",
             ) from error
         except OpenAIError as error:
+            cached = cached_demo_artifact(
+                kind=kind, request=request, session=session
+            )
+            if cached is not None:
+                return cached
             raise ApiError(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "AI_OUTPUT_INVALID",
@@ -781,6 +861,156 @@ def create_app(
             request=request,
             session=session,
         )
+
+    @application.post(
+        "/api/v1/studio/teach-back",
+        response_model=ArtifactResponse,
+    )
+    def create_teach_back(
+        request: TeachBackRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        if not session.generation_lock.acquire(blocking=False):
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "Another AI task is already running.",
+                True,
+                "Wait for it to finish and try again.",
+            )
+        try:
+            sources = selected_indexes(session, request.source_ids)
+            chunks = retrieve_teach_back_chunks(
+                concept=request.concept,
+                sources=sources,
+                embedder=create_embedder(),
+            )
+            title: str | None = None
+            content: dict | None = None
+            last_error: InvalidArtifactError | None = None
+            for _ in range(2):
+                raw = generate_teach_back(
+                    request.concept,
+                    request.explanation,
+                    chunks,
+                )
+                try:
+                    title, content = materialize_teach_back(
+                        raw=raw,
+                        chunks=chunks,
+                        sources=sources,
+                    )
+                    break
+                except InvalidArtifactError as error:
+                    last_error = error
+            if title is None or content is None:
+                raise last_error or InvalidArtifactError(
+                    "Teach-Back feedback could not be validated."
+                )
+            artifact = ArtifactResponse(
+                id=uuid4(),
+                type="teach_back",
+                title=title,
+                content={
+                    **content,
+                    "concept": request.concept,
+                },
+                source_ids=request.source_ids,
+                created_at=utc_now(),
+            )
+            session.artifacts.append(artifact.model_dump(mode="json"))
+            session.attempts.append(
+                {
+                    "id": str(uuid4()),
+                    "artifact_id": str(artifact.id),
+                    "activity_type": "teach_back",
+                    "concept_label": request.concept,
+                    "response_text": request.explanation,
+                    "confidence": None,
+                    "is_correct": None,
+                    "classification": "unscored",
+                    "feedback": "Formative source-grounded Teach-Back feedback.",
+                    "created_at": utc_now().isoformat(),
+                }
+            )
+            return artifact
+        except ApiError:
+            raise
+        except RateLimitError as error:
+            raise ApiError(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "AI_RATE_LIMITED",
+                "Teach-Back is temporarily busy.",
+                True,
+                "Wait a moment and try again.",
+            ) from error
+        except AuthenticationError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_BILLING_UNAVAILABLE",
+                "Teach-Back is temporarily unavailable.",
+                False,
+                "Keep using cached demo tools or contact the demo owner.",
+            ) from error
+        except (APIConnectionError, APITimeoutError, APIStatusError) as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "Teach-Back could not reach the AI service.",
+                True,
+                "Retry your explanation in a moment.",
+            ) from error
+        except (InvalidArtifactError, ValueError) as error:
+            raise ApiError(
+                status.HTTP_502_BAD_GATEWAY,
+                "AI_OUTPUT_INVALID",
+                "Teach-Back feedback could not be validated.",
+                True,
+                "Try the explanation again.",
+            ) from error
+        except OpenAIError as error:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "AI_OUTPUT_INVALID",
+                "Teach-Back is temporarily unavailable.",
+                True,
+                "Retry later.",
+            ) from error
+        finally:
+            session.generation_lock.release()
+
+    @application.post(
+        "/api/v1/artifacts/{artifact_id}/attempts",
+        response_model=AttemptResponse,
+    )
+    def create_attempt(
+        artifact_id: UUID,
+        request: AttemptRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> AttemptResponse:
+        try:
+            return record_quiz_attempt(
+                session=session,
+                artifact_id=artifact_id,
+                request=request,
+            )
+        except LookupError as error:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                str(error),
+                False,
+                "Return to Studio and open an available quiz.",
+            ) from error
+
+    @application.get(
+        "/api/v1/studio/progress",
+        response_model=ProgressResponse,
+    )
+    def get_progress(
+        session: DemoSession = Depends(current_session),
+    ) -> ProgressResponse:
+        return build_progress(session)
 
     @application.get(
         "/api/v1/studio/artifacts",

@@ -32,13 +32,14 @@ until the product is further along. The repository now contains:
 - Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
   retryable failures, source deletion, and automatic temporary-file cleanup.
 
-Phases 1 and 2 are complete locally, and the Phase 3 grounded-chat vertical
-slice is connected. The workspace opens with a ready economics source, accepts
-up to two temporary PDF uploads, answers against selected sources with
-backend-validated page citations, and opens cited PDFs in an evidence sheet.
-Studio generates cited summaries plus focused Flashcard and Quiz practice
-experiences. Teach-Back and deterministic misconception tracking remain for
-the next phase.
+Phases 1–5 are complete locally. The workspace opens with a ready economics
+source, accepts up to two temporary PDF uploads, answers against selected
+sources with backend-validated page citations, and opens cited PDFs in an
+evidence sheet. Studio generates cited summaries plus focused Flashcard and
+Quiz practice experiences, records deterministic confidence-aware learning
+signals, recommends weak concepts, and provides cited Teach-Back feedback.
+Cached demo artifacts keep the bundled source presentable during a live OpenAI
+generation outage.
 
 ## Phase 0 setup
 

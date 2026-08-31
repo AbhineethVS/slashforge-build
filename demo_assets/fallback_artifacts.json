@@ -1,0 +1,142 @@
+{
+  "summary": {
+    "title": "Theory of Cost — Concise Revision Brief",
+    "content": {
+      "fallback": true,
+      "sections": [
+        {
+          "title": "Cost foundations",
+          "content_markdown": "A cost is a payment to factors used in production. **Explicit costs** are direct payments for hired inputs; **implicit costs** are opportunity costs of using owner-provided resources.",
+          "citations": [
+            {
+              "id": "fallback-summary-1",
+              "chunk_id": "3d77cdcc-5bdf-524e-a82e-dd3f16122f7c",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 2,
+              "page_end": 2,
+              "excerpt": "Explicit cost or direct cost is the actual expenditure incurred by a firm. Implicit cost is the cost of inputs owned by the firm.",
+              "claim": "Explicit and implicit costs differ by whether inputs are hired or owner-provided.",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=2"
+            }
+          ]
+        },
+        {
+          "title": "Short-run cost relationships",
+          "content_markdown": "**Total cost equals total fixed cost plus total variable cost.** Fixed cost does not change with output, while variable cost rises or falls with production.",
+          "citations": [
+            {
+              "id": "fallback-summary-2",
+              "chunk_id": "de34860a-930c-5dd9-8539-0cab0d8f45b2",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 4,
+              "page_end": 4,
+              "excerpt": "Total Cost consists of Total Fixed Cost and Total Variable Cost.",
+              "claim": "Total cost is the sum of fixed and variable cost.",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=4"
+            }
+          ]
+        },
+        {
+          "title": "Average and marginal cost",
+          "content_markdown": "Average cost and marginal cost are generally U-shaped. When marginal cost is below average cost, average cost falls; when it is above average cost, average cost rises.",
+          "citations": [
+            {
+              "id": "fallback-summary-3",
+              "chunk_id": "4c8464df-0e10-5a83-9ba9-29bcdd1e45a4",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 9,
+              "page_end": 9,
+              "excerpt": "When marginal cost is less than average cost, average cost falls. When marginal cost is greater, average cost rises.",
+              "claim": "Marginal cost determines whether average cost rises or falls.",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=9"
+            }
+          ]
+        }
+      ],
+      "revision_questions": [
+        "How do explicit and implicit costs differ?",
+        "Why does total fixed cost remain unchanged as output changes?",
+        "What happens to average cost when marginal cost is below it?"
+      ]
+    }
+  },
+  "flashcards": {
+    "title": "Theory of Cost Essentials",
+    "content": {
+      "fallback": true,
+      "cards": [
+        {
+          "id": "fallback-card-1",
+          "front": "What is explicit cost?",
+          "back_markdown": "The actual expenditure a firm incurs to purchase or hire inputs it does not own.",
+          "concept_label": "Explicit and implicit cost",
+          "difficulty": "recall",
+          "citations": [{"id":"fc-1","chunk_id":"3d77cdcc-5bdf-524e-a82e-dd3f16122f7c","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":2,"page_end":2,"excerpt":"Explicit cost or direct cost is the actual expenditure incurred by a firm.","claim":"Definition of explicit cost.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=2"}]
+        },
+        {
+          "id": "fallback-card-2",
+          "front": "What is implicit cost?",
+          "back_markdown": "The opportunity cost of owner-provided inputs used by the firm.",
+          "concept_label": "Explicit and implicit cost",
+          "difficulty": "recall",
+          "citations": [{"id":"fc-2","chunk_id":"3d77cdcc-5bdf-524e-a82e-dd3f16122f7c","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":2,"page_end":2,"excerpt":"Implicit cost is the cost of inputs owned by the firm.","claim":"Definition of implicit cost.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=2"}]
+        },
+        {
+          "id": "fallback-card-3",
+          "front": "How are total cost, fixed cost, and variable cost related?",
+          "back_markdown": "**TC = TFC + TVC.**",
+          "concept_label": "Total cost",
+          "difficulty": "recall",
+          "citations": [{"id":"fc-3","chunk_id":"de34860a-930c-5dd9-8539-0cab0d8f45b2","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":4,"page_end":4,"excerpt":"Total Cost consists of Total Fixed Cost and Total Variable Cost.","claim":"Total cost relationship.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=4"}]
+        },
+        {
+          "id": "fallback-card-4",
+          "front": "What happens to total variable cost when output is zero?",
+          "back_markdown": "It is zero because no variable inputs are being used.",
+          "concept_label": "Variable cost",
+          "difficulty": "understanding",
+          "citations": [{"id":"fc-4","chunk_id":"f6c207f0-28fe-5c61-8601-cd3c43c04a89","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":6,"page_end":6,"excerpt":"The TVC curve starts from the origin which shows that when output is zero, total variable cost is also zero.","claim":"TVC is zero at zero output.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=6"}]
+        },
+        {
+          "id": "fallback-card-5",
+          "front": "How does marginal cost affect average cost?",
+          "back_markdown": "Average cost falls when MC is below AC and rises when MC is above AC.",
+          "concept_label": "Marginal and average cost",
+          "difficulty": "understanding",
+          "citations": [{"id":"fc-5","chunk_id":"4c8464df-0e10-5a83-9ba9-29bcdd1e45a4","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":9,"page_end":9,"excerpt":"When marginal cost is less than average cost, average cost falls.","claim":"MC and AC relationship.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=9"}]
+        }
+      ]
+    }
+  },
+  "quiz": {
+    "title": "Theory of Cost Check",
+    "content": {
+      "fallback": true,
+      "questions": [
+        {
+          "id":"fallback-question-1","type":"mcq","prompt":"Which is an explicit cost?","options":["Rent paid for a hired building","Rent forgone on an owner-used building","The owner's unpaid managerial time","Return forgone on owner capital"],"expected_answer":"Rent paid for a hired building","explanation_markdown":"Explicit costs are actual payments for purchased or hired inputs.","demo_response":"Rent paid for a hired building","concept_label":"Explicit and implicit cost","difficulty":"recall",
+          "citations":[{"id":"fq-1","chunk_id":"3d77cdcc-5bdf-524e-a82e-dd3f16122f7c","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":2,"page_end":2,"excerpt":"Explicit cost is incurred when the entity has to pay for utilization of factors of production.","claim":"Explicit cost example.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=2"}]
+        },
+        {
+          "id":"fallback-question-2","type":"mcq","prompt":"Which equation is correct?","options":["TC = TFC + TVC","TC = TFC − TVC","TFC = TC + TVC","TVC = TFC + TC"],"expected_answer":"TC = TFC + TVC","explanation_markdown":"Total cost combines fixed and variable costs.","demo_response":"TC = TFC + TVC","concept_label":"Total cost","difficulty":"recall",
+          "citations":[{"id":"fq-2","chunk_id":"de34860a-930c-5dd9-8539-0cab0d8f45b2","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":4,"page_end":4,"excerpt":"Total Cost consists of Total Fixed Cost and Total Variable Cost.","claim":"Total cost equation.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=4"}]
+        },
+        {
+          "id":"fallback-question-3","type":"mcq","prompt":"What happens to total fixed cost as output changes in the short run?","options":["It remains constant","It always rises","It always falls","It becomes zero"],"expected_answer":"It remains constant","explanation_markdown":"Fixed cost is independent of output in the short run.","demo_response":"It remains constant","concept_label":"Fixed cost","difficulty":"understanding",
+          "citations":[{"id":"fq-3","chunk_id":"de34860a-930c-5dd9-8539-0cab0d8f45b2","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":4,"page_end":4,"excerpt":"Total fixed cost is independent of output.","claim":"Fixed cost behavior.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=4"}]
+        },
+        {
+          "id":"fallback-question-4","type":"mcq","prompt":"When marginal cost is below average cost, what happens to average cost?","options":["It falls","It rises","It is always zero","It becomes fixed"],"expected_answer":"It falls","explanation_markdown":"A marginal value below the average pulls the average down.","demo_response":"It falls","concept_label":"Marginal and average cost","difficulty":"understanding",
+          "citations":[{"id":"fq-4","chunk_id":"4c8464df-0e10-5a83-9ba9-29bcdd1e45a4","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":9,"page_end":9,"excerpt":"When marginal cost is less than average cost, average cost falls.","claim":"MC below AC lowers AC.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=9"}]
+        },
+        {
+          "id":"fallback-question-5","type":"short_answer","prompt":"Explain opportunity cost in one or two sentences.","options":[],"expected_answer":"Opportunity cost is the next best alternative forgone when a choice is made.","explanation_markdown":"Scarce resources make choices necessary, so selecting one use sacrifices the next best available use.","demo_response":"Opportunity cost is the next best alternative forgone when a choice is made.","concept_label":"Opportunity cost","difficulty":"understanding",
+          "citations":[{"id":"fq-5","chunk_id":"590c0273-66fc-5ce1-a1bb-87cb54bde440","source_id":"8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f","source_name":"Economics - Theory of Cost.pdf","page_start":3,"page_end":3,"excerpt":"The opportunity cost of any good is the next best alternative good that is given up.","claim":"Definition of opportunity cost.","viewer_url":"/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=3"}]
+        }
+      ]
+    }
+  }
+}

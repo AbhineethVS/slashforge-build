@@ -72,7 +72,7 @@ class ArtifactRequest(BaseModel):
 
 class ArtifactResponse(BaseModel):
     id: UUID
-    type: Literal["summary", "flashcards", "quiz"]
+    type: Literal["summary", "flashcards", "quiz", "teach_back"]
     title: str
     content: dict[str, Any]
     source_ids: list[UUID]

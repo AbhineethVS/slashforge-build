@@ -44,6 +44,7 @@ class BundledDemoCatalog:
     manifest: DemoManifest
     chunks: tuple[Chunk, ...]
     index: VectorIndex
+    fallback_artifacts: dict[str, dict[str, Any]]
 
     @property
     def source_id(self) -> UUID:
@@ -66,6 +67,10 @@ class BundledDemoCatalog:
     def suggested_questions(self) -> list[str]:
         return list(self.manifest.suggested_questions)
 
+    def fallback_artifact(self, kind: str) -> dict[str, Any] | None:
+        artifact = self.fallback_artifacts.get(kind)
+        return json.loads(json.dumps(artifact)) if artifact is not None else None
+
 
 def demo_assets_dir(path: Path | None = None) -> Path:
     configured = path or Path(
@@ -80,6 +85,7 @@ def load_catalog(root: Path | None = None) -> BundledDemoCatalog:
     chunks_path = assets_root / "chunks.json"
     embeddings_path = assets_root / "embeddings.npy"
     pdf_path = assets_root / "source.pdf"
+    fallback_path = assets_root / "fallback_artifacts.json"
 
     for required in (manifest_path, chunks_path, embeddings_path, pdf_path):
         if not required.is_file():
@@ -94,7 +100,30 @@ def load_catalog(root: Path | None = None) -> BundledDemoCatalog:
         raise ValueError("Demo embeddings do not align with chunk records.")
 
     index = VectorIndex(chunks, np.asarray(matrix, dtype=np.float32), manifest.embedding_model)
-    return BundledDemoCatalog(assets_root, manifest, chunks, index)
+    fallback_artifacts: dict[str, dict[str, Any]] = {}
+    if fallback_path.is_file():
+        loaded = json.loads(fallback_path.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            raise ValueError("Demo fallback artifacts must be a JSON object.")
+        allowed_chunk_ids = {str(chunk.id) for chunk in chunks}
+        for kind, artifact in loaded.items():
+            if kind not in {"summary", "flashcards", "quiz"} or not isinstance(
+                artifact, dict
+            ):
+                raise ValueError("Demo fallback artifact has an unsupported shape.")
+            _validate_fallback_citations(
+                artifact,
+                allowed_chunk_ids=allowed_chunk_ids,
+                source_id=str(manifest.source_id),
+            )
+            fallback_artifacts[kind] = artifact
+    return BundledDemoCatalog(
+        assets_root,
+        manifest,
+        chunks,
+        index,
+        fallback_artifacts,
+    )
 
 
 def build_demo_assets(
@@ -179,6 +208,33 @@ def _chunk_from_record(record: dict[str, Any], source_id: UUID) -> Chunk:
         content_hash=record["content_hash"],
         token_count=record["token_count"],
     )
+
+
+def _validate_fallback_citations(
+    value: object,
+    *,
+    allowed_chunk_ids: set[str],
+    source_id: str,
+) -> None:
+    if isinstance(value, dict):
+        if "chunk_id" in value:
+            if value.get("chunk_id") not in allowed_chunk_ids:
+                raise ValueError("Demo fallback cites an unknown chunk.")
+            if value.get("source_id") != source_id:
+                raise ValueError("Demo fallback cites a different source.")
+        for child in value.values():
+            _validate_fallback_citations(
+                child,
+                allowed_chunk_ids=allowed_chunk_ids,
+                source_id=source_id,
+            )
+    elif isinstance(value, list):
+        for child in value:
+            _validate_fallback_citations(
+                child,
+                allowed_chunk_ids=allowed_chunk_ids,
+                source_id=source_id,
+            )
 
 
 def _cli() -> None:

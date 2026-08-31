@@ -487,6 +487,40 @@ describe('WorkspacePage', () => {
           headers: { 'Content-Type': 'application/json' },
         }),
       )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: 'attempt-1',
+            artifact_id: quiz.id,
+            activity_type: 'quiz',
+            concept_label: 'Costs',
+            confidence: 1,
+            is_correct: true,
+            classification: 'lucky_guess',
+            feedback:
+              'Correct, but low confidence suggests this is worth revisiting.',
+            created_at: '2026-08-30T05:01:00Z',
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total_attempts: 1,
+            concepts: [],
+            recommended_concept: null,
+            recommendation: 'Complete another question.',
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
 
     render(
       <MemoryRouter>
@@ -502,8 +536,8 @@ describe('WorkspacePage', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Low' }))
     fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
 
-    expect(screen.getByText('Expected answer')).toBeInTheDocument()
-    expect(screen.getByText('Correct')).toBeInTheDocument()
+    expect(await screen.findByText('Expected answer')).toBeInTheDocument()
+    expect(screen.getByText('Lucky guess signal')).toBeInTheDocument()
     expect(screen.getByText('Explanation 1')).toBeInTheDocument()
   })
 
@@ -558,6 +592,210 @@ describe('WorkspacePage', () => {
     expect(
       screen.getByRole('button', { name: 'Back to Studio' }),
     ).toBeInTheDocument()
+  })
+
+  it('shows a confident misconception and updates Studio progress', async () => {
+    const quiz = {
+      id: 'ed4d3f55-00c5-4db1-bf08-438e0d9fbb93',
+      type: 'quiz',
+      title: 'Confidence check',
+      content: {
+        questions: [
+          {
+            id: 'question-1',
+            type: 'mcq',
+            prompt: 'Which equation is correct?',
+            options: ['TC = TFC + TVC', 'TC = TFC - TVC', 'TFC = TC + TVC', 'None'],
+            expected_answer: 'TC = TFC + TVC',
+            explanation_markdown: 'Total cost combines fixed and variable cost.',
+            demo_response: 'TC = TFC + TVC',
+            concept_label: 'Total cost',
+            difficulty: 'understanding',
+            citations: [],
+          },
+        ],
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(quiz), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: 'attempt-wrong',
+            artifact_id: quiz.id,
+            activity_type: 'quiz',
+            concept_label: 'Total cost',
+            confidence: 3,
+            is_correct: false,
+            classification: 'confident_misconception',
+            feedback:
+              'Your high confidence and incorrect answer signal a misconception to revisit.',
+            created_at: '2026-08-30T05:01:00Z',
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total_attempts: 1,
+            concepts: [
+              {
+                concept_label: 'Total cost',
+                attempt_count: 1,
+                classification: 'confident_misconception',
+                mastered: 0,
+                lucky_guess: 0,
+                needs_practice: 0,
+                confident_misconception: 1,
+                unscored: 0,
+              },
+            ],
+            recommended_concept: 'Total cost',
+            recommendation: 'Teach back Total cost using the source evidence.',
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    await screen.findByRole('dialog', { name: 'Confidence check' })
+    fireEvent.click(screen.getByRole('radio', { name: 'TC = TFC - TVC' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'High' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }))
+
+    expect(
+      await screen.findByText('Confident misconception'),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Misconception')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Teach back Total cost' }),
+    ).toBeInTheDocument()
+  })
+
+  it('returns cited formative Teach-Back feedback', async () => {
+    const feedback = {
+      id: 'teach-back-1',
+      type: 'teach_back',
+      title: 'Teach Back: Total cost',
+      content: {
+        concept: 'Total cost',
+        rubric_points: [],
+        covered: [{ text: 'Total cost includes fixed and variable cost.', citations: [] }],
+        missing: [{ text: 'Fixed cost does not vary with output.', citations: [] }],
+        check_this: [],
+        next_prompt: 'Why can variable cost be zero?',
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(feedback), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total_attempts: 1,
+            concepts: [],
+            recommended_concept: null,
+            recommendation: 'Complete a quiz next.',
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Teach Back/ }))
+    fireEvent.change(screen.getByLabelText('Concept'), {
+      target: { value: 'Total cost' },
+    })
+    fireEvent.change(screen.getByLabelText('Your explanation'), {
+      target: {
+        value:
+          'Total cost is the combined cost a firm faces when producing output.',
+      },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Get cited feedback' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Teach Back: Total cost' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Covered')).toBeInTheDocument()
+    expect(screen.getByText('Missing')).toBeInTheDocument()
+    expect(screen.getByText('Check this idea')).toBeInTheDocument()
+  })
+
+  it('exposes responsive Sources and Studio sheet controls', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(session), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+
+    const sourcesButton = await screen.findByRole('button', { name: 'Sources' })
+    const studioButton = screen.getByRole('button', { name: 'Studio' })
+    fireEvent.click(sourcesButton)
+    expect(sourcesButton).toHaveAttribute('aria-expanded', 'true')
+    expect(
+      await screen.findByRole('dialog', { name: 'Sources' }),
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Close Sources panel' }),
+      ).toHaveFocus(),
+    )
+    fireEvent.click(studioButton)
+    expect(studioButton).toHaveAttribute('aria-expanded', 'true')
+    expect(sourcesButton).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(screen.getByRole('button', { name: 'Close Studio panel' }))
+    await waitFor(() => expect(studioButton).toHaveFocus())
   })
 })
 

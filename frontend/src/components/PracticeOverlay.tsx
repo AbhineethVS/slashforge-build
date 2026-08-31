@@ -7,7 +7,13 @@ import {
 } from 'react'
 import ReactMarkdown from 'react-markdown'
 
-import { type Citation, type FlashcardArtifact, type QuizArtifact } from '../lib/session'
+import {
+  submitQuizAttempt,
+  type Attempt,
+  type Citation,
+  type FlashcardArtifact,
+  type QuizArtifact,
+} from '../lib/session'
 import { EvidencePanel } from './EvidencePanel'
 
 const markdownElements = [
@@ -27,12 +33,14 @@ type PracticeOverlayProps = {
   artifact: FlashcardArtifact | QuizArtifact
   sessionId: string
   onClose: () => void
+  onAttemptRecorded: () => void
 }
 
 export function PracticeOverlay({
   artifact,
   sessionId,
   onClose,
+  onAttemptRecorded,
 }: PracticeOverlayProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const citationTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -106,7 +114,12 @@ export function PracticeOverlay({
         {artifact.type === 'flashcards' ? (
           <FlashcardPractice artifact={artifact} onCitation={openEvidence} />
         ) : (
-          <QuizPractice artifact={artifact} onCitation={openEvidence} />
+          <QuizPractice
+            artifact={artifact}
+            sessionId={sessionId}
+            onCitation={openEvidence}
+            onAttemptRecorded={onAttemptRecorded}
+          />
         )}
 
         {activeCitation && (
@@ -231,22 +244,28 @@ function FlashcardPractice({
 
 function QuizPractice({
   artifact,
+  sessionId,
   onCitation,
+  onAttemptRecorded,
 }: {
   artifact: QuizArtifact
+  sessionId: string
   onCitation: (citation: Citation, event: MouseEvent<HTMLButtonElement>) => void
+  onAttemptRecorded: () => void
 }) {
   const questions = artifact.content.questions
   const [position, setPosition] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [confidence, setConfidence] = useState<Record<string, 1 | 2 | 3>>({})
   const [submitted, setSubmitted] = useState<Set<string>>(() => new Set())
+  const [attempts, setAttempts] = useState<Record<string, Attempt>>({})
+  const [submissionState, setSubmissionState] = useState<
+    { status: 'idle' } | { status: 'submitting' } | { status: 'error'; message: string }
+  >({ status: 'idle' })
   const [complete, setComplete] = useState(false)
   const question = questions[position]
   const answer = answers[question.id] || ''
   const isSubmitted = submitted.has(question.id)
-  const isMcqCorrect =
-    question.type === 'mcq' && answer === question.expected_answer
   const completedCount = submitted.size
   const correctMcqCount = useMemo(
     () =>
@@ -263,9 +282,30 @@ function QuizPractice({
     setAnswers((current) => ({ ...current, [question.id]: value }))
   }
 
-  function submit() {
+  async function submit() {
     if (!answer.trim() || !confidence[question.id]) return
-    setSubmitted((current) => new Set(current).add(question.id))
+    setSubmissionState({ status: 'submitting' })
+    try {
+      const attempt = await submitQuizAttempt(
+        sessionId,
+        artifact.id,
+        question.id,
+        answer,
+        confidence[question.id],
+      )
+      setAttempts((current) => ({ ...current, [question.id]: attempt }))
+      setSubmitted((current) => new Set(current).add(question.id))
+      setSubmissionState({ status: 'idle' })
+      onAttemptRecorded()
+    } catch (error) {
+      setSubmissionState({
+        status: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'This attempt could not be saved.',
+      })
+    }
   }
 
   function next() {
@@ -277,14 +317,30 @@ function QuizPractice({
   }
 
   if (complete) {
+    const misconceptionCount = Object.values(attempts).filter(
+      (attempt) => attempt.classification === 'confident_misconception',
+    ).length
+    const needsPracticeCount = Object.values(attempts).filter((attempt) =>
+      ['needs_practice', 'lucky_guess'].includes(attempt.classification),
+    ).length
     return (
       <section className="quiz-complete">
         <p className="eyebrow">Quiz complete</p>
         <h2>{completedCount} of {questions.length} questions completed</h2>
         <p>
           {correctMcqCount} multiple-choice answers were correct. Short answers
-          are shown for comparison and will gain formative scoring in Phase 5.
+          remain formative comparisons rather than authoritative grades.
         </p>
+        {misconceptionCount > 0 && (
+          <p className="misconception-summary">
+            {misconceptionCount} confident misconception{' '}
+            {misconceptionCount === 1 ? 'signal needs' : 'signals need'} priority
+            review in Studio.
+          </p>
+        )}
+        {misconceptionCount === 0 && needsPracticeCount > 0 && (
+          <p>{needsPracticeCount} concept signals are worth another look.</p>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -373,20 +429,25 @@ function QuizPractice({
           <button
             className="quiz-submit"
             type="button"
-            onClick={submit}
-            disabled={!answer.trim() || !confidence[question.id]}
+            onClick={() => void submit()}
+            disabled={
+              !answer.trim() ||
+              !confidence[question.id] ||
+              submissionState.status === 'submitting'
+            }
           >
-            Submit answer
+            {submissionState.status === 'submitting'
+              ? 'Saving attempt…'
+              : 'Submit answer'}
           </button>
         ) : (
           <div className="quiz-feedback" aria-live="polite">
-            <p className="eyebrow">
-              {question.type === 'mcq'
-                ? isMcqCorrect
-                  ? 'Correct'
-                  : 'Needs another look'
-                : 'Compare your response'}
+            <p
+              className={`classification classification-${attempts[question.id]?.classification}`}
+            >
+              {classificationLabel(attempts[question.id]?.classification)}
             </p>
+            <p>{attempts[question.id]?.feedback}</p>
             <h3>Expected answer</h3>
             <p>{question.expected_answer}</p>
             <ReactMarkdown allowedElements={markdownElements}>
@@ -403,9 +464,29 @@ function QuizPractice({
             </button>
           </div>
         )}
+        {submissionState.status === 'error' && (
+          <div className="attempt-error" role="alert">
+            <p>{submissionState.message}</p>
+            <button type="button" onClick={() => void submit()}>
+              Retry saving attempt
+            </button>
+          </div>
+        )}
       </div>
     </section>
   )
+}
+
+function classificationLabel(
+  classification: Attempt['classification'] | undefined,
+): string {
+  return {
+    mastered: 'Mastered signal',
+    lucky_guess: 'Lucky guess signal',
+    needs_practice: 'Needs practice',
+    confident_misconception: 'Confident misconception',
+    unscored: 'Formative comparison',
+  }[classification || 'unscored']
 }
 
 function CitationButtons({

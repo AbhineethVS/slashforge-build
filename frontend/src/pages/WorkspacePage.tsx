@@ -27,6 +27,7 @@ import {
   restoreOrCreateSession,
   restorePanelWidths,
   restoreSelectedSourceIds,
+  takeSessionRecoveryNotice,
   uploadSource,
   type ChatMessage,
   type Citation,
@@ -77,6 +78,8 @@ export function WorkspacePage() {
     | { status: 'error'; question: string; message: string; action?: string }
   >({ status: 'idle' })
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
+  const [sideSheet, setSideSheet] = useState<'sources' | 'studio' | null>(null)
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null)
   const [panelWidths, setPanelWidths] = useState<PanelWidths>(() =>
     restorePanelWidths(),
   )
@@ -84,6 +87,10 @@ export function WorkspacePage() {
   const questionInputRef = useRef<HTMLTextAreaElement>(null)
   const citationTriggerRef = useRef<HTMLButtonElement | null>(null)
   const workspaceGridRef = useRef<HTMLElement>(null)
+  const sourcesPanelRef = useRef<HTMLElement>(null)
+  const studioRegionRef = useRef<HTMLDivElement>(null)
+  const sourcesNavRef = useRef<HTMLButtonElement>(null)
+  const studioNavRef = useRef<HTMLButtonElement>(null)
   const panelWidthsRef = useRef(panelWidths)
   const resizeDragRef = useRef<{
     edge: 'sources' | 'studio'
@@ -94,6 +101,46 @@ export function WorkspacePage() {
   useEffect(() => {
     panelWidthsRef.current = panelWidths
   }, [panelWidths])
+
+  const closeSideSheet = useCallback(() => {
+    const trigger =
+      sideSheet === 'sources' ? sourcesNavRef.current : studioNavRef.current
+    setSideSheet(null)
+    window.setTimeout(() => trigger?.focus(), 0)
+  }, [sideSheet])
+
+  useEffect(() => {
+    if (!sideSheet) return
+    const panel =
+      sideSheet === 'sources'
+        ? sourcesPanelRef.current
+        : studioRegionRef.current
+    const focusable = panel?.querySelectorAll<HTMLElement>(
+      'button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex="-1"])',
+    )
+    focusable?.[0]?.focus()
+
+    function handleSheetKeys(event: KeyboardEvent) {
+      if (activeCitation) return
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeSideSheet()
+        return
+      }
+      if (event.key !== 'Tab' || !focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleSheetKeys)
+    return () => document.removeEventListener('keydown', handleSheetKeys)
+  }, [activeCitation, closeSideSheet, sideSheet])
 
   useEffect(() => {
     function syncToViewport() {
@@ -178,6 +225,7 @@ export function WorkspacePage() {
         persistSelectedSourceIds(selected)
         setSelectedSourceIds(selected)
         setMessages(session.messages || [])
+        setSessionNotice(takeSessionRecoveryNotice())
         setState({ status: 'ready', session })
       })
       .catch((error: unknown) =>
@@ -392,6 +440,7 @@ export function WorkspacePage() {
     trigger: HTMLButtonElement,
   ) {
     citationTriggerRef.current = trigger
+    setSideSheet('studio')
     setActiveCitation(citation)
   }
 
@@ -410,6 +459,32 @@ export function WorkspacePage() {
           <strong>Study workspace</strong>
           <span>Temporary session</span>
         </div>
+        <nav className="workspace-panel-nav" aria-label="Workspace panels">
+          <button
+            ref={sourcesNavRef}
+            type="button"
+            aria-expanded={sideSheet === 'sources'}
+            onClick={() =>
+              setSideSheet((current) =>
+                current === 'sources' ? null : 'sources',
+              )
+            }
+          >
+            Sources
+          </button>
+          <button
+            ref={studioNavRef}
+            type="button"
+            aria-expanded={sideSheet === 'studio'}
+            onClick={() =>
+              setSideSheet((current) =>
+                current === 'studio' ? null : 'studio',
+              )
+            }
+          >
+            Studio
+          </button>
+        </nav>
         <button
           className="quiet-button"
           type="button"
@@ -455,6 +530,15 @@ export function WorkspacePage() {
         const uploadLimitReached = uploadedCount >= 2
 
         return (
+        <>
+        {sessionNotice && (
+          <div className="session-recovery-notice" role="status">
+            <span>{sessionNotice}</span>
+            <button type="button" onClick={() => setSessionNotice(null)}>
+              Dismiss
+            </button>
+          </div>
+        )}
         <main
           ref={workspaceGridRef}
           className="workspace-grid"
@@ -462,12 +546,26 @@ export function WorkspacePage() {
             gridTemplateColumns: `${panelWidths.sources}px 6px minmax(0, 1fr) 6px ${panelWidths.studio}px`,
           }}
         >
-          <aside className="sources-panel" aria-labelledby="sources-title">
+          <aside
+            ref={sourcesPanelRef}
+            className={`sources-panel ${sideSheet === 'sources' ? 'is-sheet-open' : ''}`}
+            aria-labelledby="sources-title"
+            role={sideSheet === 'sources' ? 'dialog' : undefined}
+            aria-modal={sideSheet === 'sources' ? true : undefined}
+          >
             <div className="panel-heading">
               <div>
                 <p className="panel-kicker">Library</p>
                 <h1 id="sources-title">Sources</h1>
               </div>
+              <button
+                className="responsive-sheet-close"
+                type="button"
+                aria-label="Close Sources panel"
+                onClick={closeSideSheet}
+              >
+                Close
+              </button>
               <button
                 className="add-source"
                 type="button"
@@ -850,13 +948,21 @@ export function WorkspacePage() {
             }}
           />
 
-          <div className="studio-region">
+          <div
+            ref={studioRegionRef}
+            className={`studio-region ${sideSheet === 'studio' ? 'is-sheet-open' : ''}`}
+            role={sideSheet === 'studio' ? 'dialog' : undefined}
+            aria-modal={sideSheet === 'studio' ? true : undefined}
+            aria-label={sideSheet === 'studio' ? 'Studio panel' : undefined}
+          >
             <StudioPanel
               key={state.session.id}
               sessionId={state.session.id}
               selectedSources={selectedSources}
               initialArtifacts={state.session.artifacts}
+              initialAttemptCount={state.session.attempts.length}
               onCitation={showCitation}
+              onCloseResponsive={closeSideSheet}
             />
             {activeCitation && (
               <EvidencePanel
@@ -868,6 +974,17 @@ export function WorkspacePage() {
             )}
           </div>
         </main>
+        {sideSheet && (
+          <button
+            className="sheet-backdrop"
+            type="button"
+            aria-label="Close side panel"
+            onClick={() => {
+              if (!activeCitation) closeSideSheet()
+            }}
+          />
+        )}
+        </>
         )
       })()}
     </div>

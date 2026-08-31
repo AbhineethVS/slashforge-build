@@ -241,7 +241,9 @@ submission before revealing feedback.
 - `GET /api/v1/studio/progress`
 
 The API calculates correctness for MCQs. Short answers and Teach-Back may use
-model-assisted judgments, stored with `unscored` when confidence is inadequate.
+model-assisted judgments in a later iteration. The scoped release stores them
+as `unscored` formative comparisons; deterministic classifications are emitted
+only when correctness is known.
 
 ## 7. Session isolation
 
