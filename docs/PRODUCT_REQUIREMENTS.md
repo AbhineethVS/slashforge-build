@@ -32,7 +32,8 @@ handouts, or textbook chapters on a laptop.
 
 Initial constraints:
 
-- English, digitally readable PDFs only.
+- English, digitally readable PDFs only; Phase 6 speech is English-India
+  (`en-IN`) only.
 - One temporary session per browser with no login.
 - One bundled demo PDF plus up to two temporary uploads.
 - Up to 50 pages per uploaded PDF and 100 uploaded pages per session.
@@ -142,10 +143,39 @@ The right-hand Studio panel is the home for generated learning tools:
 - Flashcards.
 - Quiz.
 - Teach Back.
+- Audio Overview.
 - Temporary progress signals.
 
 Studio uses the source selection from the left panel. Generated tools appear in
 the panel without replacing the center chat.
+
+### 5.8 Use grounded voice learning
+
+1. The student explicitly starts and stops a bounded push-to-talk recording in
+   Chat or Teach Back.
+2. Sarvam Saaras v3 transcribes English-India speech into an editable text
+   draft; the student reviews or changes it before submission.
+3. The student may play narration only for LUMA-owned assistant answers and
+   already backend-validated Teach-Back feedback.
+4. From selected ready sources, the student may generate one 3–5 minute,
+   single-narrator Audio Overview.
+5. OpenAI builds the overview script from selected-source retrieval. The
+   backend validates every cited chunk ID and maps it to trusted page metadata
+   before Sarvam Bulbul v3 narrates the final transcript.
+
+Acceptance criteria:
+
+- Voice is optional and every flow remains usable through editable text.
+- Push-to-talk has explicit start, recording, stop, transcribing, review,
+  failure, and retry states; it never auto-submits a transcript.
+- Narration does not read student-authored text, arbitrary PDFs, flashcards, or
+  quizzes.
+- Audio Overview always exposes its complete transcript and backend-validated
+  page citations.
+- Recording and generated audio are temporary, session-scoped, bounded, and
+  removed on reset, expiry, or restart.
+- Speech failures preserve the transcript or answer and provide a text
+  fallback.
 
 ## 6. Release scope
 
@@ -163,6 +193,11 @@ the panel without replacing the center chat.
 - Confidence capture and attempt classifications.
 - Right-side Studio panel for study tools.
 - In-session state only.
+- English-India push-to-talk Chat and Teach-Back dictation with editable
+  transcripts.
+- Optional narration of owned assistant answers and validated Teach-Back
+  feedback.
+- A cited 3–5 minute single-narrator Audio Overview with transcript.
 
 ### Should have
 
@@ -180,14 +215,15 @@ the panel without replacing the center chat.
 ### Will not have in the hackathon release
 
 - OCR or handwriting recognition.
-- Video, audio, website, or YouTube ingestion.
-- Audio overviews or podcasts.
+- Video, audio-source, website, or YouTube ingestion.
+- Multi-speaker podcasts or conversational audio overviews.
+- Voice flashcards or voice quizzes.
 - Collaborative notebooks or public sharing.
 - LMS integrations.
 - Native mobile applications.
 - General web search mixed into source answers.
 - Multi-agent workflows.
-- Multi-provider model configuration.
+- User-selectable provider or model configuration.
 - Full spaced-repetition scheduling.
 - User accounts, durable cloud storage, and cross-device history.
 
@@ -201,6 +237,9 @@ Technical release gates:
 - At least 90% of generated quiz questions answerable from cited evidence.
 - No cross-session source access in isolation tests.
 - No broken citation links in three full demo rehearsals.
+- At least 90% usable English-India transcription on the fixed voice fixture
+  set, with every transcript editable before submission.
+- No unvalidated page citation or non-owned text reaches narration.
 
 Usability release gates:
 
@@ -218,6 +257,8 @@ Usability release gates:
 6. Answer a quiz question incorrectly with high confidence.
 7. Show the new confident-misconception state.
 8. Use Teach-Back to identify one missing point with evidence.
+9. Generate or play the bundled-source Audio Overview, show its transcript,
+   and open one validated page citation.
 
 ## 9. Risks
 
@@ -227,6 +268,8 @@ Usability release gates:
 - Long processing blocks the demo.
 - API billing, quota, or network failure interrupts the live presentation.
 - Azure restarts and clears temporary sessions.
+- Microphone permission, Sarvam availability, or speech quality interrupts a
+  voice flow.
 
 Mitigations are specified in
 [AI_RAG_SPEC.md](AI_RAG_SPEC.md) and

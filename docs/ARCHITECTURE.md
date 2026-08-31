@@ -12,6 +12,7 @@ It supports:
 - Optional temporary PDF uploads during a browser session.
 - Page-aware retrieval and citation.
 - Grounded chat, summaries, flashcards, quizzes, and Teach-Back.
+- Optional grounded voice learning and cited Audio Overviews.
 - A NotebookLM-style Sources–Chat–Studio interface.
 
 It deliberately does not provide durable accounts, cloud file storage, a
@@ -25,6 +26,7 @@ flowchart LR
     FastAPI --> TempFiles[EphemeralTempFiles]
     FastAPI --> Memory[InMemorySessionsAndVectors]
     FastAPI --> OpenAI[OpenAIAPI]
+    FastAPI --> Sarvam[SarvamSpeechAPIs]
     DemoAssets[PrebuiltDemoAssets] --> FastAPI
 ```
 
@@ -33,6 +35,10 @@ flowchart LR
 React, Vite, TypeScript, Tailwind CSS, and shadcn/ui provide the interface.
 Browser `sessionStorage` keeps the current session ID, chat display state,
 selected sources, and temporary activity results.
+
+The browser captures push-to-talk audio only after explicit permission and
+sends bounded recordings to FastAPI. It never receives provider credentials
+and does not call Sarvam directly.
 
 Client routes:
 
@@ -51,7 +57,12 @@ One Python service:
 - Keeps temporary source metadata, chunks, and vectors in memory.
 - Performs cosine similarity with NumPy.
 - Calls the OpenAI Responses API.
+- Calls Sarvam Saaras v3 for English-India transcription and Bulbul v3 for
+  narration; Sarvam is not used for retrieval, reasoning, or content
+  generation.
 - Validates citations and structured artifacts.
+- Stores bounded temporary recordings, generated narration, and overview
+  transcripts inside the owning session.
 - Serves temporary and bundled PDFs to the evidence viewer.
 
 ### Demo assets
@@ -63,6 +74,8 @@ assets:
 - Embeddings.
 - Suggested prompts.
 - Optional cached artifact fixtures for emergency fallback.
+- An optional cached Audio Overview transcript and audio file, but only when
+  redistribution rights cover both.
 
 Do not commit copyrighted textbooks without redistribution permission.
 
@@ -84,6 +97,7 @@ flowchart TB
     API --> Temp
     API --> RAM
     API --> OpenAI[OpenAIAPI]
+    API --> Sarvam[SpeechOnlySarvamAPIs]
 ```
 
 Use one instance only. Multiple instances would hold different in-memory
@@ -101,6 +115,8 @@ before judging; use student credits for a small paid tier if available.
 5. Extracted chunks and embedding matrices live in that session's memory.
 6. Each request refreshes the expiry time.
 7. Explicit reset, TTL expiry, or process restart removes temporary data.
+8. Recorded audio, generated narration, transcripts, and overview artifacts
+   follow the same session ownership and cleanup lifecycle.
 
 Target TTL: 60 minutes. The UI clearly says temporary uploads may disappear on
 refresh after expiry or when the demo server restarts.
@@ -154,9 +170,35 @@ the extracted chunk metadata.
 - Filenames are display metadata and never filesystem paths.
 - Uploaded text is delimited as untrusted evidence, not instructions.
 - OpenAI keys remain server-side.
+- Sarvam keys remain server-side.
 - Model output is schema- and citation-validated.
 - Upload count, file size, page count, extracted characters, session memory,
-  request rate, and OpenAI usage are bounded.
+  request rate, OpenAI usage, recording duration/bytes, narrated characters,
+  generated audio bytes, and speech requests are bounded.
+
+## 7.1 Grounded voice flows
+
+Push-to-talk is request/response, not an open microphone:
+
+1. The browser records only while the student holds or explicitly activates the
+   control, stops at the configured duration cap, and uploads a supported audio
+   blob to FastAPI.
+2. The browser stops capture at 30 seconds. FastAPI independently validates
+   session ownership, media type, and request bytes, then sends it to Sarvam
+   Saaras v3 with `en-IN`.
+3. The returned transcript is temporary and editable in the existing text
+   composer; transcription never submits Chat or Teach-Back automatically.
+
+Narration accepts only a server-owned assistant message or validated
+Teach-Back feedback ID. FastAPI resolves the owned text, enforces character and
+audio limits, and sends it to Sarvam Bulbul v3. The browser cannot supply
+arbitrary narration text.
+
+Audio Overview generation first performs selected-source retrieval through the
+existing OpenAI pipeline. OpenAI returns a structured single-narrator script
+with chunk IDs; the backend validates and maps all citations before Bulbul v3
+narrates the final 3–5 minute transcript. The transcript and normalized
+citations remain available if TTS fails.
 
 This design is suitable for a controlled hackathon demo, not a public launch.
 
@@ -169,6 +211,11 @@ This design is suitable for a controlled hackathon demo, not a public launch.
 - Invalid structured output: retry once, then return a recoverable error.
 - OpenAI billing/quota failure: offer cached demo artifacts and explain that
   live generation is unavailable.
+- Microphone denial or capture failure: retain the text input path.
+- Sarvam STT failure: retain the recording only within its short cleanup window
+  and allow retry or manual typing.
+- Sarvam TTS failure: keep the owned text, overview transcript, and citations
+  readable; narration remains optional.
 
 ## 9. Observability
 
@@ -178,10 +225,12 @@ Log only:
 - Processing stage and duration.
 - Page and chunk counts.
 - Model, token usage, and estimated cost.
+- Speech provider/model, audio duration/bytes, character count, latency, and
+  failure category.
 - Retrieval scores, selected chunk IDs, and validation outcome.
 
-Do not log source text, student answers, session tokens, temporary paths, or API
-keys.
+Do not log source text, transcripts, recordings, generated audio, student
+answers, session tokens, temporary paths, or API keys.
 
 ## 10. Upgrade path
 

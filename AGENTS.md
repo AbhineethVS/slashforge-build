@@ -25,7 +25,10 @@ whether behavior or documentation is wrong and update both in the same change.
 
 ## Project invariants
 
-- The OpenAI API is the only generation provider in the scoped release.
+- The OpenAI API is the only retrieval and content-generation provider in the
+  scoped release.
+- Sarvam is used only for English-India speech-to-text and text-to-speech:
+  Saaras v3 for transcription and Bulbul v3 for narration.
 - ChatGPT subscriptions and OpenAI API billing are separate.
 - Page citations come from trusted chunk metadata, not model-written page
   numbers.
@@ -36,6 +39,9 @@ whether behavior or documentation is wrong and update both in the same change.
 - Unsupported evidence produces an abstention, not an invented answer.
 - No secrets are shipped to the browser.
 - Temporary uploads and in-memory state must be bounded and expire.
+- Recorded and generated audio is temporary, session-scoped, bounded, and
+  removed on reset, expiry, or restart.
+- Speech failures preserve an editable text path; voice never gates learning.
 - The desktop workspace is Sources left, Chat center, Studio right.
 - No feature outranks session isolation, cleanup, citation validation, or demo
   reliability.

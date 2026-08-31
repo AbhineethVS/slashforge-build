@@ -32,7 +32,7 @@ until the product is further along. The repository now contains:
 - Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
   retryable failures, source deletion, and automatic temporary-file cleanup.
 
-Phases 1–5 are complete locally. The workspace opens with a ready economics
+Phases 1–6 are complete locally. The workspace opens with a ready economics
 source, accepts up to two temporary PDF uploads, answers against selected
 sources with backend-validated page citations, and opens cited PDFs in an
 evidence sheet. Studio generates cited summaries plus focused Flashcard and
@@ -40,6 +40,16 @@ Quiz practice experiences, records deterministic confidence-aware learning
 signals, recommends weak concepts, and provides cited Teach-Back feedback.
 Cached demo artifacts keep the bundled source presentable during a live OpenAI
 generation outage.
+
+Phase 6 adds English-India push-to-talk dictation with an editable transcript,
+narration of owned assistant answers, spoken Teach-Back input and narration of
+already validated feedback, and a 3–5 minute single-narrator Audio Overview
+with a transcript and backend-validated page citations. OpenAI remains
+responsible for selected-source retrieval and overview content; Sarvam Saaras
+v3 and Bulbul v3 are used only for speech-to-text and text-to-speech. Audio
+remains temporary, session-scoped, bounded, and optional, with text fallback on
+speech failure. The bundled demo includes a cached overview transcript; cached
+speech is intentionally unavailable until redistribution rights are confirmed.
 
 ## Phase 0 setup
 
@@ -68,7 +78,11 @@ python -m luma_spikes.cli extract ../path/to/source.pdf
 ```
 
 Live retrieval and answer commands require `OPENAI_API_KEY`. The answer model
-defaults to `gpt-5-mini` and can be changed with `OPENAI_CHAT_MODEL`.
+defaults to `gpt-5-mini` and can be changed with `OPENAI_CHAT_MODEL`; Audio
+Overview defaults to `gpt-5` and can be changed with
+`OPENAI_AUDIO_OVERVIEW_MODEL`. Phase 6 speech calls additionally require a
+server-only `SARVAM_API_KEY`; `SARVAM_TTS_SPEAKER` selects the Bulbul voice.
+Neither key may be shipped to the browser.
 
 Rebuild bundled demo assets after changing the source PDF:
 
@@ -94,6 +108,7 @@ python -m luma_api.demo_assets ../demo.pdf
 - React, Vite, TypeScript, Tailwind CSS, and shadcn/ui
 - FastAPI and Python for PDF processing and AI orchestration
 - OpenAI Responses API, structured outputs, and `text-embedding-3-small`
+- Sarvam Saaras v3 for English-India STT and Bulbul v3 for TTS
 - PyMuPDF for page-aware PDF extraction
 - NumPy for in-memory vector similarity
 - Browser `sessionStorage`, backend memory, and temporary files

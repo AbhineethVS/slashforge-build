@@ -72,7 +72,13 @@ class ArtifactRequest(BaseModel):
 
 class ArtifactResponse(BaseModel):
     id: UUID
-    type: Literal["summary", "flashcards", "quiz", "teach_back"]
+    type: Literal[
+        "summary",
+        "flashcards",
+        "quiz",
+        "teach_back",
+        "audio_overview",
+    ]
     title: str
     content: dict[str, Any]
     source_ids: list[UUID]
@@ -105,4 +111,23 @@ class ErrorResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"]
     openai_configured: bool
+    speech_configured: bool
+
+
+class TranscriptionResponse(BaseModel):
+    transcript: str
+    language_code: str | None = None
+
+
+class AudioClipResponse(BaseModel):
+    id: UUID
+    url: str
+    mime_type: str
+    sequence: int
+    section_index: int | None = None
+
+
+class NarrationResponse(BaseModel):
+    resource_id: UUID
+    clips: list[AudioClipResponse]
 

@@ -242,7 +242,49 @@ weights will be calibrated with sample sessions and documented in code.
 The system must use uncertainty language for semantic judgments and must not
 claim objective grading.
 
-## 14. Model policy
+## 14. Grounded voice learning
+
+Speech does not change the retrieval or citation trust model.
+
+### Dictation
+
+- Chat and Teach-Back use bounded push-to-talk recordings, never ambient or
+  continuously open microphone capture.
+- FastAPI sends English-India audio to Sarvam Saaras v3 with transcription
+  output, not translation.
+- The transcript is untrusted user input, remains editable, and is never
+  submitted automatically.
+
+### Narration
+
+- Sarvam Bulbul v3 may narrate only text resolved by the backend from a
+  session-owned assistant answer, already validated Teach-Back feedback, or
+  validated Audio Overview artifact.
+- User-authored text, arbitrary client text, source PDFs, flashcards, and
+  quizzes are not narration inputs.
+- Page numbers and citation labels are rendered from backend-owned citation
+  objects; speech output is never a citation authority.
+
+### Audio Overview
+
+1. Validate the current session and selected ready source IDs.
+2. Run a broad selected-source retrieval sweep sufficient for a coherent short
+   overview.
+3. Ask OpenAI for a structured, single-narrator script targeting 3–5 minutes,
+   with section-level opaque chunk IDs.
+4. Validate every chunk ID against the exact supplied retrieval set and map it
+   to trusted source/page metadata.
+5. Reject or retry unsupported sections before narration.
+6. Send only the final validated transcript to Sarvam Bulbul v3.
+7. Return the transcript, normalized page citations, and optional temporary
+   audio. If TTS fails, return the readable validated artifact without audio.
+
+The overview is explanatory study content, not a multi-speaker podcast. It
+must not introduce facts absent from selected-source evidence. Cached bundled
+overview transcripts must pass the same citation validation; cached audio is
+packaged only when redistribution is allowed.
+
+## 15. Provider and model policy
 
 - Use the OpenAI Responses API through the official Python SDK.
 - Keep the generation model configurable as `OPENAI_CHAT_MODEL`.
@@ -252,8 +294,14 @@ claim objective grading.
 - Use structured outputs with Pydantic schemas for artifacts.
 - Set explicit request timeouts and bounded retries.
 - Store model and prompt versions with every generated artifact.
+- OpenAI remains the sole provider for embeddings, retrieval-related model
+  work, grounded content generation, and structured learning artifacts.
+- Sarvam is a narrow speech provider only: `saaras:v3` for STT and
+  `bulbul:v3` for TTS, configured for English-India where applicable.
+- Keep `OPENAI_API_KEY` and `SARVAM_API_KEY` server-only and record speech
+  model versions with temporary speech artifacts.
 
-## 15. Prompt versioning
+## 16. Prompt versioning
 
 Prompts live as versioned files or constants grouped by task:
 
@@ -264,11 +312,12 @@ Prompts live as versioned files or constants grouped by task:
 - `quiz_validation`
 - `teach_back_rubric`
 - `teach_back_feedback`
+- `audio_overview`
 
 Every response records its prompt version in temporary diagnostics. Prompt
 changes require running the fixed evaluation set before release.
 
-## 16. Evaluation
+## 17. Evaluation
 
 Maintain two representative, redistributable fixture PDFs with:
 
@@ -281,3 +330,8 @@ Maintain two representative, redistributable fixture PDFs with:
 Track retrieval hit rate separately from answer correctness. If the required
 evidence is absent from the selected context, the generation model is not the
 first problem to fix.
+
+Phase 6 adds fixed English-India speech fixtures for transcription usability,
+recording limits, narration ownership, speech fallback, overview duration,
+script groundedness, and citation-page accuracy. Evaluate transcript quality
+separately from OpenAI content quality and citation validation.

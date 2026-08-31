@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import shutil
+import tempfile
 from threading import Lock
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -16,10 +17,23 @@ if TYPE_CHECKING:
 SESSION_TTL = timedelta(minutes=60)
 MAX_ACTIVE_SESSIONS = 100
 MAX_EXPIRED_MARKERS = 1_000
+MAX_VOICE_REQUESTS_PER_SESSION = 40
+MAX_TTS_CHARACTERS_PER_SESSION = 50_000
+MAX_AUDIO_BYTES_PER_SESSION = 25 * 1024 * 1024
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+@dataclass(slots=True)
+class AudioAsset:
+    id: UUID
+    resource_id: UUID
+    path: Path
+    mime_type: str
+    sequence: int
+    section_index: int | None = None
 
 
 @dataclass(slots=True)
@@ -35,9 +49,40 @@ class DemoSession:
     temporary_directory: Path | None = None
     upload_in_progress: bool = False
     generation_lock: Lock = field(default_factory=Lock, repr=False)
+    voice_lock: Lock = field(default_factory=Lock, repr=False)
+    voice_request_count: int = 0
+    tts_character_count: int = 0
+    audio_bytes: int = 0
+    audio_assets: dict[UUID, AudioAsset] = field(default_factory=dict)
+
+    def ensure_temporary_directory(self) -> Path:
+        if self.temporary_directory is None:
+            self.temporary_directory = Path(
+                tempfile.mkdtemp(prefix="luma-session-")
+            )
+        return self.temporary_directory
+
+    def remove_audio_for_resource(self, resource_id: UUID) -> None:
+        matching = [
+            asset_id
+            for asset_id, asset in self.audio_assets.items()
+            if asset.resource_id == resource_id
+        ]
+        for asset_id in matching:
+            asset = self.audio_assets.pop(asset_id)
+            try:
+                self.audio_bytes = max(
+                    0,
+                    self.audio_bytes - asset.path.stat().st_size,
+                )
+            except OSError:
+                pass
+            asset.path.unlink(missing_ok=True)
 
     def cleanup(self) -> None:
         self.uploaded_sources.clear()
+        self.audio_assets.clear()
+        self.audio_bytes = 0
         if self.temporary_directory is not None:
             shutil.rmtree(self.temporary_directory, ignore_errors=True)
             self.temporary_directory = None
@@ -117,6 +162,11 @@ class SessionStore:
             del self._sessions[session_id]
             self._mark_expired(session_id)
         return len(expired)
+
+    def cleanup_all(self) -> None:
+        for session in self._sessions.values():
+            session.cleanup()
+        self._sessions.clear()
 
     def _mark_expired(self, session_id: UUID) -> None:
         if session_id in self._expired_ids:

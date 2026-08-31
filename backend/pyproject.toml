@@ -15,6 +15,7 @@ dependencies = [
   "pymupdf",
   "python-dotenv",
   "python-multipart",
+  "sarvamai",
   "tiktoken",
   "uvicorn[standard]",
 ]

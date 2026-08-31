@@ -107,7 +107,12 @@ def load_catalog(root: Path | None = None) -> BundledDemoCatalog:
             raise ValueError("Demo fallback artifacts must be a JSON object.")
         allowed_chunk_ids = {str(chunk.id) for chunk in chunks}
         for kind, artifact in loaded.items():
-            if kind not in {"summary", "flashcards", "quiz"} or not isinstance(
+            if kind not in {
+                "summary",
+                "flashcards",
+                "quiz",
+                "audio_overview",
+            } or not isinstance(
                 artifact, dict
             ):
                 raise ValueError("Demo fallback artifact has an unsupported shape.")

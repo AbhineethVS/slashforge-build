@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import tempfile
 from contextlib import asynccontextmanager, suppress
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -46,6 +45,12 @@ from .artifacts import (
     materialize_artifact,
     retrieve_artifact_chunks,
 )
+from .audio_overview import (
+    RawAudioOverview,
+    generate_raw_audio_overview,
+    materialize_audio_overview,
+    retrieve_audio_overview_chunks,
+)
 from .chat import SelectedIndex, answer_from_sources
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
@@ -68,11 +73,15 @@ from .schemas import (
     HealthResponse,
     ArtifactRequest,
     ArtifactResponse,
+    AudioClipResponse,
     SessionResponse,
     SourceSummary,
+    NarrationResponse,
+    TranscriptionResponse,
 )
 from .sessions import (
     DemoSession,
+    MAX_VOICE_REQUESTS_PER_SESSION,
     SessionCapacityError,
     SessionExpiredError,
     SessionNotFoundError,
@@ -85,6 +94,18 @@ from .sources import (
     MAX_UPLOADED_SOURCES,
     SourceLimitError,
     build_uploaded_source,
+)
+from .voice import (
+    MAX_AUDIO_UPLOAD_BYTES,
+    SUPPORTED_AUDIO_TYPES,
+    SarvamVoiceService,
+    StoredNarration,
+    VoiceBusyError,
+    VoiceLimitError,
+    VoiceProvider,
+    VoiceProviderError,
+    narration_text,
+    store_narration,
 )
 
 load_project_environment()
@@ -130,6 +151,44 @@ def _pdf_api_error(error: PdfSpikeError) -> ApiError:
     return ApiError(status_code, error.code, message, False, action)
 
 
+def _voice_api_error(error: Exception) -> ApiError:
+    if isinstance(error, VoiceBusyError):
+        return ApiError(
+            status.HTTP_409_CONFLICT,
+            "REQUEST_RATE_LIMITED",
+            "Another voice request is already running.",
+            True,
+            "Wait for it to finish and try again.",
+        )
+    if isinstance(error, VoiceLimitError):
+        return ApiError(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "VOICE_USAGE_LIMIT",
+            str(error),
+            False,
+            "Reset the temporary session or continue with text.",
+        )
+    if isinstance(error, VoiceProviderError):
+        return ApiError(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            (
+                "VOICE_NOT_CONFIGURED"
+                if error.unavailable
+                else "VOICE_PROCESSING_FAILED"
+            ),
+            "Voice processing is temporarily unavailable.",
+            error.retryable,
+            "Continue with text or retry voice in a moment.",
+        )
+    return ApiError(
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+        "VOICE_PROCESSING_FAILED",
+        str(error),
+        False,
+        "Continue with text or try a clearer recording.",
+    )
+
+
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         try:
@@ -155,6 +214,10 @@ def create_app(
     teach_back_generator: (
         Callable[[str, str, Sequence[Chunk]], RawTeachBack] | None
     ) = None,
+    audio_overview_generator: (
+        Callable[[Sequence[Chunk]], RawAudioOverview] | None
+    ) = None,
+    voice_provider: VoiceProvider | None = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
     catalog = demo_catalog
@@ -163,6 +226,11 @@ def create_app(
             catalog = load_catalog()
         except FileNotFoundError:
             catalog = None
+    configured_voice_provider = voice_provider
+    if configured_voice_provider is None and os.getenv("SARVAM_API_KEY"):
+        configured_voice_provider = SarvamVoiceService(
+            os.environ["SARVAM_API_KEY"]
+        )
 
     def attach_bundled_demo(session: DemoSession) -> None:
         if catalog is None:
@@ -268,6 +336,43 @@ def create_app(
             concept=concept,
             explanation=explanation,
             chunks=chunks,
+        )
+
+    def generate_audio_overview(
+        chunks: Sequence[Chunk],
+    ) -> RawAudioOverview:
+        if audio_overview_generator is not None:
+            return audio_overview_generator(chunks)
+        return generate_raw_audio_overview(
+            client=OpenAI(timeout=120.0, max_retries=1),
+            model=os.getenv("OPENAI_AUDIO_OVERVIEW_MODEL", "gpt-5"),
+            chunks=chunks,
+        )
+
+    def require_voice_provider() -> VoiceProvider:
+        if configured_voice_provider is None:
+            raise ApiError(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                "VOICE_NOT_CONFIGURED",
+                "Voice features are not configured.",
+                False,
+                "Add SARVAM_API_KEY on the server or continue with text.",
+            )
+        return configured_voice_provider
+
+    def narration_response(stored: StoredNarration) -> NarrationResponse:
+        return NarrationResponse(
+            resource_id=stored.resource_id,
+            clips=[
+                AudioClipResponse(
+                    id=asset.id,
+                    url=f"/api/v1/audio/{asset.id}",
+                    mime_type=asset.mime_type,
+                    sequence=asset.sequence,
+                    section_index=asset.section_index,
+                )
+                for asset in stored.assets
+            ],
         )
 
     def cached_demo_artifact(
@@ -429,6 +534,7 @@ def create_app(
             cleanup_task.cancel()
             with suppress(asyncio.CancelledError):
                 await cleanup_task
+            store.cleanup_all()
 
     application = FastAPI(title="LUMA", version="0.1.0", lifespan=lifespan)
     application.add_exception_handler(ApiError, api_error_response)
@@ -471,7 +577,82 @@ def create_app(
         return HealthResponse(
             status="ok",
             openai_configured=bool(os.getenv("OPENAI_API_KEY")),
+            speech_configured=configured_voice_provider is not None,
         )
+
+    @application.post(
+        "/api/v1/voice/transcriptions",
+        response_model=TranscriptionResponse,
+    )
+    async def transcribe_voice(
+        file: UploadFile,
+        session: DemoSession = Depends(current_session),
+    ) -> TranscriptionResponse:
+        content_type = (file.content_type or "").split(";", 1)[0].lower()
+        if content_type not in SUPPORTED_AUDIO_TYPES:
+            await file.close()
+            raise ApiError(
+                status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                "VOICE_UNSUPPORTED",
+                "This recording format is not supported.",
+                False,
+                "Use a browser that records WebM, MP4, OGG, MP3, or WAV audio.",
+            )
+        if not session.voice_lock.acquire(blocking=False):
+            await file.close()
+            raise _voice_api_error(
+                VoiceBusyError("Another voice request is already running.")
+            )
+        try:
+            if session.voice_request_count >= MAX_VOICE_REQUESTS_PER_SESSION:
+                raise VoiceLimitError(
+                    "This session reached its voice request limit."
+                )
+            audio = bytearray()
+            while chunk := await file.read(64 * 1024):
+                audio.extend(chunk)
+                if len(audio) > MAX_AUDIO_UPLOAD_BYTES:
+                    raise ApiError(
+                        status.HTTP_413_CONTENT_TOO_LARGE,
+                        "AUDIO_TOO_LARGE",
+                        "The recording is too large.",
+                        False,
+                        "Record for no more than 30 seconds and try again.",
+                    )
+            if not audio:
+                raise ApiError(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    "TRANSCRIPT_EMPTY",
+                    "No audio was received.",
+                    False,
+                    "Record a short explanation and try again.",
+                )
+            session.voice_request_count += 1
+            filename = Path((file.filename or "recording.webm").replace("\\", "/")).name
+            transcript, language_code = await require_voice_provider().transcribe(
+                audio=bytes(audio),
+                filename=filename[:120],
+                content_type=content_type,
+            )
+            if not transcript:
+                raise ApiError(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    "TRANSCRIPT_EMPTY",
+                    "No clear speech was detected.",
+                    False,
+                    "Try again in a quieter place or continue by typing.",
+                )
+            return TranscriptionResponse(
+                transcript=transcript[:4_000],
+                language_code=language_code,
+            )
+        except ApiError:
+            raise
+        except (VoiceProviderError, VoiceLimitError) as error:
+            raise _voice_api_error(error) from error
+        finally:
+            session.voice_lock.release()
+            await file.close()
 
     @application.post(
         "/api/v1/session",
@@ -566,9 +747,7 @@ def create_app(
         source_id = uuid4()
         display_name = Path((file.filename or "upload.pdf").replace("\\", "/")).name
         display_name = display_name[:255] or "upload.pdf"
-        if session.temporary_directory is None:
-            session.temporary_directory = Path(tempfile.mkdtemp(prefix="luma-upload-"))
-        file_path = session.temporary_directory / f"{uuid4()}.pdf"
+        file_path = session.ensure_temporary_directory() / f"{uuid4()}.pdf"
 
         try:
             size = 0
@@ -1012,6 +1191,241 @@ def create_app(
     ) -> ProgressResponse:
         return build_progress(session)
 
+    @application.post(
+        "/api/v1/chat/messages/{message_id}/audio",
+        response_model=NarrationResponse,
+    )
+    async def narrate_chat_message(
+        message_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> NarrationResponse:
+        message = next(
+            (
+                item
+                for item in session.messages
+                if item.get("id") == str(message_id)
+                and item.get("role") == "assistant"
+            ),
+            None,
+        )
+        if message is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "VOICE_RESOURCE_NOT_FOUND",
+                "The answer is not available in this session.",
+                False,
+                "Choose an available grounded answer.",
+            )
+        try:
+            stored = await store_narration(
+                session=session,
+                resource_id=message_id,
+                texts=[str(message.get("content_markdown", ""))],
+                provider=require_voice_provider(),
+            )
+            return narration_response(stored)
+        except ApiError:
+            raise
+        except (VoiceBusyError, VoiceLimitError, VoiceProviderError, ValueError) as error:
+            raise _voice_api_error(error) from error
+
+    @application.post(
+        "/api/v1/artifacts/{artifact_id}/audio",
+        response_model=NarrationResponse,
+    )
+    async def narrate_artifact(
+        artifact_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> NarrationResponse:
+        artifact = next(
+            (
+                item
+                for item in session.artifacts
+                if item.get("id") == str(artifact_id)
+            ),
+            None,
+        )
+        if artifact is None or artifact.get("type") not in {
+            "teach_back",
+            "audio_overview",
+        }:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "VOICE_RESOURCE_NOT_FOUND",
+                "The narrated study tool is not available in this session.",
+                False,
+                "Choose an available Teach-Back or Audio Overview.",
+            )
+        content = artifact.get("content", {})
+        if artifact.get("type") == "audio_overview":
+            sections = content.get("sections", [])
+            texts = [str(section.get("transcript", "")) for section in sections]
+            section_indexes: list[int | None] = list(range(len(texts)))
+        else:
+            def point_text(group: str) -> str:
+                points = content.get(group, [])
+                return " ".join(str(point.get("text", "")) for point in points)
+
+            texts = [
+                (
+                    "Here is your formative Teach Back feedback. "
+                    f"Covered: {point_text('covered') or 'No rubric point was clearly covered yet.'} "
+                    f"Missing: {point_text('missing') or 'No important omission was identified.'} "
+                    f"Check this idea: {point_text('check_this') or 'No conflicting claim was identified.'} "
+                    f"Try next: {content.get('next_prompt', '')}"
+                )
+            ]
+            section_indexes = [None]
+        try:
+            stored = await store_narration(
+                session=session,
+                resource_id=artifact_id,
+                texts=texts,
+                section_indexes=section_indexes,
+                provider=require_voice_provider(),
+            )
+            if artifact.get("type") == "audio_overview":
+                for section in content.get("sections", []):
+                    section["audio_clip_ids"] = []
+                for asset in stored.assets:
+                    if asset.section_index is not None:
+                        content["sections"][asset.section_index][
+                            "audio_clip_ids"
+                        ].append(str(asset.id))
+                content["audio_status"] = "ready"
+            return narration_response(stored)
+        except ApiError:
+            raise
+        except (VoiceBusyError, VoiceLimitError, VoiceProviderError, ValueError) as error:
+            if artifact.get("type") == "audio_overview":
+                content["audio_status"] = "unavailable"
+            raise _voice_api_error(error) from error
+
+    @application.get("/api/v1/audio/{audio_id}")
+    def get_audio(
+        audio_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> FileResponse:
+        asset = session.audio_assets.get(audio_id)
+        if asset is None or not asset.path.is_file():
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "VOICE_RESOURCE_NOT_FOUND",
+                "This temporary audio clip is unavailable.",
+                False,
+                "Regenerate the narration or continue with the transcript.",
+            )
+        return FileResponse(
+            asset.path,
+            media_type=asset.mime_type,
+            filename=f"luma-{asset.sequence + 1}.mp3",
+        )
+
+    @application.post(
+        "/api/v1/studio/audio-overview",
+        response_model=ArtifactResponse,
+    )
+    async def create_audio_overview(
+        request: ArtifactRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        if not session.generation_lock.acquire(blocking=False):
+            raise ApiError(
+                status.HTTP_409_CONFLICT,
+                "REQUEST_RATE_LIMITED",
+                "Another AI task is already running.",
+                True,
+                "Wait for it to finish and try again.",
+            )
+        stored_artifact: dict[str, object] | None = None
+        try:
+            sources = selected_indexes(session, request.source_ids)
+            chunks = await run_in_threadpool(
+                retrieve_audio_overview_chunks,
+                sources=sources,
+                embedder=create_embedder(),
+            )
+            title: str | None = None
+            content: dict[str, object] | None = None
+            for _ in range(2):
+                raw = await run_in_threadpool(generate_audio_overview, chunks)
+                try:
+                    title, content = materialize_audio_overview(
+                        raw=raw,
+                        chunks=chunks,
+                        sources=sources,
+                    )
+                    break
+                except InvalidArtifactError:
+                    continue
+            if title is None or content is None:
+                raise InvalidArtifactError(
+                    "The audio overview could not be validated."
+                )
+            artifact = ArtifactResponse(
+                id=uuid4(),
+                type="audio_overview",
+                title=title,
+                content=content,
+                source_ids=request.source_ids,
+                created_at=utc_now(),
+            )
+            stored_artifact = artifact.model_dump(mode="json")
+            session.artifacts.append(stored_artifact)
+        except (OpenAIError, InvalidArtifactError, ValueError) as error:
+            cached = (
+                catalog.fallback_artifact("audio_overview")
+                if catalog is not None
+                and request.source_ids == [catalog.source_id]
+                else None
+            )
+            if cached is None:
+                raise ApiError(
+                    status.HTTP_503_SERVICE_UNAVAILABLE,
+                    "AI_OUTPUT_INVALID",
+                    "The grounded audio overview could not be generated.",
+                    True,
+                    "Retry later or continue with another Studio tool.",
+                ) from error
+            artifact = ArtifactResponse(
+                id=uuid4(),
+                type="audio_overview",
+                title=str(cached["title"]),
+                content=dict(cached["content"]),
+                source_ids=request.source_ids,
+                created_at=utc_now(),
+            )
+            stored_artifact = artifact.model_dump(mode="json")
+            session.artifacts.append(stored_artifact)
+        finally:
+            session.generation_lock.release()
+
+        assert stored_artifact is not None
+        artifact_id = UUID(str(stored_artifact["id"]))
+        content = stored_artifact["content"]
+        assert isinstance(content, dict)
+        sections = content.get("sections", [])
+        assert isinstance(sections, list)
+        try:
+            stored = await store_narration(
+                session=session,
+                resource_id=artifact_id,
+                texts=[str(section.get("transcript", "")) for section in sections],
+                section_indexes=list(range(len(sections))),
+                provider=require_voice_provider(),
+            )
+            for section in sections:
+                section["audio_clip_ids"] = []
+            for asset in stored.assets:
+                if asset.section_index is not None:
+                    sections[asset.section_index]["audio_clip_ids"].append(
+                        str(asset.id)
+                    )
+            content["audio_status"] = "ready"
+        except (ApiError, VoiceBusyError, VoiceLimitError, VoiceProviderError, ValueError):
+            content["audio_status"] = "unavailable"
+        return ArtifactResponse.model_validate(stored_artifact)
+
     @application.get(
         "/api/v1/studio/artifacts",
         response_model=list[ArtifactResponse],
@@ -1072,6 +1486,7 @@ def create_app(
                 False,
                 "Refresh Studio and try again.",
             )
+        session.remove_audio_for_resource(artifact_id)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     @application.post("/api/v1/spike/upload")

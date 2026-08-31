@@ -175,11 +175,45 @@ export type TeachBackArtifact = {
   created_at: string
 }
 
+export type AudioOverviewArtifact = {
+  id: string
+  type: 'audio_overview'
+  title: string
+  content: {
+    fallback?: boolean
+    audio_status: 'pending' | 'ready' | 'unavailable'
+    estimated_duration_seconds: number
+    prompt_version: string
+    sections: {
+      title: string
+      transcript: string
+      citations: Citation[]
+      audio_clip_ids: string[]
+    }[]
+  }
+  source_ids: string[]
+  created_at: string
+}
+
 export type StudioArtifact =
   | SummaryArtifact
   | FlashcardArtifact
   | QuizArtifact
   | TeachBackArtifact
+  | AudioOverviewArtifact
+
+export type AudioClip = {
+  id: string
+  url: string
+  mime_type: string
+  sequence: number
+  section_index: number | null
+}
+
+export type Narration = {
+  resource_id: string
+  clips: AudioClip[]
+}
 
 type ApiErrorResponse = {
   error?: {
@@ -497,6 +531,74 @@ export async function generateTeachBack(
   })
   if (!response.ok) throw await readError(response)
   return (await response.json()) as TeachBackArtifact
+}
+
+export async function transcribeVoice(
+  sessionId: string,
+  recording: Blob,
+): Promise<string> {
+  const body = new FormData()
+  const extension = recording.type.includes('mp4') ? 'm4a' : 'webm'
+  body.append('file', recording, `luma-recording.${extension}`)
+  const response = await fetch('/api/v1/voice/transcriptions', {
+    method: 'POST',
+    headers: { 'X-Session-ID': sessionId },
+    body,
+  })
+  if (!response.ok) throw await readError(response)
+  const result = (await response.json()) as { transcript: string }
+  return result.transcript
+}
+
+export async function createMessageNarration(
+  sessionId: string,
+  messageId: string,
+): Promise<Narration> {
+  const response = await fetch(`/api/v1/chat/messages/${messageId}/audio`, {
+    method: 'POST',
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as Narration
+}
+
+export async function createArtifactNarration(
+  sessionId: string,
+  artifactId: string,
+): Promise<Narration> {
+  const response = await fetch(`/api/v1/artifacts/${artifactId}/audio`, {
+    method: 'POST',
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as Narration
+}
+
+export async function fetchAudioClip(
+  sessionId: string,
+  url: string,
+): Promise<Blob> {
+  const response = await fetch(url, {
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return response.blob()
+}
+
+export async function generateAudioOverview(
+  sessionId: string,
+  sourceIds: string[],
+): Promise<AudioOverviewArtifact> {
+  const response = await fetch('/api/v1/studio/audio-overview', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({ source_ids: sourceIds }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as AudioOverviewArtifact
 }
 
 export async function deleteStudioArtifact(

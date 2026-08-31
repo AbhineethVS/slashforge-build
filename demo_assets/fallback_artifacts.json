@@ -138,5 +138,92 @@
         }
       ]
     }
+  },
+  "audio_overview": {
+    "title": "Theory of Cost — Grounded Audio Overview",
+    "content": {
+      "fallback": true,
+      "audio_status": "unavailable",
+      "estimated_duration_seconds": 210,
+      "prompt_version": "audio_overview.cached.v1",
+      "sections": [
+        {
+          "title": "What economists mean by cost",
+          "transcript": "Start with the broad idea: cost is the payment made to factors used in production, while a cost function connects the level of output with the least-cost combination of inputs. The first distinction to remember is between explicit and implicit cost. Explicit costs are actual payments for inputs hired from outside the firm, such as wages, rent, and interest. Implicit costs arise when the firm uses resources it already owns. No cheque is written, but using the owner's land, capital, or managerial time means giving up the next best use of that resource. This is why implicit cost is an opportunity cost. Accounting records usually emphasize explicit payments, while economic reasoning includes both explicit and implicit costs when assessing the real sacrifice involved in production.",
+          "audio_clip_ids": [],
+          "citations": [
+            {
+              "id": "overview-cached-1",
+              "chunk_id": "3d77cdcc-5bdf-524e-a82e-dd3f16122f7c",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 2,
+              "page_end": 2,
+              "excerpt": "Explicit cost is the actual expenditure incurred by a firm. Implicit cost is the cost of inputs owned by the firm.",
+              "claim": "Explicit, implicit, and opportunity cost",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=2"
+            }
+          ]
+        },
+        {
+          "title": "How short-run costs move",
+          "transcript": "In the short run, some factors such as plant and machinery are fixed, so total cost has two parts. Total fixed cost is the obligation attached to fixed factors and does not change when output changes. Total variable cost covers inputs such as raw materials, temporary labour, fuel, and power, so it moves with production. Put them together and total cost equals total fixed cost plus total variable cost. At zero output, fixed cost still exists, while variable cost is zero. As output expands, the total variable cost and total cost curves rise. Their rate of increase changes because productivity first improves and later declines under the law of variable proportions. This creates the reverse-S pattern described for total variable cost. The vertical distance between total cost and total variable cost remains equal to total fixed cost.",
+          "audio_clip_ids": [],
+          "citations": [
+            {
+              "id": "overview-cached-2",
+              "chunk_id": "de34860a-930c-5dd9-8539-0cab0d8f45b2",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 4,
+              "page_end": 4,
+              "excerpt": "Total Cost consists of Total Fixed Cost and Total Variable Cost.",
+              "claim": "Short-run total cost relationships",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=4"
+            },
+            {
+              "id": "overview-cached-3",
+              "chunk_id": "f6c207f0-28fe-5c61-8601-cd3c43c04a89",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 6,
+              "page_end": 6,
+              "excerpt": "The TVC curve starts from the origin which shows that when output is zero, total variable cost is also zero.",
+              "claim": "Fixed and variable cost curve behavior",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=6"
+            }
+          ]
+        },
+        {
+          "title": "Average cost, marginal cost, and the key test",
+          "transcript": "Average cost measures cost per unit of output, and it can be separated into average fixed cost and average variable cost. Average fixed cost falls continuously because the same fixed obligation is spread across more units. Average variable cost and average total cost are U-shaped: they fall at first, reach a minimum, and then rise. Marginal cost asks a different question: how much does total cost change when one additional unit is produced? The most useful relationship is the marginal-average rule. When marginal cost is below average cost, it pulls the average down. When marginal cost is above average cost, it pushes the average up. Marginal cost therefore crosses average cost at average cost's minimum point. As a final recall check, do not confuse a total with a per-unit measure, and do not treat fixed cost as a driver of marginal cost in the short run.",
+          "audio_clip_ids": [],
+          "citations": [
+            {
+              "id": "overview-cached-4",
+              "chunk_id": "f6c207f0-28fe-5c61-8601-cd3c43c04a89",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 6,
+              "page_end": 6,
+              "excerpt": "Average cost consists of Average fixed cost and Average variable cost.",
+              "claim": "Average cost components",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=6"
+            },
+            {
+              "id": "overview-cached-5",
+              "chunk_id": "4c8464df-0e10-5a83-9ba9-29bcdd1e45a4",
+              "source_id": "8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f",
+              "source_name": "Economics - Theory of Cost.pdf",
+              "page_start": 9,
+              "page_end": 9,
+              "excerpt": "When marginal cost is less than average cost, average cost falls. When marginal cost is greater, average cost rises.",
+              "claim": "Marginal and average cost relationship",
+              "viewer_url": "/api/v1/sources/8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f/file#page=9"
+            }
+          ]
+        }
+      ]
+    }
   }
 }

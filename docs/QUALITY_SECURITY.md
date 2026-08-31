@@ -19,6 +19,10 @@ misdiagnosed as model failures.
 - Attempt classification display.
 - Empty, loading, interrupted, and error states.
 - Responsive sheet focus restoration.
+- Push-to-talk permission, duration, cancellation, editable transcript, and
+  text fallback states.
+- Narration ownership controls, keyboard playback, and Audio Overview
+  transcript/citation behavior.
 
 Suggested tools: Vitest, React Testing Library, and axe.
 
@@ -32,6 +36,8 @@ Suggested tools: Vitest, React Testing Library, and axe.
 - Citation allow-list validation.
 - Deterministic mastery classification.
 - Error mapping and retry policy.
+- Speech media/size/duration limits, narration resource ownership, and cleanup.
+- Audio Overview chunk allow-listing before narration.
 
 Suggested tools: pytest, pytest-asyncio, and Hypothesis for chunking invariants
 where useful.
@@ -44,6 +50,9 @@ where useful.
 - Session reset and expiry remove temporary files and memory.
 - A server restart returns users to the bundled demo.
 - OpenAI timeout, rate limit, billing failure, and invalid output handled.
+- Sarvam authentication, rate limit, timeout, malformed response, and partial
+  speech failure handled without losing the text path.
+- Cross-session recording and generated-audio access is rejected.
 
 ### End-to-end tests
 
@@ -57,6 +66,9 @@ With Playwright:
 6. Complete a quiz with a high-confidence wrong answer.
 7. Verify the confident-misconception state.
 8. Upload a small fixture PDF and ask a cited question about it.
+9. Dictate and edit one Chat question and one Teach-Back response.
+10. Narrate an owned answer, generate an Audio Overview, inspect its
+    transcript, and open a validated page citation.
 
 Keep one mocked deterministic run for CI and one live OpenAI smoke run that is
 manual or budget-controlled.
@@ -81,6 +93,10 @@ Measure:
 - Abstention accuracy.
 - Quiz answerability and answer-key correctness.
 - Median and p95 processing/chat latency.
+- English-India transcription usability and word/error review on fixed speech
+  fixtures.
+- Audio Overview groundedness, citation-page accuracy, spoken duration, and
+  transcript/audio agreement.
 
 Release targets:
 
@@ -109,6 +125,7 @@ Do not silently change models or prompts after a passing evaluation.
 - Resolve source and artifact IDs only inside the current session.
 - Expire inactive sessions and bound total active sessions.
 - Never expose the OpenAI key to the browser.
+- Never expose the Sarvam key to the browser.
 - Treat this as controlled-demo isolation, not public authentication.
 
 ### Files
@@ -121,6 +138,9 @@ Do not silently change models or prompts after a passing evaluation.
 - Serve PDFs only through session-checked API routes.
 - Bound parser time, memory, pages, and extracted characters.
 - Remove failed uploads immediately and expired sessions on schedule.
+- Treat browser recordings and generated audio as temporary files: validate
+  media type, bytes, duration, decoding behavior, and safe response MIME type;
+  randomize paths and remove them on completion, reset, expiry, or restart.
 
 ### API
 
@@ -130,6 +150,8 @@ Do not silently change models or prompts after a passing evaluation.
 - Request size and question-length limits.
 - One concurrent upload and generation per session.
 - No stack traces or provider responses in client errors.
+- Resolve narration text from a session-owned resource ID; reject arbitrary
+  client-provided narration text.
 
 ### Model safety
 
@@ -137,16 +159,21 @@ Do not silently change models or prompts after a passing evaluation.
 - Delimit source chunks and tell the model to ignore instructions inside them.
 - Never give the model secrets or service capabilities.
 - Validate structured output and citations.
+- Validate the entire Audio Overview script and citation allow-list before
+  sending its transcript to TTS.
 - Do not mix web search or external knowledge into grounded answers.
 - Escape or sanitize generated Markdown before rendering.
 
 ### Privacy
 
 - State that PDFs are processed by OpenAI for requested AI features.
+- State that voice recordings are processed by Sarvam for transcription and
+  that owned generated text is processed by Sarvam for optional narration.
 - Explain temporary retention and reset behavior in the UI.
 - Provide a Reset session action.
 - Do not use uploaded course material as public demo data without permission.
-- Do not log raw source text, user responses, session IDs, or tokens.
+- Do not log raw source text, user responses, speech transcripts, recordings,
+  generated audio, session IDs, or tokens.
 
 ## 5. Threat checklist
 
@@ -160,6 +187,9 @@ Do not silently change models or prompts after a passing evaluation.
 - Temporary PDF route accessed without the correct session.
 - Unbounded generation or repeated retries causing cost abuse.
 - Temporary filesystem exhaustion.
+- Microphone recordings crafted to exhaust decoders or bypass duration limits.
+- Narration endpoint abused as arbitrary TTS or to access another session's
+  text/audio.
 
 Every item requires either a test or a documented platform control.
 
@@ -175,6 +205,10 @@ Automated checks are necessary but insufficient:
 - Check text and non-text contrast.
 - Verify status and quiz result announcements with a screen reader.
 - Keep a text excerpt available when PDF canvas content is inaccessible.
+- Test push-to-talk and audio playback by keyboard and screen reader; never
+  require a timed hold gesture as the only interaction.
+- Verify every narrated artifact has an equivalent readable transcript and
+  independently operable citations.
 
 ## 7. Performance budgets
 
@@ -185,6 +219,7 @@ Initial budgets:
 - Grounded answer median under 8 seconds after retrieval.
 - Citation panel open under 300 ms when the PDF is loaded.
 - Avoid shipping the PDF viewer on the landing page.
+- Lazy-load recording/playback support and cap buffered audio memory.
 - Virtualize or paginate long chat and artifact histories if needed.
 
 Indexing time is variable; honest staged progress and recoverability matter more
@@ -203,6 +238,8 @@ than a misleading percentage.
 - Abort retries on authentication, billing, quota, and validation errors that
   cannot improve.
 - Keep seeded demo results available if live API use is unavailable.
+- Enforce Sarvam recording, character, audio-byte, and request limits; measure
+  STT/TTS cost separately from OpenAI token cost.
 
 The operator should configure an OpenAI project budget alert and a low hard
 usage limit where available.
@@ -218,10 +255,13 @@ usage limit where available.
 - Warm the Azure App Service before judging.
 - Keep cached demo artifacts that can show answers and citations when live
   generation is unavailable.
+- Keep a citation-validated bundled Audio Overview transcript and, only when
+  redistribution is permitted, its audio as the speech fallback.
 
 ## 10. Release checklist
 
 - Environment variables are documented and no secrets are committed.
+- Both OpenAI and Sarvam keys are server-only and absent from frontend output.
 - Critical test suites pass.
 - RAG evaluation meets targets.
 - Cross-session isolation and expiry tests pass.
@@ -231,3 +271,5 @@ usage limit where available.
 - Costs for three complete demo runs are measured.
 - README contains setup, limitations, privacy note, and attribution.
 - Three complete demo rehearsals pass.
+- Voice denial/failure rehearsals confirm Chat, Teach-Back, and Audio Overview
+  remain usable as text.

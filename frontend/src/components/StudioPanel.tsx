@@ -5,7 +5,9 @@ import {
   ApiRequestError,
   deleteStudioArtifact,
   fetchProgress,
+  generateAudioOverview,
   generateTeachBack,
+  type AudioOverviewArtifact,
   generateStudioArtifact,
   type Citation,
   type Progress,
@@ -14,7 +16,10 @@ import {
   type SummaryArtifact,
   type TeachBackArtifact,
 } from '../lib/session'
+import { AudioOverviewOverlay } from './AudioOverviewOverlay'
+import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
+import { VoiceRecorder } from './VoiceRecorder'
 
 const summaryMarkdownElements = [
   'p',
@@ -55,6 +60,8 @@ export function StudioPanel({
     useState<StudioArtifact[]>(initialArtifacts)
   const [activeSummary, setActiveSummary] =
     useState<SummaryArtifact | null>(null)
+  const [audioOverview, setAudioOverview] =
+    useState<AudioOverviewArtifact | null>(null)
   const [teachBackOpen, setTeachBackOpen] = useState(false)
   const [teachBackResult, setTeachBackResult] =
     useState<TeachBackArtifact | null>(null)
@@ -123,6 +130,35 @@ export function StudioPanel({
     }
   }
 
+  async function generateOverview(trigger?: HTMLButtonElement) {
+    if (selectedSources.length === 0 || generation.status === 'loading') return
+    if (trigger) launcherRef.current = trigger
+    setGeneration({ status: 'loading', kind: 'audio_overview' })
+    try {
+      const artifact = await generateAudioOverview(
+        sessionId,
+        selectedSources.map((source) => source.id),
+      )
+      setArtifacts((current) => [
+        artifact,
+        ...current.filter((item) => item.id !== artifact.id),
+      ])
+      setAudioOverview(artifact)
+      setGeneration({ status: 'idle' })
+    } catch (error) {
+      const requestError =
+        error instanceof ApiRequestError
+          ? error
+          : new ApiRequestError('The Audio Overview could not be generated.')
+      setGeneration({
+        status: 'error',
+        kind: 'audio_overview',
+        message: requestError.message,
+        action: requestError.action,
+      })
+    }
+  }
+
   function openArtifact(artifact: StudioArtifact) {
     if (artifact.type === 'summary') {
       setActiveSummary(artifact)
@@ -130,6 +166,8 @@ export function StudioPanel({
       setTeachBackResult(artifact)
       setTeachBackConcept(artifact.content.concept)
       setTeachBackOpen(true)
+    } else if (artifact.type === 'audio_overview') {
+      setAudioOverview(artifact)
     } else {
       setPracticeArtifact(artifact)
     }
@@ -274,6 +312,16 @@ export function StudioPanel({
                 placeholder="Explain the concept in about 3–6 sentences. Include the relationships you think matter."
               />
             </label>
+            <VoiceRecorder
+              sessionId={sessionId}
+              label="Record explanation"
+              disabled={generation.status === 'loading'}
+              onTranscript={(transcript) =>
+                setTeachBackExplanation((current) =>
+                  [current.trim(), transcript.trim()].filter(Boolean).join(' '),
+                )
+              }
+            />
             <p>
               Feedback is formative and checked only against your selected
               sources; it is not an authoritative grade.
@@ -303,6 +351,10 @@ export function StudioPanel({
         ) : (
           <div className="teach-back-feedback">
             <h2>{teachBackResult.title}</h2>
+            <NarrationPlayer
+              sessionId={sessionId}
+              resource={{ kind: 'artifact', id: teachBackResult.id }}
+            />
             <FeedbackGroup
               title="Covered"
               empty="No rubric point was clearly covered yet."
@@ -401,6 +453,19 @@ export function StudioPanel({
             <strong>Teach Back</strong>
             <span>Explain a concept and find gaps with cited feedback.</span>
           </button>
+          <button
+            type="button"
+            onClick={(event) => void generateOverview(event.currentTarget)}
+            disabled={selectedSources.length === 0 || generation.status === 'loading'}
+          >
+            <strong>
+              {generation.status === 'loading' &&
+              generation.kind === 'audio_overview'
+                ? 'Generating Audio Overview…'
+                : 'Audio Overview'}
+            </strong>
+            <span>Listen to a focused, cited 3–5 minute source overview.</span>
+          </button>
         </div>
 
         <ProgressSummary
@@ -422,7 +487,11 @@ export function StudioPanel({
                 type="button"
                 onClick={() => {
                   const kind = generation.kind
-                  if (kind !== 'teach_back') void generate(kind)
+                  if (kind === 'audio_overview') {
+                    void generateOverview()
+                  } else if (kind !== 'teach_back') {
+                    void generate(kind)
+                  }
                 }}
               >
                 Retry
@@ -452,7 +521,9 @@ export function StudioPanel({
                           ? `${artifact.content.cards.length} flashcards`
                           : artifact.type === 'quiz'
                             ? `${artifact.content.questions.length} questions`
-                            : `Teach Back · ${artifact.content.concept}`}
+                            : artifact.type === 'teach_back'
+                              ? `Teach Back · ${artifact.content.concept}`
+                              : `${artifact.content.sections.length} section Audio Overview`}
                     </span>
                   </button>
                   <button
@@ -483,6 +554,16 @@ export function StudioPanel({
           onAttemptRecorded={() =>
             setProgressRevision((current) => current + 1)
           }
+        />
+      )}
+      {audioOverview && (
+        <AudioOverviewOverlay
+          artifact={audioOverview}
+          sessionId={sessionId}
+          onClose={() => {
+            setAudioOverview(null)
+            window.setTimeout(() => launcherRef.current?.focus(), 0)
+          }}
         />
       )}
     </>

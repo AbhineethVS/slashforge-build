@@ -20,6 +20,8 @@ retrieved from memory, answered from, and opened at the cited page.
 - PyMuPDF for page-aware PDF extraction.
 - OpenAI Responses API for generation.
 - `text-embedding-3-small` for embeddings.
+- Sarvam Saaras v3 for English-India speech-to-text and Bulbul v3 for
+  text-to-speech.
 - NumPy cosine similarity for in-memory retrieval.
 - Browser `sessionStorage` for temporary UI state.
 - FastAPI memory and temporary filesystem for uploaded data.
@@ -30,6 +32,8 @@ retrieved from memory, answered from, and opened at the cited page.
 
 - Confirm the final deadline and judging format.
 - Create an OpenAI Platform API key with separate API billing or prepaid credit.
+- Create a Sarvam API key for server-only Phase 6 STT/TTS calls and verify
+  Saaras v3 and Bulbul v3 account access, limits, pricing, and output rights.
 - Confirm access to an Azure subscription or Azure student credits.
 - Product name is **LUMA**.
 - Select one legally reusable polished demo PDF.
@@ -307,12 +311,71 @@ Phase 5 status (2026-08-31):
 - Automated verification passes with 48 backend and 18 frontend tests, plus
   the frontend production build and lint checks.
 
-### Phase 6: hardening and presentation
+### Phase 6: Grounded Voice Learning
+
+Phase 6 status (2026-08-31): implemented locally; live Sarvam verification
+still requires a configured provider key and deployed-HTTPS device checks.
+
+- Add bounded English-India push-to-talk capture for Chat and Teach-Back.
+- Transcribe through server-side Sarvam Saaras v3 and place the result in the
+  existing editable text input without auto-submitting.
+- Add optional Bulbul v3 narration for backend-owned assistant answers and
+  already citation-validated Teach-Back feedback.
+- Generate a structured 3–5 minute single-narrator Audio Overview with OpenAI
+  from selected-source retrieval.
+- Validate all overview chunk IDs and map trusted page citations before sending
+  the final transcript to Bulbul v3.
+- Show overview playback, complete transcript, and citation controls in Studio.
+- Enforce recording duration/bytes, narration characters/audio bytes,
+  concurrency, request-rate, retained-asset, and session-memory limits.
+- Delete recordings and generated audio on completion where possible, reset,
+  expiry, or restart; keep both provider keys server-only.
+- Preserve typed input and readable transcripts on microphone, STT, or TTS
+  failure.
+- Add a cached bundled overview transcript and audio only if redistribution is
+  allowed.
+- Do not add voice flashcards/quizzes or audio-source ingestion.
+
+Implementation notes:
+
+- FastAPI exposes bounded multipart transcription, owned assistant/Teach-Back
+  narration, session-checked MP3 clips, and grounded Audio Overview creation.
+- Raw microphone blobs are not written to disk. Generated clips use randomized
+  temporary paths and are removed with their artifact, session reset, expiry,
+  or process restart.
+- Audio Overview script generation uses selected-source retrieval, structured
+  OpenAI output, chunk allow-list validation, and trusted backend page mapping.
+  TTS runs after script validation and a TTS failure preserves the transcript.
+- The bundled economics fallback includes a validated overview transcript.
+  Cached audio is explicitly unavailable because redistribution approval has
+  not been confirmed.
+- Chat and Teach-Back use a reusable 30-second recorder. Dictation only edits
+  the existing textarea. Optional narration and the focused overview player
+  include status announcements, speed, replay, transcript, and citations.
+- Automated verification passes with 56 backend and 22 frontend tests, plus
+  frontend production build and lint checks.
+
+Exit criteria:
+
+- Dictated Chat and Teach-Back transcripts are editable and never auto-submit.
+- Narration cannot be used for client-supplied text or another session's
+  resource.
+- The Audio Overview stays within the 3–5 minute target, exposes its complete
+  transcript, and uses only backend-validated page citations.
+- Speech denial and provider failures leave all learning flows usable as text.
+- Audio isolation, limits, cleanup, keyboard access, and fixed English-India
+  speech fixtures pass.
+
+### Phase 7: hardening and presentation
 
 - Run file-abuse, prompt-injection, session-isolation, and API-failure tests.
+- Run recording abuse, narration ownership, speech-provider failure, and audio
+  cleanup tests.
 - Run RAG evaluation and fix the earliest failing layer.
-- Test keyboard use, 200% zoom, reduced motion, and contrast.
-- Measure Azure cold start, memory, latency, tokens, and demo cost.
+- Test keyboard use, audio alternatives, 200% zoom, reduced motion, and
+  contrast.
+- Measure Azure cold start, memory, latency, tokens, speech usage, and demo
+  cost.
 - Rehearse three times with the bundled source.
 - Record a fallback video.
 
@@ -343,20 +406,25 @@ Phase 5 status (2026-08-31):
 
 ### Days 6–8, if available
 
-- Add Teach-Back and temporary progress.
+- Implement Phase 6 Grounded Voice Learning after the completed Teach-Back and
+  temporary progress foundation.
 - Improve measured RAG failures and accessibility.
-- Harden cleanup and fallback behavior.
+- Complete Phase 7 cleanup, fallback, and presentation hardening.
 - Spend remaining time on presentation quality, not new infrastructure.
 
 ## 8. Scope-cut order
 
 Cut in this order if behind:
 
-1. Teach-Back.
-2. Temporary progress history.
-3. Short-answer quiz grading; retain MCQs.
-4. Streaming responses.
-5. More than one temporary uploaded PDF.
+1. Live narration of individual assistant answers.
+2. Live narration of Teach-Back feedback.
+3. Live Audio Overview generation; retain a redistributable cached transcript
+   and audio only if permitted.
+4. Push-to-talk dictation.
+5. Temporary progress history.
+6. Short-answer quiz grading; retain MCQs.
+7. Streaming responses.
+8. More than one temporary uploaded PDF.
 
 Never cut:
 
@@ -368,6 +436,7 @@ Never cut:
 - Abstention behavior.
 - Summary, flashcards, and quiz in Studio.
 - OpenAI outage fallback for the demo.
+- Backend citation validation for any Audio Overview that remains in scope.
 
 ## 9. Definition of done
 
@@ -376,6 +445,8 @@ A task is complete only when:
 - Acceptance criteria pass.
 - Loading, success, failure, expiry, and retry states exist.
 - Session and resource limits are enforced.
+- Speech features retain an equivalent text path and audio is session-owned,
+  bounded, and cleaned up.
 - Generated citations use only supplied chunk IDs.
 - Relevant tests pass.
 - Keyboard and responsive behavior work.

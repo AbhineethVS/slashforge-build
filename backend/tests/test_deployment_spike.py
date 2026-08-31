@@ -41,7 +41,11 @@ def test_health_does_not_expose_secret(
     response = client.get("/api/v1/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "openai_configured": True}
+    assert response.json() == {
+        "status": "ok",
+        "openai_configured": True,
+        "speech_configured": False,
+    }
     assert "do-not-return-this" not in response.text
 
 

@@ -41,6 +41,12 @@ Test:
 - Repeated retries, simultaneous operations, and session-memory limits.
 - OpenAI authentication, rate-limit, billing, timeout, and malformed-output
   failures.
+- Sarvam authentication, rate-limit, timeout, malformed STT/TTS, and partial
+  speech failures with preserved text fallback.
+- Oversized, over-duration, malformed, cross-session, and repeatedly retried
+  recordings and generated audio.
+- Arbitrary-client-text narration attempts and unvalidated Audio Overview
+  citations.
 - Long filenames, long words, long answers, narrow screens, and 200% zoom.
 
 ## RAG diagnosis
@@ -75,9 +81,12 @@ Reject changes that log or expose:
 - Uploaded source text.
 - Student answers in operational logs.
 - OpenAI credentials in browser code.
+- Sarvam credentials in browser code.
+- Speech transcripts, recordings, or generated audio in operational logs.
 
 Logs may include hashed user identifiers, resource IDs, stage timings, model
-names, token usage, retrieval scores, and validated chunk IDs.
+names, token usage, retrieval scores, validated chunk IDs, and bounded speech
+metrics such as duration, bytes, character count, and failure category.
 
 ## Release gate
 
@@ -87,10 +96,18 @@ Before release, verify:
 - RAG evaluation meets documented targets.
 - Cross-session isolation, expiry, and reset tests pass.
 - Temporary files and memory are removed.
+- Temporary recordings, transcripts, narrations, and overview audio are
+  session-isolated, bounded, and removed.
+- English-India dictation stays editable; narration ownership and Audio
+  Overview citation validation tests pass.
+- Every speech failure leaves the equivalent typed or readable flow usable.
 - Three full demo rehearsals pass.
 - The bundled demo source, cached fallback artifacts, and recording are
   available.
 - OpenAI credit and project cost controls are checked.
+- Sarvam credit, rate limits, speech cost controls, and server-only key
+  configuration are checked.
+- Bundled overview audio is included only with confirmed redistribution rights.
 - Documentation matches behavior.
 
 When a target is missed, report the measured result and blocker. Do not weaken

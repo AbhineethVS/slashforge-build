@@ -1,6 +1,6 @@
 ---
 name: slashforge-frontend
-description: Designs, implements, and reviews the LUMA frontend using the project UX system. Use for React, Vite, Tailwind, shadcn/ui, responsive layout, Sources–Chat–Studio panels, PDF evidence views, chat, flashcards, quizzes, accessibility, or visual-polish work.
+description: Designs, implements, and reviews the LUMA frontend using the project UX system. Use for React, Vite, Tailwind, shadcn/ui, responsive layout, Sources–Chat–Studio panels, PDF evidence views, chat, grounded voice controls, Audio Overview, flashcards, quizzes, accessibility, or visual-polish work.
 ---
 
 # LUMA Frontend
@@ -57,6 +57,13 @@ Use academic editorial clarity with a modern productivity-workspace layout.
   state when closed.
 - Summary, Flashcards, Quiz, Teach Back, and Progress belong in Studio rather
   than the Chat transcript.
+- Audio Overview belongs in Studio with a complete transcript and trusted page
+  citation controls.
+- Push-to-talk is English-India, explicitly activated, bounded, cancellable,
+  and followed by editable transcript review; never auto-submit speech.
+- Narration is optional, never autoplays, and is offered only for owned
+  assistant answers, validated Teach-Back feedback, and Audio Overview.
+- Do not add voice flashcards/quizzes or audio-source ingestion.
 - Quiz correctness remains hidden until the student selects confidence.
 - Confident misconception is serious feedback, not a celebratory state.
 - Teach-Back uses formative, uncertainty-aware language.
@@ -71,6 +78,8 @@ Use academic editorial clarity with a modern productivity-workspace layout.
 - Lazy-load the PDF viewer and other heavy code.
 - Use native controls and links when custom behavior is unnecessary.
 - Give icon buttons accessible names and tooltips.
+- Give recording and playback controls persistent text labels, keyboard
+  operation, announced states, and equivalent readable text.
 - Support long filenames, generated text, browser zoom, and text scaling.
 
 ## Accessibility gate
@@ -86,6 +95,8 @@ Verify:
 - WCAG AA contrast.
 - `prefers-reduced-motion`.
 - No clipping at 200% zoom.
+- No timed press-and-hold gesture as the only keyboard path.
+- Audio playback always has a readable transcript and independent citations.
 
 ## Delivery gate
 
@@ -96,3 +107,5 @@ Do not call a page complete until:
 - Keyboard and responsive checks pass.
 - Relevant component tests exist.
 - No OpenAI key or trusted citation metadata is generated in browser code.
+- No OpenAI or Sarvam key is present in browser code, and speech failures retain
+  the text path.

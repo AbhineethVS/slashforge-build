@@ -67,7 +67,8 @@ Keep the page short:
 
 1. How it works: add sources, ask with citations, practise in Studio.
 2. Feature highlights: grounded Chat, page citations, Flashcards, Quiz, and
-   Teach Back.
+   Teach Back; Phase 6 may also preview grounded voice learning without
+   implying that it is already implemented.
 3. Why it is trustworthy: answers stay tied to selected material and abstain
    when evidence is missing.
 4. Final call to action linking to `/workspace`.
@@ -95,7 +96,7 @@ Use three regions:
 2. **Chat**, flexible and dominant: conversation, suggested questions,
    citations, and anchored composer.
 3. **Studio**, approximately 300–360 px: Summary, Flashcards, Quiz, Teach Back,
-   and Progress tools.
+   Audio Overview, and Progress tools.
 
 Each panel has a clear heading and independent scrolling. The page itself
 should not develop multiple competing scrollbars. Sources and Studio may
@@ -147,7 +148,7 @@ Only one dominant call to action should appear per state.
 ### Studio
 
 - The default Studio view uses compact tool cards for Summary, Flashcards,
-  Quiz, and Teach Back.
+  Quiz, Teach Back, and Audio Overview.
 - Summary opens in place within Studio with a clear Back to Studio action.
 - Flashcards and Quiz open in a large, centered Practice overlay. The workspace
   remains visible under restrained dimming and background blur.
@@ -183,6 +184,30 @@ Only one dominant call to action should appear per state.
 - Each correction is linked to evidence.
 - Use language such as “The source suggests” rather than “You are wrong” when
   judgment is semantic.
+
+### Grounded voice learning
+
+- Chat and Teach-Back expose a labeled push-to-talk control beside the existing
+  text input. Voice is optional and does not replace typing.
+- Recording begins only after an explicit pointer or keyboard action. Show
+  recording state, elapsed time, duration cap, Stop, and Cancel without relying
+  on color or animation.
+- After transcription, place the editable transcript in the existing composer
+  or Teach-Back editor. Never auto-submit it.
+- Handle microphone permission denial, no captured speech, upload failure, and
+  transcription failure inline while preserving typed text.
+- Owned assistant answers may show a Play answer control. Validated Teach-Back
+  feedback may show Play feedback. Do not offer narration for student text,
+  arbitrary source text, flashcards, or quizzes.
+- Narration never autoplays. Controls expose loading, play/pause, replay, and
+  failure states and leave readable text available.
+- Audio Overview opens within Studio and shows selected sources before
+  generation, a 3–5 minute target, single-narrator label, generation progress,
+  audio controls, complete transcript, and page citation controls.
+- If overview narration fails, keep the validated transcript and citations as
+  the successful core artifact and offer Retry audio.
+- Cached bundled overview audio must be labeled as a fallback artifact and
+  used only when redistribution is allowed.
 
 ## 6. Visual system
 
@@ -249,6 +274,9 @@ Domain:
 - Quiz question, confidence selector, and answer feedback.
 - Concept state badge.
 - Teach-Back editor and rubric feedback.
+- Push-to-talk recorder and editable transcript review.
+- Owned-answer narration controls and accessible audio player.
+- Audio Overview generator, transcript, and cited sections.
 
 Reuse domain components across routes rather than building page-local variants.
 
@@ -273,6 +301,8 @@ must truncate with an accessible full-name tooltip.
   answer and suggest selecting another source or asking differently.
 - API billing unavailable: keep existing work accessible and tell the operator
   where configuration is required without exposing account details.
+- Speech unavailable: preserve editable text, validated feedback, or overview
+  transcript and offer typing, reading, or Retry audio as appropriate.
 - Streaming interrupted: preserve partial text, mark it incomplete, and offer
   Regenerate.
 - Temporary PDF unavailable: keep citation metadata and excerpt visible.
@@ -301,6 +331,11 @@ interactive.
 - Citation popovers are keyboard-operable and do not contain hover-only data.
 - PDFs require a text excerpt fallback because canvas rendering is not enough
   for screen readers.
+- Recording and playback controls have persistent text labels, expose state to
+  assistive technology, and work by keyboard without requiring a timed
+  press-and-hold gesture.
+- Audio Overview narration has a synchronized readable transcript; citations
+  remain operable independently of audio.
 
 ## 12. Content style
 

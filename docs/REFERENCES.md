@@ -11,7 +11,7 @@
   citations.
 - Deliberately not adopted: SurrealDB, LangGraph for simple chat,
   `surreal-commands`, multi-provider configuration, transformations, and
-  podcasts.
+  podcast orchestration.
 
 Open Notebook's default chat often places selected source text directly in the
 prompt, while its separate Ask flow uses a more expensive multi-step retrieval
@@ -54,6 +54,31 @@ OpenAI managed File Search remains a future simplification option. The first
 release uses custom page-aware retrieval because the product requires trusted
 page links, not only file-level citations.
 
+## Sarvam speech references
+
+- Models overview:
+  https://docs.sarvam.ai/api/getting-started/models
+- Saaras v3 speech-to-text overview:
+  https://docs.sarvam.ai/api/api-guides-tutorials/speech-to-text/overview
+- Speech-to-text REST API:
+  https://docs.sarvam.ai/api-reference/speech-to-text/transcribe
+- Bulbul v3 text-to-speech overview:
+  https://docs.sarvam.ai/api/api-guides-tutorials/text-to-speech/overview
+- Bulbul v3 model guide:
+  https://docs.sarvam.ai/api/getting-started/models/bulbul
+- Text-to-speech REST API:
+  https://docs.sarvam.ai/api-reference/text-to-speech/convert
+- Authentication and server-side key handling:
+  https://docs.sarvam.ai/api-reference/authentication
+- Credits and rate limits:
+  https://docs.sarvam.ai/api-reference-docs/ratelimits.mdx
+
+Phase 6 uses Sarvam only for English-India speech processing: Saaras v3
+transcribes bounded push-to-talk input and Bulbul v3 narrates backend-owned
+validated text. OpenAI remains the content-generation provider. Confirm current
+model availability, request limits, pricing, audio formats, voice selection,
+and redistribution terms before implementation or packaging generated audio.
+
 ## Framework and platform references
 
 - React documentation: https://react.dev/
@@ -70,5 +95,7 @@ page links, not only file-level citations.
   implementation time.
 - Pin direct dependencies and commit lock files.
 - Prefer the official OpenAI SDK over provider abstraction layers.
+- Use Sarvam only behind the backend speech boundary; do not introduce a
+  general model-provider abstraction.
 - Do not add a dependency merely because it appears in a reference project.
 - Record copied code and nontrivial assets in `THIRD_PARTY_NOTICES.md`.

@@ -24,6 +24,7 @@ are runtime structures, not database tables.
 - `messages: list[Message]`
 - `artifacts: dict[artifact_id, Artifact]`
 - `attempts: list[Attempt]`
+- `audio_assets: dict[audio_id, TemporaryAudioAsset]`
 
 ### Source
 
@@ -75,7 +76,13 @@ Message statuses: `pending`, `complete`, `interrupted`, `failed`.
 - `source_ids`
 - `created_at`
 
-Artifact types: `summary`, `flashcards`, `quiz`, `teach_back`.
+Artifact types: `summary`, `flashcards`, `quiz`, `teach_back`,
+`audio_overview`.
+
+An Audio Overview artifact contains three or four transcript `sections`, each
+with normalized backend-mapped `citations` and ordered `audio_clip_ids`. It
+also includes `estimated_duration_seconds` and `audio_status`. It is
+single-narrator and scoped to selected ready sources.
 
 ### Attempt
 
@@ -92,6 +99,19 @@ Artifact types: `summary`, `flashcards`, `quiz`, `teach_back`.
 
 Classifications: `mastered`, `lucky_guess`, `needs_practice`,
 `confident_misconception`, `unscored`.
+
+### Temporary audio asset
+
+- `id`
+- `resource_id`: owned assistant message, Teach-Back, or Audio Overview
+- `file_path`
+- `mime_type`
+- `sequence`
+- `section_index` nullable
+
+Audio assets are server-owned, bounded runtime records, not durable media.
+Raw recordings are forwarded to transcription without being written to disk.
+Generated MP3 clips never outlive the session.
 
 ## 3. Browser session state
 
@@ -157,13 +177,20 @@ Stable user-facing error codes include:
 - `AI_BILLING_UNAVAILABLE`
 - `AI_OUTPUT_INVALID`
 - `REQUEST_RATE_LIMITED`
+- `VOICE_UNSUPPORTED`
+- `AUDIO_TOO_LARGE`
+- `TRANSCRIPT_EMPTY`
+- `VOICE_PROCESSING_FAILED`
+- `VOICE_NOT_CONFIGURED`
+- `VOICE_RESOURCE_NOT_FOUND`
+- `VOICE_USAGE_LIMIT`
 
 ## 6. API endpoints
 
 ### Health
 
 - `GET /api/v1/health`
-  - Returns service and OpenAI configuration status without secrets.
+  - Returns service, OpenAI, and speech configuration status without secrets.
 
 ### Session
 
@@ -221,12 +248,20 @@ session.
 - `POST /api/v1/studio/flashcards`
 - `POST /api/v1/studio/quiz`
 - `POST /api/v1/studio/teach-back`
+- `POST /api/v1/studio/audio-overview`
 - `GET /api/v1/studio/artifacts`
 - `GET /api/v1/artifacts/{artifact_id}`
 - `DELETE /api/v1/artifacts/{artifact_id}`
 
 Generation requests include selected `source_ids`. Quiz requests may include
 question count and difficulty, but the server enforces safe bounds.
+
+Audio Overview requests include selected ready `source_ids`. The response is
+an `audio_overview` artifact with three or four transcript sections, a 3–5
+minute duration target, backend-mapped page citations, ordered clip IDs, and
+audio status. An OpenAI-generated script with any invalid or missing required
+evidence is rejected before TTS. If Bulbul v3 fails, the validated transcript
+and citations still return with `audio_status: unavailable`.
 
 Summary responses contain cited sections and revision questions. Flashcard
 responses contain five to ten unique cited cards. Quiz generation requests
@@ -245,6 +280,26 @@ model-assisted judgments in a later iteration. The scoped release stores them
 as `unscored` formative comparisons; deterministic classifications are emitted
 only when correctness is known.
 
+### Voice
+
+- `POST /api/v1/voice/transcriptions`
+  - Accepts one bounded multipart recording.
+  - Uses Sarvam Saaras v3 in English-India transcription mode.
+  - Returns an editable `transcript`, detected language when supplied by the
+    provider, and no submitted Chat or Teach-Back action.
+- `POST /api/v1/chat/messages/{message_id}/audio`
+  - Resolves and narrates only a session-owned assistant answer.
+- `POST /api/v1/artifacts/{artifact_id}/audio`
+  - Resolves and narrates only a session-owned Teach-Back or Audio Overview.
+  - Resolves server-owned text and refuses user-authored or arbitrary client
+    text before calling Sarvam Bulbul v3.
+- `GET /api/v1/audio/{audio_id}`
+  - Streams a session-owned generated narration with a safe audio MIME type.
+
+Speech responses identify status and recoverable failure without returning
+provider payloads. The browser never sends text to be narrated and never
+receives either provider key.
+
 ## 7. Session isolation
 
 - Every endpoint except health and static assets requires `X-Session-ID`.
@@ -259,17 +314,28 @@ only when correctness is known.
 - Deploy one application instance.
 - Permit one upload-processing operation per session.
 - Permit one generation operation per session.
+- Permit one speech operation per session and reject duplicate in-flight
+  requests.
 - Permit at most two uploaded sources, 20 MB and 50 pages per PDF, and 100
   uploaded pages per session.
 - Cap each uploaded source at 250 chunks and each session at 5 MB of uploaded
   embedding matrices.
 - Reject duplicate in-flight requests instead of adding a queue.
+- Cap recording MIME types, bytes, and duration; cap narration characters,
+  overview script length, generated audio bytes, retained speech assets, and
+  speech requests per session. Concrete values must be fixed from measured
+  provider and browser behavior before Phase 6 implementation.
 
 ## 9. Retention
 
 - Temporary sessions expire after approximately 60 minutes of inactivity.
 - Uploaded PDFs and in-memory vectors are deleted on expiry, explicit reset, or
   process restart.
+- Recordings, transcripts, narrations, and Audio Overview artifacts are deleted
+  on expiry, explicit reset, or process restart; raw recordings should be
+  removed earlier after transcription completes.
 - The bundled demo PDF and precomputed index remain part of the deployment.
+- A cached bundled Audio Overview transcript and audio may be packaged only
+  when the source, script, voice output, and redistribution terms permit it.
 - No database, account, or cross-device history exists.
 - Production logs never contain source text, student responses, or session IDs.

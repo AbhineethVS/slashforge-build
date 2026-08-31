@@ -11,7 +11,9 @@ import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
 import { EvidencePanel } from '../components/EvidencePanel'
+import { NarrationPlayer } from '../components/NarrationPlayer'
 import { StudioPanel } from '../components/StudioPanel'
+import { VoiceRecorder } from '../components/VoiceRecorder'
 import {
   ApiRequestError,
   askQuestion,
@@ -795,6 +797,11 @@ export function WorkspacePage() {
                         <ReactMarkdown allowedElements={groundedMarkdownElements}>
                           {message.content_markdown}
                         </ReactMarkdown>
+                        <NarrationPlayer
+                          compact
+                          sessionId={state.session.id}
+                          resource={{ kind: 'message', id: message.id }}
+                        />
                         {message.citations.length > 0 && (
                           <div
                             className="citation-list"
@@ -899,7 +906,21 @@ export function WorkspacePage() {
                   activeCount === 0 || chatState.status === 'submitting'
                 }
               />
-              <div>
+              <div className="chat-composer-actions">
+                <VoiceRecorder
+                  sessionId={state.session.id}
+                  disabled={
+                    activeCount === 0 || chatState.status === 'submitting'
+                  }
+                  onTranscript={(transcript) => {
+                    setQuestion((current) =>
+                      [current.trim(), transcript.trim()]
+                        .filter(Boolean)
+                        .join(' '),
+                    )
+                    window.setTimeout(() => questionInputRef.current?.focus(), 0)
+                  }}
+                />
                 <span>
                   {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
                   selected
