@@ -306,15 +306,11 @@ export function StudioPanel({
         >
           Back to Studio
         </button>
-        <p className="panel-kicker">Prompt-led visual study deck</p>
+        <p className="panel-kicker">Visual study deck</p>
         <h1 id="visual-deck-form-title">Infographics</h1>
-        <p>
-          Describe the diagrams and graphs you want to explain. The current
-          economics demo opens a cached PDF presentation after you submit.
-        </p>
         <form onSubmit={(event) => void submitVisualDeck(event)}>
           <label>
-            <span>Deck prompt</span>
+            <span>What should the deck cover?</span>
             <textarea
               rows={12}
               maxLength={2000}
@@ -323,10 +319,7 @@ export function StudioPanel({
               placeholder="Describe the graphs, comparisons, and explanations to include."
             />
           </label>
-          <p className="visual-deck-form-note">
-            For now, the generated result is a clearly labeled, 15-slide cached
-            economics deck. Your prompt is retained only in this temporary session.
-          </p>
+          <p className="visual-deck-form-note">Bundled demo deck</p>
           <button
             className="teach-back-submit"
             type="submit"

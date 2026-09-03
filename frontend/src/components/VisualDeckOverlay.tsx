@@ -86,20 +86,12 @@ export function VisualDeckOverlay({
           <div>
             <p className="panel-kicker">Visual Deck</p>
             <h1 id="visual-deck-title">{artifact.title}</h1>
-            <p>{artifact.content.page_count} slides · PDF presentation</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close Visual Deck">
             Close
           </button>
         </header>
-        <p className="fallback-notice">
-          Cached demo deck · your request was saved with this temporary session.
-          Live deck composition will replace this fallback in a later iteration.
-        </p>
-        <div className="visual-deck-request">
-          <strong>Your requested focus</strong>
-          <p>{artifact.content.prompt}</p>
-        </div>
+        <p className="fallback-notice">Cached bundled demo deck</p>
         {error ? (
           <div className="studio-error" role="alert">
             <strong>Deck preview unavailable</strong>
