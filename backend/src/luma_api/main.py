@@ -28,6 +28,7 @@ from luma_spikes.citations import (
     generate_grounded_answer,
 )
 from luma_spikes.models import Chunk, GroundedAnswer
+from luma_spikes.models import AnswerFormat
 from luma_spikes.pdf import (
     MAX_PAGES,
     MAX_PDF_BYTES,
@@ -51,7 +52,7 @@ from .audio_overview import (
     materialize_audio_overview,
     retrieve_audio_overview_chunks,
 )
-from .chat import SelectedIndex, answer_from_sources
+from .chat import SelectedIndex, answer_from_sources, resolve_answer_format
 from .demo_assets import BundledDemoCatalog, load_catalog
 from .errors import ApiError, api_error_response
 from .learning import (
@@ -276,6 +277,7 @@ def create_app(
     def generate_answer(
         question: str,
         chunks: Sequence[Chunk],
+        answer_format: AnswerFormat = "auto",
     ) -> GroundedAnswer:
         if answer_generator is not None:
             return answer_generator(question, chunks)
@@ -284,6 +286,7 @@ def create_app(
             model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
             question=question,
             chunks=chunks,
+            answer_format=answer_format,
         )
 
     def selected_indexes(
@@ -931,11 +934,20 @@ def create_app(
             )
         try:
             sources = selected_indexes(session, request.source_ids)
+            resolved_format = resolve_answer_format(
+                request.question,
+                request.answer_format,
+            )
             result = answer_from_sources(
                 question=request.question,
                 sources=sources,
                 embedder=create_embedder(),
-                generate=generate_answer,
+                requested_format=resolved_format,
+                generate=lambda question, chunks: generate_answer(
+                    question,
+                    chunks,
+                    resolved_format,
+                ),
             )
             created_at = utc_now()
             session.messages.append(
@@ -963,6 +975,8 @@ def create_app(
                 id=uuid4(),
                 role="assistant",
                 content_markdown=result.answer.answer_markdown,
+                answer_format=result.answer.answer_format,
+                sections=result.answer.sections,
                 citations=[
                     citation.model_dump(mode="json")
                     for citation in result.citations

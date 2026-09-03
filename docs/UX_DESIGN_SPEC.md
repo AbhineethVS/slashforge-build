@@ -139,7 +139,12 @@ Only one dominant call to action should appear per state.
 
 - Composer placeholder reflects active sources.
 - Active source count appears next to the composer.
+- An Answer format selector offers Auto, Concise points, Table, Steps, Code,
+  and Paragraph. Auto selects the most suitable validated format.
 - Answers use document typography rather than rounded chat bubbles.
+- Comparisons render as semantic tables with horizontally scrollable overflow
+  on narrow screens; explanations and procedures use readable lists; algorithm
+  requests render in preformatted code blocks.
 - Citation markers are compact numbered buttons.
 - Hover/focus shows source name, page, and excerpt.
 - Selection opens evidence and highlights the active citation.

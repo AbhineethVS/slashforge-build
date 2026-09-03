@@ -403,6 +403,30 @@ Exit criteria:
 - A selected uploaded source cannot receive the economics fallback.
 - Reset and expiry clear the artifact record.
 
+### Phase 6.7: Structured Chat formatting
+
+Status (2026-09-03): implemented locally.
+
+- Add a Chat answer-format selector for Auto, concise points, table, steps,
+  code, and paragraph.
+- Ask OpenAI for structured sections in the existing grounded-answer response;
+  do not add a second formatting pass.
+- Validate selected formats, section evidence chunk IDs, table shape, and code
+  section presence before returning the answer.
+- Strip raw chunk UUIDs from visible answer text while preserving citation
+  metadata.
+- Render tables, lists, steps, and code blocks directly in React.
+- For code/algorithm requests, include a short explanatory section before the
+  source-supported code or pseudocode.
+
+Exit criteria:
+
+- A comparison request in Auto or Table renders as a semantic table.
+- A code request in Auto or Code renders as a preformatted code block when the
+  selected source contains enough evidence.
+- Raw chunk IDs do not appear in visible prose, bullets, table cells, or code.
+- Unsupported source selections still abstain instead of inventing.
+
 ### Phase 7: hardening and presentation
 
 - Run file-abuse, prompt-injection, session-isolation, and API-failure tests.

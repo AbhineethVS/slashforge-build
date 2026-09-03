@@ -19,6 +19,7 @@ from luma_spikes.citations import (
 from luma_spikes import config
 from luma_spikes.models import (
     AnswerCitation,
+    AnswerSection,
     Chunk,
     ExtractedDocument,
     ExtractedPage,
@@ -231,6 +232,13 @@ def test_mapped_citation_uses_trusted_page_metadata(tmp_path: Path) -> None:
         citations=[AnswerCitation(chunk_id=chunk.id, claim="Evidence location")],
         insufficient_evidence=False,
         follow_up_questions=[],
+        sections=[
+            AnswerSection(
+                kind="paragraph",
+                content_markdown="The evidence is on the second page.",
+                evidence_chunk_ids=[chunk.id],
+            )
+        ],
     )
 
     citation = map_citations(

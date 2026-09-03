@@ -34,6 +34,8 @@ import {
   type ChatMessage,
   type Citation,
   type DemoSession,
+  type AnswerFormat,
+  type AnswerSection,
   type LearningMemory,
   type PanelWidths,
   type SourceSummary,
@@ -75,6 +77,7 @@ export function WorkspacePage() {
   const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [question, setQuestion] = useState('')
+  const [answerFormat, setAnswerFormat] = useState<AnswerFormat>('auto')
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
   const [memoryNote, setMemoryNote] = useState<string | null>(null)
   const [chatState, setChatState] = useState<
@@ -424,6 +427,7 @@ export function WorkspacePage() {
         state.session.id,
         normalized,
         selectedSourceIds,
+        answerFormat,
       )
       const userMessage: ChatMessage = {
         id: `user-for-${answer.id}`,
@@ -816,15 +820,17 @@ export function WorkspacePage() {
                             evidence for a supported answer.
                           </p>
                         )}
-                        <ReactMarkdown allowedElements={groundedMarkdownElements}>
-                          {message.content_markdown}
-                        </ReactMarkdown>
+                        <StructuredAnswer
+                          message={message}
+                          onCitation={showCitation}
+                        />
                         <NarrationPlayer
                           compact
                           sessionId={state.session.id}
                           resource={{ kind: 'message', id: message.id }}
                         />
-                        {message.citations.length > 0 && (
+                        {message.citations.length > 0 &&
+                          (!message.sections || message.sections.length === 0) && (
                           <div
                             className="citation-list"
                             aria-label="Answer citations"
@@ -947,6 +953,23 @@ export function WorkspacePage() {
                   {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
                   selected
                 </span>
+                <label className="answer-format">
+                  <span>Answer format</span>
+                  <select
+                    value={answerFormat}
+                    onChange={(event) =>
+                      setAnswerFormat(event.target.value as AnswerFormat)
+                    }
+                    disabled={chatState.status === 'submitting'}
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="bullets">Concise points</option>
+                    <option value="table">Table</option>
+                    <option value="steps">Steps</option>
+                    <option value="code">Code</option>
+                    <option value="paragraph">Paragraph</option>
+                  </select>
+                </label>
                 <button
                   type="submit"
                   disabled={
@@ -1033,6 +1056,114 @@ export function WorkspacePage() {
         )
       })()}
     </div>
+  )
+}
+
+function StructuredAnswer({
+  message,
+  onCitation,
+}: {
+  message: ChatMessage
+  onCitation: (citation: Citation, trigger: HTMLButtonElement) => void
+}) {
+  const sections = message.sections || []
+  if (sections.length === 0) {
+    return (
+      <ReactMarkdown allowedElements={groundedMarkdownElements}>
+        {message.content_markdown}
+      </ReactMarkdown>
+    )
+  }
+
+  return (
+    <div className="structured-answer">
+      {sections.map((section, index) => (
+        <AnswerSectionView
+          key={`${section.title || section.kind}-${index}`}
+          section={section}
+          citations={message.citations.filter((citation) =>
+            section.evidence_chunk_ids.includes(citation.chunk_id),
+          )}
+          onCitation={onCitation}
+        />
+      ))}
+    </div>
+  )
+}
+
+function AnswerSectionView({
+  section,
+  citations,
+  onCitation,
+}: {
+  section: AnswerSection
+  citations: Citation[]
+  onCitation: (citation: Citation, trigger: HTMLButtonElement) => void
+}) {
+  return (
+    <section className={`answer-section answer-section-${section.kind}`}>
+      {section.title && <h2>{section.title}</h2>}
+      {section.kind === 'paragraph' && section.content_markdown && (
+        <ReactMarkdown allowedElements={groundedMarkdownElements}>
+          {section.content_markdown}
+        </ReactMarkdown>
+      )}
+      {section.kind === 'bullets' && (
+        <ul>
+          {section.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      )}
+      {section.kind === 'steps' && (
+        <ol>
+          {section.items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ol>
+      )}
+      {section.kind === 'code' && section.content_markdown && (
+        <pre className="answer-code">
+          <code>{section.content_markdown}</code>
+        </pre>
+      )}
+      {section.kind === 'table' && (
+        <div className="answer-table-wrap" tabIndex={0}>
+          <table>
+            <thead>
+              <tr>
+                {section.columns.map((column) => (
+                  <th key={column} scope="col">{column}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {section.rows.map((row, rowIndex) => (
+                <tr key={`row-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {citations.length > 0 && (
+        <div className="citation-list answer-section-citations" aria-label="Section citations">
+          {citations.map((citation, index) => (
+            <button
+              key={citation.id}
+              type="button"
+              aria-label={`Citation ${index + 1}: ${citation.source_name}, page ${citation.page_start}`}
+              onClick={(event) => onCitation(citation, event.currentTarget)}
+            >
+              [{index + 1}] p.{citation.page_start}
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 

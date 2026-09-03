@@ -90,6 +90,8 @@ Acceptance criteria:
 3. The assistant answers only from retrieved source chunks.
 4. Citations identify the source and page.
 5. Selecting a citation opens the source at that page.
+6. The student may choose Auto, concise points, table, steps, code, or
+   paragraph formatting before asking.
 
 Acceptance criteria:
 
@@ -99,6 +101,8 @@ Acceptance criteria:
 - A citation never points to a source outside the current session and selected
   source set.
 - The student can inspect the retrieved excerpt.
+- Comparison questions can render as tables; algorithm and pseudocode requests
+  can render as readable code blocks with a brief explanation.
 
 ### 5.4 Generate a summary
 

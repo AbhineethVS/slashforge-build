@@ -253,18 +253,27 @@ Request:
 ```json
 {
   "question": "Compare paging and segmentation.",
-  "source_ids": ["uuid-1", "uuid-2"]
+  "source_ids": ["uuid-1", "uuid-2"],
+  "answer_format": "auto"
 }
 ```
+
+`answer_format` may be `auto`, `paragraph`, `bullets`, `steps`, `table`, or
+`code`. `auto` lets the server request the most readable supported form; a
+concrete selection is validated against the generated response. Code is used
+for source-supported algorithm, pseudocode, and implementation requests.
 
 Initial response may be structured JSON. The final contract uses
 `text/event-stream` with the events defined in `AI_RAG_SPEC.md`.
 
 The initial non-streaming response is an assistant message with
-`content_markdown`, backend-mapped `citations`, `insufficient_evidence`,
-`follow_up_questions`, `status`, and `created_at`. The request is rejected
-before retrieval if any selected source is not ready and owned by the current
-session.
+`content_markdown`, `answer_format`, structured `sections`, backend-mapped
+`citations`, `insufficient_evidence`, `follow_up_questions`, `status`, and
+`created_at`. A section is a paragraph, bullet list, numbered steps,
+comparison table, or code block; it carries evidence chunk IDs which the
+browser uses only to associate normalized backend citations. Raw chunk IDs are
+never displayed to the student. The request is rejected before retrieval if any
+selected source is not ready and owned by the current session.
 
 ### Studio
 

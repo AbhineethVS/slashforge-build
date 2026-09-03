@@ -403,6 +403,89 @@ describe('WorkspacePage', () => {
     )
   })
 
+  it('renders a cited table answer and sends the selected format', async () => {
+    const answer = {
+      id: 'table-answer',
+      role: 'assistant',
+      content_markdown: 'Explicit and implicit costs differ.',
+      answer_format: 'table',
+      sections: [
+        {
+          kind: 'table',
+          title: 'Cost comparison',
+          content_markdown: null,
+          items: [],
+          columns: ['Explicit cost', 'Implicit cost'],
+          rows: [['Paid for hired inputs', 'Uses owned inputs']],
+          evidence_chunk_ids: ['citation-chunk'],
+        },
+      ],
+      citations: [
+        {
+          id: 'citation-1',
+          chunk_id: 'citation-chunk',
+          source_id: session.sources[0].id,
+          source_name: session.sources[0].display_name,
+          page_start: 2,
+          page_end: 2,
+          excerpt: 'Explicit cost is actual expenditure.',
+          claim: 'Explicit and implicit costs differ.',
+          viewer_url: `/api/v1/sources/${session.sources[0].id}/file#page=2`,
+        },
+      ],
+      insufficient_evidence: false,
+      follow_up_questions: [],
+      status: 'complete',
+      created_at: '2026-09-03T05:00:00Z',
+    }
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(answer), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('heading', { name: 'Chat' })
+    fireEvent.change(screen.getByLabelText('Ask your selected sources'), {
+      target: { value: 'Compare explicit and implicit cost.' },
+    })
+    fireEvent.change(screen.getByLabelText('Answer format'), {
+      target: { value: 'table' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }))
+
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Explicit cost' })).toBeInTheDocument()
+    expect(screen.getByText('Uses owned inputs')).toBeInTheDocument()
+    expect(screen.getByRole('button', {
+      name: 'Citation 1: Economics - Theory of Cost.pdf, page 2',
+    })).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/chat/messages',
+      expect.objectContaining({
+        body: JSON.stringify({
+          question: 'Compare explicit and implicit cost.',
+          source_ids: [session.sources[0].id],
+          answer_format: 'table',
+        }),
+      }),
+    )
+  })
+
   it('requires at least one selected source before asking', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify(session), {

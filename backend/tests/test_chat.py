@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 from numpy.typing import NDArray
 
 from luma_api.main import create_app
-from luma_spikes.models import AnswerCitation, Chunk, GroundedAnswer
+from luma_api.chat import resolve_answer_format
+from luma_spikes.models import AnswerCitation, AnswerSection, Chunk, GroundedAnswer
 from tests.demo_fixtures import write_test_demo_assets
 
 
@@ -41,12 +42,25 @@ def ask(
     session_id: str,
     source_ids: list[str],
     question: str = "What is explicit cost?",
+    answer_format: str = "auto",
 ):
     return client.post(
         "/api/v1/chat/messages",
         headers={"X-Session-ID": session_id},
-        json={"question": question, "source_ids": source_ids},
+        json={
+            "question": question,
+            "source_ids": source_ids,
+            "answer_format": answer_format,
+        },
     )
+
+
+def test_auto_answer_format_uses_question_intent() -> None:
+    assert resolve_answer_format("Compare fixed and variable cost.", "auto") == "table"
+    assert resolve_answer_format("Explain total cost.", "auto") == "bullets"
+    assert resolve_answer_format("Give me the merge sort algorithm code.", "auto") == "code"
+    assert resolve_answer_format("State the steps in the procedure.", "auto") == "steps"
+    assert resolve_answer_format("What is explicit cost?", "auto") == "paragraph"
 
 
 def test_grounded_answer_maps_trusted_citation_metadata(tmp_path: Path) -> None:
@@ -61,6 +75,13 @@ def test_grounded_answer_maps_trusted_citation_metadata(tmp_path: Path) -> None:
             ],
             insufficient_evidence=False,
             follow_up_questions=["How does implicit cost differ?"],
+            sections=[
+                AnswerSection(
+                    kind="paragraph",
+                    content_markdown="Explicit cost is a direct payment.",
+                    evidence_chunk_ids=[chunks[0].id],
+                )
+            ],
         )
 
     client, source_id = build_client(tmp_path, generator)
@@ -82,6 +103,152 @@ def test_grounded_answer_maps_trusted_citation_metadata(tmp_path: Path) -> None:
         headers={"X-Session-ID": session["id"]},
     ).json()
     assert [message["role"] for message in history] == ["user", "assistant"]
+
+
+def test_table_format_returns_validated_structured_sections(tmp_path: Path) -> None:
+    def generator(_: str, chunks: Sequence[Chunk]) -> GroundedAnswer:
+        return GroundedAnswer(
+            answer_markdown="Explicit and implicit costs differ.",
+            citations=[
+                AnswerCitation(
+                    chunk_id=chunks[0].id,
+                    claim="Explicit and implicit costs use different inputs.",
+                )
+            ],
+            insufficient_evidence=False,
+            follow_up_questions=[],
+            answer_format="table",
+            sections=[
+                AnswerSection(
+                    kind="table",
+                    title="Cost comparison",
+                    columns=["Explicit cost", "Implicit cost"],
+                    rows=[
+                        [
+                            "Paid for hired inputs.",
+                            "Uses inputs owned by the firm.",
+                        ]
+                    ],
+                    evidence_chunk_ids=[chunks[0].id],
+                )
+            ],
+        )
+
+    client, source_id = build_client(tmp_path, generator)
+    session = client.post("/api/v1/session").json()
+
+    response = ask(
+        client,
+        session["id"],
+        [source_id],
+        "Compare explicit and implicit cost.",
+        answer_format="table",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer_format"] == "table"
+    assert body["sections"][0]["columns"] == ["Explicit cost", "Implicit cost"]
+    assert len(body["sections"][0]["evidence_chunk_ids"]) == 1
+
+
+def test_visible_answer_text_strips_raw_chunk_ids(tmp_path: Path) -> None:
+    def generator(_: str, chunks: Sequence[Chunk]) -> GroundedAnswer:
+        chunk_id = chunks[0].id
+        return GroundedAnswer(
+            answer_markdown=f"AVC formula ({chunk_id}).",
+            citations=[
+                AnswerCitation(
+                    chunk_id=chunk_id,
+                    claim=f"AVC formula ({chunk_id}).",
+                )
+            ],
+            insufficient_evidence=False,
+            follow_up_questions=[],
+            answer_format="bullets",
+            sections=[
+                AnswerSection(
+                    kind="bullets",
+                    title=f"Formula ({chunk_id})",
+                    items=[f"AVC = TVC / Q ({chunk_id})."],
+                    evidence_chunk_ids=[chunk_id],
+                )
+            ],
+        )
+
+    client, source_id = build_client(tmp_path, generator)
+    session = client.post("/api/v1/session").json()
+
+    response = ask(
+        client,
+        session["id"],
+        [source_id],
+        "Explain why AVC is U-shaped.",
+        answer_format="bullets",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "(" not in body["sections"][0]["items"][0]
+    assert body["sections"][0]["title"] == "Formula"
+    assert body["citations"][0]["claim"] == "AVC formula."
+
+
+def test_code_format_returns_preformatted_section(tmp_path: Path) -> None:
+    def generator(_: str, chunks: Sequence[Chunk]) -> GroundedAnswer:
+        return GroundedAnswer(
+            answer_markdown="Merge sort pseudocode.",
+            citations=[
+                AnswerCitation(
+                    chunk_id=chunks[0].id,
+                    claim="The source provides merge sort pseudocode.",
+                )
+            ],
+            insufficient_evidence=False,
+            follow_up_questions=[],
+            answer_format="code",
+            sections=[
+                AnswerSection(
+                    kind="paragraph",
+                    title="How it works",
+                    content_markdown=(
+                        "MergeSort recursively divides the input and then uses "
+                        "Merge to combine sorted halves."
+                    ),
+                    evidence_chunk_ids=[chunks[0].id],
+                ),
+                AnswerSection(
+                    kind="code",
+                    title="Merge sort",
+                    content_markdown=(
+                        "MergeSort(A, p, r) { if p < r { "
+                        "q = (p + r) / 2; MergeSort(A, p, q); } }"
+                    ),
+                    code_language="text",
+                    evidence_chunk_ids=[chunks[0].id],
+                )
+            ],
+        )
+
+    client, source_id = build_client(tmp_path, generator)
+    session = client.post("/api/v1/session").json()
+
+    response = ask(
+        client,
+        session["id"],
+        [source_id],
+        "Give me algorithm for merge sort, I want actual code.",
+        answer_format="code",
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer_format"] == "code"
+    assert body["sections"][0]["kind"] == "paragraph"
+    assert body["sections"][1]["kind"] == "code"
+    assert "MergeSort" in body["sections"][1]["content_markdown"]
+    assert "  if p < r" in body["sections"][1]["content_markdown"]
+    assert "    q = (p + r) / 2;" in body["sections"][1]["content_markdown"]
 
 
 def test_fabricated_citation_is_retried_once_then_rejected(tmp_path: Path) -> None:

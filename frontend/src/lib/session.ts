@@ -52,11 +52,32 @@ export type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
   content_markdown: string
+  answer_format?: AnswerFormat
+  sections?: AnswerSection[]
   citations: Citation[]
   insufficient_evidence?: boolean
   follow_up_questions?: string[]
   status: 'pending' | 'complete' | 'interrupted' | 'failed'
   created_at: string
+}
+
+export type AnswerFormat =
+  | 'auto'
+  | 'paragraph'
+  | 'bullets'
+  | 'steps'
+  | 'table'
+  | 'code'
+
+export type AnswerSection = {
+  kind: Exclude<AnswerFormat, 'auto'>
+  title: string | null
+  content_markdown: string | null
+  code_language: string | null
+  items: string[]
+  columns: string[]
+  rows: string[][]
+  evidence_chunk_ids: string[]
 }
 
 export type SummaryArtifact = {
@@ -394,6 +415,7 @@ export async function askQuestion(
   sessionId: string,
   question: string,
   sourceIds: string[],
+  answerFormat: AnswerFormat = 'auto',
 ): Promise<ChatMessage> {
   const response = await fetch('/api/v1/chat/messages', {
     method: 'POST',
@@ -401,7 +423,11 @@ export async function askQuestion(
       'Content-Type': 'application/json',
       'X-Session-ID': sessionId,
     },
-    body: JSON.stringify({ question, source_ids: sourceIds }),
+    body: JSON.stringify({
+      question,
+      source_ids: sourceIds,
+      answer_format: answerFormat,
+    }),
   })
   if (!response.ok) throw await readError(response)
   return (await response.json()) as ChatMessage

@@ -840,6 +840,101 @@ body.is-resizing-panels * {
   overflow-wrap: anywhere;
 }
 
+.structured-answer {
+  display: grid;
+  gap: 20px;
+}
+
+.answer-section {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.answer-section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.answer-section h2 {
+  margin: 0 0 8px;
+  font-size: 1.08rem;
+}
+
+.answer-section p {
+  margin: 0;
+}
+
+.answer-section ul,
+.answer-section ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.answer-section-citations {
+  margin-top: 12px;
+}
+
+.answer-code {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: #13233a;
+  background: #f5f7f8;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.83rem;
+  line-height: 1.65;
+  white-space: pre;
+}
+
+.answer-code code {
+  white-space: pre;
+}
+
+.answer-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+}
+
+.answer-table-wrap:focus-visible {
+  outline: 3px solid #9ec1db;
+  outline-offset: 2px;
+}
+
+.answer-table-wrap table {
+  width: 100%;
+  min-width: 440px;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.answer-table-wrap th,
+.answer-table-wrap td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.answer-table-wrap th {
+  color: var(--color-primary);
+  background: var(--color-canvas);
+  font-size: 0.72rem;
+}
+
+.answer-table-wrap th:last-child,
+.answer-table-wrap td:last-child {
+  border-right: 0;
+}
+
+.answer-table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+
 .evidence-warning {
   padding: 12px 14px;
   color: #74411e;
@@ -937,6 +1032,29 @@ body.is-resizing-panels * {
 
 .chat-composer span {
   color: var(--color-faint);
+  font-size: 0.68rem;
+}
+
+.answer-format {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.answer-format span {
+  white-space: nowrap;
+}
+
+.answer-format select {
+  min-height: 30px;
+  max-width: 130px;
+  padding: 4px 22px 4px 7px;
+  color: var(--color-muted);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  font: inherit;
   font-size: 0.68rem;
 }
 

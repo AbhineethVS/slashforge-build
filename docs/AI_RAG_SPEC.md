@@ -123,6 +123,19 @@ Required answer shape:
 ```json
 {
   "answer_markdown": "string",
+  "answer_format": "paragraph | bullets | steps | table | code",
+  "sections": [
+    {
+      "kind": "paragraph | bullets | steps | table | code",
+      "title": "string or null",
+      "content_markdown": "string or null",
+      "code_language": "string or null",
+      "items": ["string"],
+      "columns": ["string"],
+      "rows": [["string"]],
+      "evidence_chunk_ids": ["uuid"]
+    }
+  ],
   "citations": [
     {
       "chunk_id": "uuid",
@@ -137,7 +150,13 @@ Required answer shape:
 Server validation:
 
 - Every citation chunk ID is in the supplied retrieval set.
+- Every section evidence chunk ID is in the supplied retrieval set.
 - Every cited chunk belongs to an active source in the current session.
+- A requested non-auto format must match the validated response format.
+- Tables have two to four columns and rows that match that column count.
+- Each displayed section has at least one supporting chunk.
+- Raw chunk IDs must not appear in visible prose, bullets, table cells, or
+  code; the backend strips any that leak from model output.
 - No client-provided source title or page is trusted.
 - An insufficient-evidence response contains no invented answer.
 - Unknown IDs are removed and the answer is retried once if that would leave a

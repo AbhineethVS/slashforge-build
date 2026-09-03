@@ -302,3 +302,30 @@ Consequences:
   unrelated economics material.
 - Prompt-specific diagrams, native SVG charts, and `.pptx` export remain
   future work.
+
+## ADR-020: Chat answers use validated structured presentation sections
+
+Status: accepted (2026-09-03)
+
+Decision: add an answer-format selector to Chat and ask OpenAI for structured
+sections as part of the existing grounded-answer response. Supported formats
+are Auto, concise points, table, steps, code, and paragraph. Auto is resolved
+deterministically from the question intent before generation. The backend
+validates the requested format, every section evidence chunk ID, table shape,
+and code-section presence before returning a supported answer.
+
+Reason: students should not receive a wall of text when the useful form is a
+comparison table, list, procedure, or code block. Keeping formatting inside the
+same structured response avoids a second model pass that could alter facts or
+drop citation support.
+
+Consequences:
+
+- The browser renders structured sections directly instead of relying only on
+  Markdown.
+- Raw chunk UUIDs are stripped from visible answer text while backend-owned
+  citation metadata is preserved.
+- Code and algorithm answers may include a brief explanatory section plus a
+  source-supported code or pseudocode block.
+- Unsupported evidence still produces an abstention, not a cleaned-up
+  hallucination.

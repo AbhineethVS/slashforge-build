@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+import re
 from uuid import UUID
 
 import numpy as np
@@ -9,12 +10,46 @@ import numpy as np
 from luma_spikes.citations import (
     InvalidCitationError,
     map_citations,
+    sanitize_visible_answer_text,
     validate_citation_allow_list,
 )
-from luma_spikes.models import Chunk, CitationView, GroundedAnswer
+from luma_spikes.models import (
+    AnswerFormat,
+    Chunk,
+    CitationView,
+    GroundedAnswer,
+    ResolvedAnswerFormat,
+)
 from luma_spikes.retrieval import Embedder, VectorIndex, retrieve
 
 RETRIEVAL_LIMIT = 5
+
+
+def resolve_answer_format(
+    question: str,
+    requested_format: AnswerFormat,
+) -> ResolvedAnswerFormat:
+    if requested_format != "auto":
+        return requested_format
+    normalized = question.lower()
+    if re.search(
+        r"\b(compare|contrast|difference|differentiate|distinguish)\b",
+        normalized,
+    ):
+        return "table"
+    if re.search(
+        r"\b(code|algorithm|pseudocode|program|implementation|implement)\b",
+        normalized,
+    ):
+        return "code"
+    if re.search(
+        r"\b(steps?|process|procedure|calculate|deriv(e|ation))\b",
+        normalized,
+    ):
+        return "steps"
+    if re.search(r"\b(explain|discuss|describe|long answer)\b", normalized):
+        return "bullets"
+    return "paragraph"
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +90,7 @@ def answer_from_sources(
     sources: Sequence[SelectedIndex],
     embedder: Embedder,
     generate: Callable[[str, Sequence[Chunk]], GroundedAnswer],
+    requested_format: AnswerFormat = "auto",
 ) -> GroundedResult:
     index = combine_indexes(sources)
     selected_ids = {source.source_id for source in sources}
@@ -74,12 +110,22 @@ def answer_from_sources(
     for _ in range(2):
         try:
             candidate = generate(question, chunks)
+            sanitize_visible_answer_text(candidate)
+            if (
+                requested_format != "auto"
+                and candidate.answer_format != requested_format
+            ):
+                raise InvalidCitationError(
+                    "Answer format did not match the student selection."
+                )
             if candidate.insufficient_evidence:
                 candidate.answer_markdown = (
                     "The selected sources do not contain enough evidence "
                     "to answer that question."
                 )
                 candidate.citations = []
+                candidate.sections = []
+                candidate.answer_format = "paragraph"
             validate_citation_allow_list(
                 candidate,
                 {chunk.id for chunk in chunks},

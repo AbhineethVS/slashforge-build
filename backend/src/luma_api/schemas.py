@@ -7,6 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from .memory import LearningMemoryResponse
+from luma_spikes.models import AnswerFormat, AnswerSection, ResolvedAnswerFormat
 
 
 class SourceSummary(BaseModel):
@@ -21,6 +22,7 @@ class SourceSummary(BaseModel):
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2_000)
     source_ids: list[UUID] = Field(min_length=1, max_length=3)
+    answer_format: AnswerFormat = "auto"
 
     @field_validator("question")
     @classmethod
@@ -54,6 +56,8 @@ class ChatMessageResponse(BaseModel):
     id: UUID
     role: Literal["assistant"]
     content_markdown: str
+    answer_format: ResolvedAnswerFormat = "paragraph"
+    sections: list[AnswerSection] = Field(default_factory=list)
     citations: list[CitationResponse]
     insufficient_evidence: bool
     follow_up_questions: list[str] = Field(max_length=3)
