@@ -387,6 +387,22 @@ Exit criteria:
   can mark it rechecked.
 - No durable store, account, or model-assigned mastery is added.
 
+### Phase 6.6: Visual Deck fallback
+
+Status (2026-09-03): implemented locally for the bundled economics demo.
+
+- Add an Infographics prompt editor in Studio.
+- Store the prompt as a temporary `visual_deck` artifact.
+- Preview and download a session-checked, cached 15-slide economics PDF.
+- Label the deck as fallback content; do not claim prompt-specific deck
+  composition until a validated SVG/chart and PowerPoint pipeline exists.
+
+Exit criteria:
+
+- The cached deck can be opened only from its owning session artifact.
+- A selected uploaded source cannot receive the economics fallback.
+- Reset and expiry clear the artifact record.
+
 ### Phase 7: hardening and presentation
 
 - Run file-abuse, prompt-injection, session-isolation, and API-failure tests.

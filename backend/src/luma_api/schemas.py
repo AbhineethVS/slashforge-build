@@ -72,6 +72,18 @@ class ArtifactRequest(BaseModel):
         return value
 
 
+class VisualDeckRequest(ArtifactRequest):
+    prompt: str = Field(min_length=20, max_length=2_000)
+
+    @field_validator("prompt")
+    @classmethod
+    def normalize_visual_deck_prompt(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if len(normalized) < 20:
+            raise ValueError("Describe the visual deck in at least 20 characters.")
+        return normalized
+
+
 class ArtifactResponse(BaseModel):
     id: UUID
     type: Literal[
@@ -80,6 +92,7 @@ class ArtifactResponse(BaseModel):
         "quiz",
         "teach_back",
         "audio_overview",
+        "visual_deck",
     ]
     title: str
     content: dict[str, Any]

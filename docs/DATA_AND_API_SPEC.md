@@ -273,9 +273,11 @@ session.
 - `POST /api/v1/studio/quiz`
 - `POST /api/v1/studio/teach-back`
 - `POST /api/v1/studio/audio-overview`
+- `POST /api/v1/studio/visual-deck`
 - `GET /api/v1/studio/artifacts`
 - `GET /api/v1/artifacts/{artifact_id}`
 - `DELETE /api/v1/artifacts/{artifact_id}`
+- `GET /api/v1/visual-decks/{artifact_id}/file`
 
 Generation requests include selected `source_ids`. Quiz requests may include
 question count and difficulty, but the server enforces safe bounds.
@@ -305,6 +307,16 @@ model-assisted judgments in a later iteration. The scoped release stores them
 as `unscored` formative comparisons; deterministic classifications are emitted
 only when correctness is known. Teach-Back still updates learning memory using
 covered, missing, and check-this counts.
+
+### Visual Deck
+
+`POST /api/v1/studio/visual-deck` accepts selected `source_ids` plus an edited
+20- to 2,000-character `prompt`. The current demo implementation returns a
+`visual_deck` artifact only for the bundled economics source selected alone.
+Its content includes the request prompt, `fallback: true`, `page_count`, and a
+session-checked PDF `file_url`. The PDF is a cached demo presentation, not a
+live response to the prompt. `GET /api/v1/visual-decks/{artifact_id}/file`
+requires the owning session and rejects other-session access.
 
 ### Voice
 

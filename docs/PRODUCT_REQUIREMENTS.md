@@ -145,6 +145,7 @@ The right-hand Studio panel is the home for generated learning tools:
 - Teach Back.
 - Audio Overview.
 - Temporary learning memory.
+- Infographics: a prompt-led visual deck with a cached bundled-demo fallback.
 
 Studio uses the source selection from the left panel. Generated tools appear in
 the panel without replacing the center chat.
@@ -197,6 +198,21 @@ Acceptance criteria:
 - Chat, Quiz, Teach Back, and Studio read the same memory.
 - The model cannot invent mastery or citation pages for memory records.
 - Reset and expiry clear learning memory with the rest of the session.
+
+### 5.10 Create an infographic presentation
+
+1. The student opens **Infographics** in Studio and writes or edits a deck prompt.
+2. The request is source-scoped and retained only with the temporary session.
+3. The bundled economics demo opens a cached 15-slide PDF presentation while
+   live deck composition is not yet available.
+4. The student can preview and download the session-checked PDF.
+
+Acceptance criteria:
+
+- The fallback is visibly labeled as cached demo content, not newly generated.
+- It is available only when the bundled economics source is the sole selected source.
+- Another session cannot open or download the artifact.
+- Reset and expiry remove the artifact record.
 
 ## 6. Release scope
 

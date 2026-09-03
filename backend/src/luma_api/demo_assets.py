@@ -54,6 +54,10 @@ class BundledDemoCatalog:
     def pdf_path(self) -> Path:
         return self.root / "source.pdf"
 
+    @property
+    def visual_deck_fallback_path(self) -> Path:
+        return self.root / "economic-blueprint-fallback.pdf"
+
     def source_summary(self) -> dict[str, Any]:
         return {
             "id": str(self.manifest.source_id),
@@ -87,7 +91,14 @@ def load_catalog(root: Path | None = None) -> BundledDemoCatalog:
     pdf_path = assets_root / "source.pdf"
     fallback_path = assets_root / "fallback_artifacts.json"
 
-    for required in (manifest_path, chunks_path, embeddings_path, pdf_path):
+    visual_deck_path = assets_root / "economic-blueprint-fallback.pdf"
+    for required in (
+        manifest_path,
+        chunks_path,
+        embeddings_path,
+        pdf_path,
+        visual_deck_path,
+    ):
         if not required.is_file():
             raise FileNotFoundError(f"Demo asset missing: {required}")
 

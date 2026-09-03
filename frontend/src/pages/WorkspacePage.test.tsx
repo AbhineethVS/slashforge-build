@@ -74,6 +74,33 @@ describe('WorkspacePage', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/session', { method: 'POST' })
   })
 
+  it('opens the Infographics prompt editor from Studio', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(session), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Infographics/ }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Infographics' }),
+    ).toBeInTheDocument()
+    expect(
+      (screen.getByLabelText('Deck prompt') as HTMLTextAreaElement).value,
+    ).toContain('key economic graphs')
+    expect(
+      screen.getByRole('button', { name: 'Generate presentation' }),
+    ).toBeEnabled()
+  })
+
   it('recovers by creating a session when the stored one expired', async () => {
     sessionStorage.setItem('luma.session_id', 'expired-session')
     const fetchMock = vi

@@ -120,6 +120,9 @@ before judging; use student credits for a small paid tier if available.
 8. Explicit reset, TTL expiry, or process restart removes temporary data.
 9. Recorded audio, generated narration, transcripts, and overview artifacts
    follow the same session ownership and cleanup lifecycle.
+10. Visual Deck requests and their cached-demo artifact records follow the
+    same session lifecycle; the bundled fallback PDF is served only after the
+    artifact is resolved inside the owning session.
 
 Target TTL: 60 minutes. The UI clearly says temporary uploads may disappear on
 refresh after expiry or when the demo server restarts.

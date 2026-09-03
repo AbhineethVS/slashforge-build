@@ -279,3 +279,26 @@ Consequences:
 - Teach-Back can move a misconception from open to repairing or rechecked.
 - Reset, expiry, and restart clear learning memory with the session.
 - Persistent cross-visit memory remains a post-hackathon requirement.
+
+## ADR-019: Visual Deck uses a transparent cached PDF fallback
+
+Status: accepted (2026-09-03)
+
+Decision: add an Infographics prompt flow in Studio that stores a
+session-scoped Visual Deck request. For the bundled economics demo selected
+alone, it previews and downloads a supplied 15-slide PDF. The API does not
+claim to compose a new presentation from the prompt yet.
+
+Reason: the supplied deck provides a polished and reliable judge-demo visual
+while accurate, source-grounded chart composition and editable PowerPoint
+generation are developed as a separate future slice.
+
+Consequences:
+
+- The fallback is explicitly labeled in both prompt editor and preview.
+- The PDF is served through a session-owned artifact route, never a public
+  static URL.
+- Uploaded or mixed source selections receive an actionable error rather than
+  unrelated economics material.
+- Prompt-specific diagrams, native SVG charts, and `.pptx` export remain
+  future work.

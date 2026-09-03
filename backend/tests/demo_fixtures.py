@@ -23,6 +23,10 @@ def write_test_demo_assets(root: Path) -> BundledDemoCatalog:
     root.mkdir(parents=True, exist_ok=True)
     pdf_path = root / "source.pdf"
     _write_pdf(pdf_path, ["Explicit cost is a direct payment.", "Implicit cost uses owned inputs."])
+    _write_pdf(
+        root / "economic-blueprint-fallback.pdf",
+        ["The Economic Blueprint", "Visual deck fallback"],
+    )
 
     source_id = BUNDLED_DEMO_SOURCE_ID
     chunks = (

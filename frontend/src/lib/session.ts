@@ -227,12 +227,27 @@ export type AudioOverviewArtifact = {
   created_at: string
 }
 
+export type VisualDeckArtifact = {
+  id: string
+  type: 'visual_deck'
+  title: string
+  content: {
+    prompt: string
+    fallback: true
+    page_count: number
+    file_url: string
+  }
+  source_ids: string[]
+  created_at: string
+}
+
 export type StudioArtifact =
   | SummaryArtifact
   | FlashcardArtifact
   | QuizArtifact
   | TeachBackArtifact
   | AudioOverviewArtifact
+  | VisualDeckArtifact
 
 export type AudioClip = {
   id: string
@@ -510,6 +525,34 @@ export async function generateStudioArtifact(
   })
   if (!response.ok) throw await readError(response)
   return (await response.json()) as StudioArtifact
+}
+
+export async function generateVisualDeck(
+  sessionId: string,
+  sourceIds: string[],
+  prompt: string,
+): Promise<VisualDeckArtifact> {
+  const response = await fetch('/api/v1/studio/visual-deck', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-ID': sessionId,
+    },
+    body: JSON.stringify({ source_ids: sourceIds, prompt }),
+  })
+  if (!response.ok) throw await readError(response)
+  return (await response.json()) as VisualDeckArtifact
+}
+
+export async function fetchVisualDeckPdf(
+  sessionId: string,
+  fileUrl: string,
+): Promise<Blob> {
+  const response = await fetch(fileUrl, {
+    headers: { 'X-Session-ID': sessionId },
+  })
+  if (!response.ok) throw await readError(response)
+  return response.blob()
 }
 
 export async function submitQuizAttempt(

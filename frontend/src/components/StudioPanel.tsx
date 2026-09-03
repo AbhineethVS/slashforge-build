@@ -16,10 +16,13 @@ import {
   type StudioArtifact,
   type SummaryArtifact,
   type TeachBackArtifact,
+  type VisualDeckArtifact,
+  generateVisualDeck as generateVisualDeckArtifact,
 } from '../lib/session'
 import { AudioOverviewOverlay } from './AudioOverviewOverlay'
 import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
+import { VisualDeckOverlay } from './VisualDeckOverlay'
 import { VoiceRecorder } from './VoiceRecorder'
 
 const summaryMarkdownElements = [
@@ -51,6 +54,9 @@ const tools = [
   ['quiz', 'Quiz', 'Test understanding and confidence.'],
 ] as const
 
+const DEFAULT_VISUAL_DECK_PROMPT =
+  'Create a presentation that visualizes and explains the key economic graphs from the sources. Include the Production Possibility Frontier, Law of Variable Proportions, Market Equilibrium, short-run cost curves, the long-run average cost envelope curve, the Break-Even Chart, and demand and revenue curves for different market structures.'
+
 export function StudioPanel({
   sessionId,
   selectedSources,
@@ -67,6 +73,11 @@ export function StudioPanel({
     useState<SummaryArtifact | null>(null)
   const [audioOverview, setAudioOverview] =
     useState<AudioOverviewArtifact | null>(null)
+  const [visualDeck, setVisualDeck] = useState<VisualDeckArtifact | null>(null)
+  const [visualDeckOpen, setVisualDeckOpen] = useState(false)
+  const [visualDeckPrompt, setVisualDeckPrompt] = useState(
+    DEFAULT_VISUAL_DECK_PROMPT,
+  )
   const [teachBackOpen, setTeachBackOpen] = useState(false)
   const [teachBackResult, setTeachBackResult] =
     useState<TeachBackArtifact | null>(null)
@@ -170,6 +181,43 @@ export function StudioPanel({
     }
   }
 
+  async function submitVisualDeck(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (
+      visualDeckPrompt.trim().length < 20 ||
+      selectedSources.length === 0 ||
+      generation.status === 'loading'
+    ) {
+      return
+    }
+    setGeneration({ status: 'loading', kind: 'visual_deck' })
+    try {
+      const artifact = await generateVisualDeckArtifact(
+        sessionId,
+        selectedSources.map((source) => source.id),
+        visualDeckPrompt.trim(),
+      )
+      setArtifacts((current) => [
+        artifact,
+        ...current.filter((item) => item.id !== artifact.id),
+      ])
+      setVisualDeckOpen(false)
+      setVisualDeck(artifact)
+      setGeneration({ status: 'idle' })
+    } catch (error) {
+      const requestError =
+        error instanceof ApiRequestError
+          ? error
+          : new ApiRequestError('The visual deck could not be generated.')
+      setGeneration({
+        status: 'error',
+        kind: 'visual_deck',
+        message: requestError.message,
+        action: requestError.action,
+      })
+    }
+  }
+
   function openArtifact(artifact: StudioArtifact) {
     if (artifact.type === 'summary') {
       setActiveSummary(artifact)
@@ -179,6 +227,8 @@ export function StudioPanel({
       setTeachBackOpen(true)
     } else if (artifact.type === 'audio_overview') {
       setAudioOverview(artifact)
+    } else if (artifact.type === 'visual_deck') {
+      setVisualDeck(artifact)
     } else {
       setPracticeArtifact(artifact)
     }
@@ -244,6 +294,62 @@ export function StudioPanel({
         action: requestError.action,
       })
     }
+  }
+
+  if (visualDeckOpen) {
+    return (
+      <aside className="studio-panel visual-deck-form-panel" aria-labelledby="visual-deck-form-title">
+        <button
+          className="studio-back"
+          type="button"
+          onClick={() => setVisualDeckOpen(false)}
+        >
+          Back to Studio
+        </button>
+        <p className="panel-kicker">Prompt-led visual study deck</p>
+        <h1 id="visual-deck-form-title">Infographics</h1>
+        <p>
+          Describe the diagrams and graphs you want to explain. The current
+          economics demo opens a cached PDF presentation after you submit.
+        </p>
+        <form onSubmit={(event) => void submitVisualDeck(event)}>
+          <label>
+            <span>Deck prompt</span>
+            <textarea
+              rows={12}
+              maxLength={2000}
+              value={visualDeckPrompt}
+              onChange={(event) => setVisualDeckPrompt(event.target.value)}
+              placeholder="Describe the graphs, comparisons, and explanations to include."
+            />
+          </label>
+          <p className="visual-deck-form-note">
+            For now, the generated result is a clearly labeled, 15-slide cached
+            economics deck. Your prompt is retained only in this temporary session.
+          </p>
+          <button
+            className="teach-back-submit"
+            type="submit"
+            disabled={
+              visualDeckPrompt.trim().length < 20 ||
+              selectedSources.length === 0 ||
+              generation.status === 'loading'
+            }
+          >
+            {generation.status === 'loading'
+              ? 'Opening visual deck…'
+              : 'Generate presentation'}
+          </button>
+          {generation.status === 'error' && (
+            <div className="studio-error" role="alert">
+              <strong>Visual Deck could not be opened</strong>
+              <p>{generation.message}</p>
+              {generation.action && <p>{generation.action}</p>}
+            </div>
+          )}
+        </form>
+      </aside>
+    )
   }
 
   if (activeSummary) {
@@ -466,6 +572,18 @@ export function StudioPanel({
           </button>
           <button
             type="button"
+            onClick={(event) => {
+              launcherRef.current = event.currentTarget
+              setVisualDeckOpen(true)
+              setGeneration({ status: 'idle' })
+            }}
+            disabled={selectedSources.length === 0 || generation.status === 'loading'}
+          >
+            <strong>Infographics</strong>
+            <span>Describe a visual deck of diagrams and graphs.</span>
+          </button>
+          <button
+            type="button"
             onClick={(event) => void generateOverview(event.currentTarget)}
             disabled={selectedSources.length === 0 || generation.status === 'loading'}
           >
@@ -501,7 +619,11 @@ export function StudioPanel({
                   const kind = generation.kind
                   if (kind === 'audio_overview') {
                     void generateOverview()
-                  } else if (kind !== 'teach_back') {
+                  } else if (
+                    kind === 'summary' ||
+                    kind === 'flashcards' ||
+                    kind === 'quiz'
+                  ) {
                     void generate(kind)
                   }
                 }}
@@ -533,9 +655,11 @@ export function StudioPanel({
                           ? `${artifact.content.cards.length} flashcards`
                           : artifact.type === 'quiz'
                             ? `${artifact.content.questions.length} questions`
-                            : artifact.type === 'teach_back'
+                          : artifact.type === 'teach_back'
                               ? `Teach Back · ${artifact.content.concept}`
-                              : `${artifact.content.sections.length} section Audio Overview`}
+                              : artifact.type === 'audio_overview'
+                                ? `${artifact.content.sections.length} section Audio Overview`
+                                : `${artifact.content.page_count} slide Visual Deck`}
                     </span>
                   </button>
                   <button
@@ -574,6 +698,16 @@ export function StudioPanel({
           sessionId={sessionId}
           onClose={() => {
             setAudioOverview(null)
+            window.setTimeout(() => launcherRef.current?.focus(), 0)
+          }}
+        />
+      )}
+      {visualDeck && (
+        <VisualDeckOverlay
+          artifact={visualDeck}
+          sessionId={sessionId}
+          onClose={() => {
+            setVisualDeck(null)
             window.setTimeout(() => launcherRef.current?.focus(), 0)
           }}
         />

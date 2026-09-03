@@ -186,6 +186,7 @@ Do not silently change models or prompts after a passing evaluation.
 - Prompt injection inside uploaded notes.
 - Forged model citation IDs.
 - Temporary PDF route accessed without the correct session.
+- Cached visual-deck PDF route accessed without the owning artifact and session.
 - Unbounded generation or repeated retries causing cost abuse.
 - Temporary filesystem exhaustion.
 - Microphone recordings crafted to exhaust decoders or bypass duration limits.

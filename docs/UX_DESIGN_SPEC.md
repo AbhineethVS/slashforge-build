@@ -148,7 +148,7 @@ Only one dominant call to action should appear per state.
 ### Studio
 
 - The default Studio view uses compact tool cards for Summary, Flashcards,
-  Quiz, Teach Back, and Audio Overview.
+  Quiz, Teach Back, Infographics, and Audio Overview.
 - Learning memory sits below the tool cards and shows concept state, open
   misconceptions, cited evidence pages, and the next repair action.
 - Summary opens in place within Studio with a clear Back to Studio action.
@@ -164,6 +164,9 @@ Only one dominant call to action should appear per state.
 - Evidence opens over the right side of Practice and restores the exact card
   or question when closed.
 - Tool state survives opening a citation or temporarily collapsing Studio.
+- Infographics opens a concise prompt editor. The bundled-demo fallback is
+  explicitly described as a cached PDF presentation before submission and in
+  the preview, with a keyboard-accessible close action and PDF download.
 - Avoid placing all generated artifacts in the center Chat transcript.
 
 ### Quiz

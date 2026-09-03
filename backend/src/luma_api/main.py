@@ -80,6 +80,7 @@ from .schemas import (
     SourceSummary,
     NarrationResponse,
     TranscriptionResponse,
+    VisualDeckRequest,
 )
 from .sessions import (
     DemoSession,
@@ -1061,6 +1062,47 @@ def create_app(
         )
 
     @application.post(
+        "/api/v1/studio/visual-deck",
+        response_model=ArtifactResponse,
+    )
+    def create_visual_deck(
+        request: VisualDeckRequest,
+        session: DemoSession = Depends(current_session),
+    ) -> ArtifactResponse:
+        selected_indexes(session, request.source_ids)
+        if (
+            catalog is None
+            or request.source_ids != [catalog.source_id]
+            or not catalog.visual_deck_fallback_path.is_file()
+        ):
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "INSUFFICIENT_EVIDENCE",
+                "The cached visual deck is available only for the bundled economics demo.",
+                False,
+                "Select only Economics - Theory of Cost.pdf and try again.",
+            )
+        artifact = ArtifactResponse(
+            id=uuid4(),
+            type="visual_deck",
+            title="The Economic Blueprint",
+            content={
+                "prompt": request.prompt,
+                "fallback": True,
+                "page_count": 15,
+                "file_url": "/api/v1/visual-decks/{artifact_id}/file",
+            },
+            source_ids=request.source_ids,
+            created_at=utc_now(),
+        )
+        stored = artifact.model_dump(mode="json")
+        stored["content"]["file_url"] = str(
+            stored["content"]["file_url"]
+        ).format(artifact_id=artifact.id)
+        session.artifacts.append(stored)
+        return ArtifactResponse.model_validate(stored)
+
+    @application.post(
         "/api/v1/studio/teach-back",
         response_model=ArtifactResponse,
     )
@@ -1584,6 +1626,34 @@ def create_app(
             catalog.pdf_path,
             media_type="application/pdf",
             filename=catalog.manifest.display_name,
+        )
+
+    @application.get("/api/v1/visual-decks/{artifact_id}/file")
+    def get_visual_deck_file(
+        artifact_id: UUID,
+        session: DemoSession = Depends(current_session),
+    ) -> FileResponse:
+        artifact = next(
+            (
+                item
+                for item in session.artifacts
+                if item.get("id") == str(artifact_id)
+                and item.get("type") == "visual_deck"
+            ),
+            None,
+        )
+        if artifact is None or catalog is None:
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The visual deck is not available in this session.",
+                False,
+                "Return to Studio and generate the deck again.",
+            )
+        return FileResponse(
+            catalog.visual_deck_fallback_path,
+            media_type="application/pdf",
+            filename="the-economic-blueprint.pdf",
         )
 
     default_frontend_dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"

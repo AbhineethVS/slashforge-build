@@ -228,3 +228,59 @@ def test_artifacts_are_session_scoped_and_deletable(tmp_path: Path) -> None:
         "/api/v1/studio/artifacts",
         headers={"X-Session-ID": owner["id"]},
     ).json() == []
+
+
+def test_visual_deck_is_session_scoped_and_serves_the_cached_pdf(
+    tmp_path: Path,
+) -> None:
+    client, source_id = make_client(
+        tmp_path,
+        lambda kind, chunks: summary_output(chunks),
+    )
+    owner = client.post("/api/v1/session").json()
+    other = client.post("/api/v1/session").json()
+    prompt = "Create a visual presentation that explains the core economic graphs."
+
+    created = client.post(
+        "/api/v1/studio/visual-deck",
+        headers={"X-Session-ID": owner["id"]},
+        json={"source_ids": [source_id], "prompt": prompt},
+    )
+
+    assert created.status_code == 200
+    artifact = created.json()
+    assert artifact["type"] == "visual_deck"
+    assert artifact["content"]["fallback"] is True
+    assert artifact["content"]["prompt"] == prompt
+    assert artifact["content"]["page_count"] == 15
+
+    owned_file = client.get(
+        artifact["content"]["file_url"],
+        headers={"X-Session-ID": owner["id"]},
+    )
+    denied_file = client.get(
+        artifact["content"]["file_url"],
+        headers={"X-Session-ID": other["id"]},
+    )
+
+    assert owned_file.status_code == 200
+    assert owned_file.content.startswith(b"%PDF")
+    assert denied_file.status_code == 404
+
+
+def test_visual_deck_validates_prompt_before_creating_an_artifact(
+    tmp_path: Path,
+) -> None:
+    client, source_id = make_client(
+        tmp_path,
+        lambda kind, chunks: summary_output(chunks),
+    )
+    session = client.post("/api/v1/session").json()
+
+    response = client.post(
+        "/api/v1/studio/visual-deck",
+        headers={"X-Session-ID": session["id"]},
+        json={"source_ids": [source_id], "prompt": "Too short"},
+    )
+
+    assert response.status_code == 422
