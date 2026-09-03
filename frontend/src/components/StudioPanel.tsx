@@ -10,6 +10,7 @@ import {
   type AudioOverviewArtifact,
   generateStudioArtifact,
   type Citation,
+  type LearningMemory,
   type Progress,
   type SourceSummary,
   type StudioArtifact,
@@ -40,6 +41,8 @@ type StudioPanelProps = {
   initialAttemptCount: number
   onCitation: (citation: Citation, trigger: HTMLButtonElement) => void
   onCloseResponsive?: () => void
+  onAskQuestion?: (question: string) => void
+  onLearningMemory?: (memory: LearningMemory) => void
 }
 
 const tools = [
@@ -55,6 +58,8 @@ export function StudioPanel({
   initialAttemptCount,
   onCitation,
   onCloseResponsive,
+  onAskQuestion,
+  onLearningMemory,
 }: StudioPanelProps) {
   const [artifacts, setArtifacts] =
     useState<StudioArtifact[]>(initialArtifacts)
@@ -78,6 +83,11 @@ export function StudioPanel({
     | { status: 'error'; kind: StudioArtifact['type']; message: string; action?: string }
   >({ status: 'idle' })
   const launcherRef = useRef<HTMLButtonElement | null>(null)
+  const onLearningMemoryRef = useRef(onLearningMemory)
+
+  useEffect(() => {
+    onLearningMemoryRef.current = onLearningMemory
+  }, [onLearningMemory])
 
   useEffect(() => {
     if (initialAttemptCount === 0 && progressRevision === 0) return
@@ -87,6 +97,7 @@ export function StudioPanel({
         if (!active) return
         if (!Array.isArray(next.concepts)) return
         setProgress(next)
+        if (next.learning_memory) onLearningMemoryRef.current?.(next.learning_memory)
         setTeachBackConcept((current) => current || next.recommended_concept || '')
       })
       .catch(() => {
@@ -475,6 +486,7 @@ export function StudioPanel({
             setTeachBackResult(null)
             setTeachBackOpen(true)
           }}
+          onAskQuestion={onAskQuestion}
         />
 
         {generation.status === 'error' && (
@@ -573,26 +585,73 @@ export function StudioPanel({
 function ProgressSummary({
   progress,
   onTeachBack,
+  onAskQuestion,
 }: {
   progress: Progress | null
   onTeachBack: (concept: string) => void
+  onAskQuestion?: (question: string) => void
 }) {
+  const memory = progress?.learning_memory
+  const focus = memory?.open_misconception
+  const concepts = memory?.concepts?.length
+    ? memory.concepts
+    : progress?.concepts.map((concept) => ({
+        concept_id: concept.concept_label,
+        concept_label: concept.concept_label,
+        state: 'needs_recheck' as const,
+        classification: concept.classification,
+        attempt_count: concept.attempt_count,
+        confidence_pattern: null,
+        misconception: null,
+        confused_with: [],
+        next_action: null,
+        next_action_label: '',
+        evidence_pages: [],
+      }))
+
   return (
     <section className="studio-progress" aria-labelledby="progress-title">
       <div>
-        <p className="panel-kicker">Temporary progress</p>
-        <h2 id="progress-title">Learning signals</h2>
+        <p className="panel-kicker">Session learning memory</p>
+        <h2 id="progress-title">Learning memory</h2>
       </div>
       {!progress || progress.total_attempts === 0 ? (
-        <p>Complete a quiz to reveal concepts that need another look.</p>
+        <p>
+          Complete a quiz to reveal which ideas are stable, guessed, or still a
+          misconception. This map stays in the current session only.
+        </p>
       ) : (
         <>
+          {focus?.misconception && (
+            <article className="memory-focus" aria-label="Open misconception">
+              <p className="panel-kicker">
+                {focus.misconception.status === 'repairing'
+                  ? 'Repairing'
+                  : 'Open misconception'}
+              </p>
+              <strong>{focus.concept_label}</strong>
+              <p>{focus.misconception.claim}</p>
+              {focus.misconception.evidence_pages.length > 0 && (
+                <p>
+                  Evidence:{' '}
+                  {focus.misconception.source_name || 'Selected source'}, p.
+                  {focus.misconception.evidence_pages.join(', p.')}
+                </p>
+              )}
+              {focus.confused_with.length > 0 && (
+                <p>Often confused with {focus.confused_with.join(', ')}</p>
+              )}
+            </article>
+          )}
           <ul>
-            {progress.concepts.slice(0, 4).map((concept) => (
-              <li key={concept.concept_label}>
+            {(concepts || []).slice(0, 4).map((concept) => (
+              <li key={concept.concept_id || concept.concept_label}>
                 <div>
                   <strong>{concept.concept_label}</strong>
-                  <span>{concept.attempt_count} attempt{concept.attempt_count === 1 ? '' : 's'}</span>
+                  <span>
+                    {stateLabel(concept.state)} · {concept.attempt_count} attempt
+                    {concept.attempt_count === 1 ? '' : 's'}
+                  </span>
                 </div>
                 <span className={`concept-badge concept-${concept.classification}`}>
                   {classificationLabel(concept.classification)}
@@ -600,13 +659,22 @@ function ProgressSummary({
               </li>
             ))}
           </ul>
-          <p>{progress.recommendation}</p>
+          <p>{memory?.next_action || progress.recommendation}</p>
           {progress.recommended_concept && (
             <button
               type="button"
               onClick={() => onTeachBack(progress.recommended_concept!)}
             >
               Teach back {progress.recommended_concept}
+            </button>
+          )}
+          {focus?.misconception?.transfer_question && onAskQuestion && (
+            <button
+              className="memory-ask"
+              type="button"
+              onClick={() => onAskQuestion(focus.misconception!.transfer_question)}
+            >
+              Ask contrast question
             </button>
           )}
         </>
@@ -623,6 +691,15 @@ function classificationLabel(classification: string): string {
     confident_misconception: 'Misconception',
     unscored: 'Formative',
   }[classification] || 'Formative'
+}
+
+function stateLabel(state: string): string {
+  return {
+    unseen: 'Unseen',
+    emerging: 'Emerging',
+    stable: 'Stable',
+    needs_recheck: 'Needs recheck',
+  }[state] || 'Needs recheck'
 }
 
 function FeedbackGroup({

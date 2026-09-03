@@ -75,8 +75,19 @@ def test_high_confidence_wrong_answer_updates_progress(tmp_path: Path) -> None:
 
     assert attempt.status_code == 200
     assert attempt.json()["classification"] == "confident_misconception"
-    assert progress["recommended_concept"] == "Costs"
+    assert attempt.json()["concept_label"] == "Explicit and implicit cost"
+    assert progress["recommended_concept"] == "Explicit and implicit cost"
     assert progress["concepts"][0]["confident_misconception"] == 1
+    memory = progress["learning_memory"]
+    assert memory["open_misconception"]["concept_label"] == "Explicit and implicit cost"
+    assert memory["open_misconception"]["misconception"]["status"] == "open"
+    assert memory["suggested_questions"][0].startswith("A firm uses its own building")
+
+    session_body = client.get("/api/v1/session", headers=headers).json()
+    assert session_body["suggested_questions"][0].startswith(
+        "A firm uses its own building"
+    )
+    assert session_body["learning_memory"]["open_misconception"]["state"] == "needs_recheck"
 
 
 def test_short_answer_attempt_remains_formatively_unscored(tmp_path: Path) -> None:

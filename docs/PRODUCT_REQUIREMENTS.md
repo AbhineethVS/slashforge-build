@@ -144,7 +144,7 @@ The right-hand Studio panel is the home for generated learning tools:
 - Quiz.
 - Teach Back.
 - Audio Overview.
-- Temporary progress signals.
+- Temporary learning memory.
 
 Studio uses the source selection from the left panel. Generated tools appear in
 the panel without replacing the center chat.
@@ -177,6 +177,27 @@ Acceptance criteria:
 - Speech failures preserve the transcript or answer and provide a text
   fallback.
 
+### 5.9 Use session learning memory
+
+1. A quiz or Teach-Back attempt writes a concept-level memory record.
+2. Deterministic code classifies understanding, confidence, and misconceptions.
+3. Studio shows the shared memory map, including the open misconception and
+   the next repair action.
+4. Chat suggested questions and follow-ups prefer a contrast case for that
+   misconception.
+5. A later correct attempt or complete Teach-Back can mark the misconception
+   as repairing or rechecked.
+
+Learning memory is session-scoped. It resets with the temporary session and
+does not persist across visits, accounts, or devices.
+
+Acceptance criteria:
+
+- A high-confidence wrong answer opens a misconception with source evidence.
+- Chat, Quiz, Teach Back, and Studio read the same memory.
+- The model cannot invent mastery or citation pages for memory records.
+- Reset and expiry clear learning memory with the rest of the session.
+
 ## 6. Release scope
 
 ### Must have
@@ -191,6 +212,7 @@ Acceptance criteria:
 - Cited flashcards.
 - Cited five-question quiz.
 - Confidence capture and attempt classifications.
+- Session learning memory shared by Chat, Quiz, Teach Back, and Studio.
 - Right-side Studio panel for study tools.
 - In-session state only.
 - English-India push-to-talk Chat and Teach-Back dictation with editable
@@ -255,7 +277,7 @@ Usability release gates:
 4. Ask a comparison question in the center Chat panel and jump to evidence.
 5. Generate flashcards or a quiz from the right Studio panel.
 6. Answer a quiz question incorrectly with high confidence.
-7. Show the new confident-misconception state.
+7. Show the new confident-misconception state and the Learning memory record.
 8. Use Teach-Back to identify one missing point with evidence.
 9. Generate or play the bundled-source Audio Overview, show its transcript,
    and open one validated page citation.

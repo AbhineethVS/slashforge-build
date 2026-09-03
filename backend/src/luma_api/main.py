@@ -64,8 +64,10 @@ from .learning import (
     generate_raw_teach_back,
     materialize_teach_back,
     record_quiz_attempt,
+    record_teach_back_attempt,
     retrieve_teach_back_chunks,
 )
+from .memory import build_learning_memory, overlay_follow_up_questions
 from .schemas import (
     ChatMessageResponse,
     ChatRequest,
@@ -241,6 +243,13 @@ def create_app(
         uploaded = [
             source.summary() for source in session.uploaded_sources.values()
         ]
+        default_suggestions = (
+            catalog.suggested_questions() if catalog is not None else []
+        )
+        memory = build_learning_memory(
+            session,
+            default_suggestions=default_suggestions,
+        )
         return SessionResponse(
             id=session.id,
             created_at=session.created_at,
@@ -249,9 +258,8 @@ def create_app(
             messages=session.messages,
             artifacts=session.artifacts,
             attempts=session.attempts,
-            suggested_questions=(
-                catalog.suggested_questions() if catalog is not None else []
-            ),
+            suggested_questions=memory.suggested_questions or default_suggestions,
+            learning_memory=memory,
         )
 
     def session_owns_source(session: DemoSession, source_id: UUID) -> bool:
@@ -939,6 +947,17 @@ def create_app(
                     "created_at": created_at,
                 }
             )
+            default_suggestions = (
+                catalog.suggested_questions() if catalog is not None else []
+            )
+            memory = build_learning_memory(
+                session,
+                default_suggestions=default_suggestions,
+            )
+            follow_ups = overlay_follow_up_questions(
+                memory,
+                list(result.answer.follow_up_questions),
+            )
             response = ChatMessageResponse(
                 id=uuid4(),
                 role="assistant",
@@ -948,7 +967,7 @@ def create_app(
                     for citation in result.citations
                 ],
                 insufficient_evidence=result.answer.insufficient_evidence,
-                follow_up_questions=result.answer.follow_up_questions,
+                follow_up_questions=follow_ups,
                 status="complete",
                 created_at=created_at,
             )
@@ -1098,19 +1117,12 @@ def create_app(
                 created_at=utc_now(),
             )
             session.artifacts.append(artifact.model_dump(mode="json"))
-            session.attempts.append(
-                {
-                    "id": str(uuid4()),
-                    "artifact_id": str(artifact.id),
-                    "activity_type": "teach_back",
-                    "concept_label": request.concept,
-                    "response_text": request.explanation,
-                    "confidence": None,
-                    "is_correct": None,
-                    "classification": "unscored",
-                    "feedback": "Formative source-grounded Teach-Back feedback.",
-                    "created_at": utc_now().isoformat(),
-                }
+            record_teach_back_attempt(
+                session=session,
+                artifact_id=artifact.id,
+                concept=request.concept,
+                explanation=request.explanation,
+                content=artifact.content,
             )
             return artifact
         except ApiError:
@@ -1189,7 +1201,13 @@ def create_app(
     def get_progress(
         session: DemoSession = Depends(current_session),
     ) -> ProgressResponse:
-        return build_progress(session)
+        default_suggestions = (
+            catalog.suggested_questions() if catalog is not None else []
+        )
+        return build_progress(
+            session,
+            default_suggestions=default_suggestions,
+        )
 
     @application.post(
         "/api/v1/chat/messages/{message_id}/audio",

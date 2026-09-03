@@ -668,7 +668,61 @@ describe('WorkspacePage', () => {
               },
             ],
             recommended_concept: 'Total cost',
-            recommendation: 'Teach back Total cost using the source evidence.',
+            recommendation: 'Test the distinction in Total cost with a contrast case.',
+            learning_memory: {
+              concepts: [
+                {
+                  concept_id: 'total_cost',
+                  concept_label: 'Total cost',
+                  state: 'needs_recheck',
+                  classification: 'confident_misconception',
+                  attempt_count: 1,
+                  confidence_pattern: 'confident_misconception',
+                  misconception: {
+                    claim:
+                      'The student does not treat total cost as the sum of fixed and variable cost.',
+                    status: 'open',
+                    evidence_pages: [4],
+                    source_name: 'Economics - Theory of Cost.pdf',
+                    transfer_question:
+                      'If output is zero in the short run, can total cost still be positive? Explain using TFC and TVC.',
+                  },
+                  confused_with: ['Fixed cost', 'Variable cost'],
+                  next_action: 'counterexample',
+                  next_action_label:
+                    'Test the distinction in Total cost with a contrast case.',
+                  evidence_pages: [4],
+                },
+              ],
+              open_misconception: {
+                concept_id: 'total_cost',
+                concept_label: 'Total cost',
+                state: 'needs_recheck',
+                classification: 'confident_misconception',
+                attempt_count: 1,
+                confidence_pattern: 'confident_misconception',
+                misconception: {
+                  claim:
+                    'The student does not treat total cost as the sum of fixed and variable cost.',
+                  status: 'open',
+                  evidence_pages: [4],
+                  source_name: 'Economics - Theory of Cost.pdf',
+                  transfer_question:
+                    'If output is zero in the short run, can total cost still be positive? Explain using TFC and TVC.',
+                },
+                confused_with: ['Fixed cost', 'Variable cost'],
+                next_action: 'counterexample',
+                next_action_label:
+                  'Test the distinction in Total cost with a contrast case.',
+                evidence_pages: [4],
+              },
+              recommended_concept: 'Total cost',
+              next_action:
+                'Test the distinction in Total cost with a contrast case.',
+              suggested_questions: [
+                'If output is zero in the short run, can total cost still be positive? Explain using TFC and TVC.',
+              ],
+            },
           }),
           {
             status: 200,
@@ -691,9 +745,15 @@ describe('WorkspacePage', () => {
     expect(
       await screen.findByText('Confident misconception'),
     ).toBeInTheDocument()
-    expect(await screen.findByText('Misconception')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(await screen.findByRole('heading', { name: 'Learning memory' })).toBeInTheDocument()
+    expect(screen.getByText('Open misconception')).toBeInTheDocument()
+    expect(screen.getByText('Misconception')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Teach back Total cost' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Ask contrast question' }),
     ).toBeInTheDocument()
   })
 

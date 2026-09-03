@@ -17,7 +17,7 @@ const features = [
     number: '03',
     title: 'Practise actively',
     description:
-      'Turn selected material into summaries, flashcards, quizzes, and teach-back prompts.',
+      'Turn selected material into quizzes, teach-back, and a session memory of what you still confuse.',
   },
 ]
 

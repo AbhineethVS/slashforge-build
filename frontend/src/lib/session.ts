@@ -24,6 +24,7 @@ export type DemoSession = {
   artifacts: StudioArtifact[]
   attempts: Attempt[]
   suggested_questions: string[]
+  learning_memory?: LearningMemory
 }
 
 export type SourceSummary = {
@@ -152,6 +153,37 @@ export type Progress = {
   concepts: ConceptProgress[]
   recommended_concept: string | null
   recommendation: string
+  learning_memory?: LearningMemory
+}
+
+export type MisconceptionRecord = {
+  claim: string
+  status: 'open' | 'repairing' | 'rechecked'
+  evidence_pages: number[]
+  source_name: string | null
+  transfer_question: string
+}
+
+export type ConceptMemory = {
+  concept_id: string
+  concept_label: string
+  state: 'unseen' | 'emerging' | 'stable' | 'needs_recheck'
+  classification: LearningClassification
+  attempt_count: number
+  confidence_pattern: 'low_confidence' | 'confident_misconception' | null
+  misconception: MisconceptionRecord | null
+  confused_with: string[]
+  next_action: 'counterexample' | 'teach_back' | 'transfer_question' | null
+  next_action_label: string
+  evidence_pages: number[]
+}
+
+export type LearningMemory = {
+  concepts: ConceptMemory[]
+  open_misconception: ConceptMemory | null
+  recommended_concept: string | null
+  next_action: string
+  suggested_questions: string[]
 }
 
 type TeachBackPoint = {

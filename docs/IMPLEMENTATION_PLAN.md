@@ -366,6 +366,27 @@ Exit criteria:
 - Audio isolation, limits, cleanup, keyboard access, and fixed English-India
   speech fixtures pass.
 
+### Phase 6.5: Session learning memory
+
+Status (2026-09-03): implemented locally as a derived in-session layer.
+
+- Derive concept-level learning memory from quiz and Teach-Back attempts.
+- Keep classification, misconception status, and next action in deterministic
+  code; use a hardcoded demo concept graph only for aliases, collisions, and
+  contrast questions.
+- Expose the memory in session and progress payloads.
+- Show the map in Studio and let Chat prefer contrast questions for an open
+  misconception.
+- Clear memory on reset, expiry, or restart.
+
+Exit criteria:
+
+- A high-confidence wrong answer opens a cited misconception in Studio.
+- Chat suggested questions change to a contrast case for that misconception.
+- Teach-Back can mark the same record as repairing; a later mastered attempt
+  can mark it rechecked.
+- No durable store, account, or model-assigned mastery is added.
+
 ### Phase 7: hardening and presentation
 
 - Run file-abuse, prompt-injection, session-isolation, and API-failure tests.

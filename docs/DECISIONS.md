@@ -256,3 +256,26 @@ Consequences:
 - Audio limits, cleanup, provider failures, accessibility, and redistribution
   rights become release gates.
 - Existing Phase 6 hardening and presentation work moves to Phase 7.
+
+## ADR-018: Session learning memory is derived and temporary
+
+Status: accepted (2026-09-03)
+
+Decision: add a shared, session-scoped learning memory layer derived
+deterministically from quiz and Teach-Back attempts. Chat, Studio, Quiz, and
+Teach Back all read the same concept records. The bundled economics source may
+use a hardcoded concept graph for aliases, common confusions, and contrast
+questions. Memory is not durable, not account-based, and not assigned by the
+generation model.
+
+Reason: the judged product should show that LUMA diagnoses and repairs
+misunderstandings, not that it stores chat trivia. A derived in-session map
+fits the existing ephemeral architecture.
+
+Consequences:
+
+- High-confidence wrong answers open an evidence-linked misconception.
+- Suggested questions and follow-ups prefer a contrast case for that idea.
+- Teach-Back can move a misconception from open to repairing or rechecked.
+- Reset, expiry, and restart clear learning memory with the session.
+- Persistent cross-visit memory remains a post-hackathon requirement.

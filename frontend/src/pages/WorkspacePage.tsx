@@ -34,6 +34,7 @@ import {
   type ChatMessage,
   type Citation,
   type DemoSession,
+  type LearningMemory,
   type PanelWidths,
   type SourceSummary,
 } from '../lib/session'
@@ -74,6 +75,8 @@ export function WorkspacePage() {
   const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [question, setQuestion] = useState('')
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
+  const [memoryNote, setMemoryNote] = useState<string | null>(null)
   const [chatState, setChatState] = useState<
     | { status: 'idle' }
     | { status: 'submitting'; question: string }
@@ -227,6 +230,12 @@ export function WorkspacePage() {
         persistSelectedSourceIds(selected)
         setSelectedSourceIds(selected)
         setMessages(session.messages || [])
+        setSuggestedQuestions(session.suggested_questions || [])
+        setMemoryNote(
+          session.learning_memory?.open_misconception
+            ? session.learning_memory.next_action
+            : null,
+        )
         setSessionNotice(takeSessionRecoveryNotice())
         setState({ status: 'ready', session })
       })
@@ -386,9 +395,19 @@ export function WorkspacePage() {
     })
   }
 
+  function applyLearningMemory(memory: LearningMemory) {
+    if (memory.suggested_questions?.length) {
+      setSuggestedQuestions(memory.suggested_questions)
+    }
+    setMemoryNote(
+      memory.open_misconception ? memory.next_action : null,
+    )
+  }
+
   function chooseQuestion(value: string) {
     setQuestion(value)
-    questionInputRef.current?.focus()
+    setSideSheet(null)
+    window.setTimeout(() => questionInputRef.current?.focus(), 0)
   }
 
   async function submitQuestion(normalized: string) {
@@ -761,11 +780,14 @@ export function WorkspacePage() {
                     Answers use only the sources you select and link back to
                     trusted page evidence.
                   </p>
-                  <div
-                    className="suggestion-list"
-                    aria-label="Suggested questions"
-                  >
-                    {state.session.suggested_questions?.map((suggestion) => (
+                    {memoryNote && (
+                      <p className="memory-chat-note">{memoryNote}</p>
+                    )}
+                    <div
+                      className="suggestion-list"
+                      aria-label="Suggested questions"
+                    >
+                      {suggestedQuestions.map((suggestion) => (
                       <button
                         key={suggestion}
                         type="button"
@@ -984,6 +1006,8 @@ export function WorkspacePage() {
               initialAttemptCount={state.session.attempts.length}
               onCitation={showCitation}
               onCloseResponsive={closeSideSheet}
+              onAskQuestion={chooseQuestion}
+              onLearningMemory={applyLearningMemory}
             />
             {activeCitation && (
               <EvidencePanel

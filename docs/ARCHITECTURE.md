@@ -61,6 +61,7 @@ One Python service:
   narration; Sarvam is not used for retrieval, reasoning, or content
   generation.
 - Validates citations and structured artifacts.
+- Derives session learning memory from quiz and Teach-Back attempts.
 - Stores bounded temporary recordings, generated narration, and overview
   transcripts inside the owning session.
 - Serves temporary and bundled PDFs to the evidence viewer.
@@ -114,8 +115,10 @@ before judging; use student credits for a small paid tier if available.
 4. Optional uploaded PDFs are written to a randomized temporary directory.
 5. Extracted chunks and embedding matrices live in that session's memory.
 6. Each request refreshes the expiry time.
-7. Explicit reset, TTL expiry, or process restart removes temporary data.
-8. Recorded audio, generated narration, transcripts, and overview artifacts
+7. Quiz and Teach-Back attempts update a derived, session-scoped learning
+   memory used by Chat and Studio.
+8. Explicit reset, TTL expiry, or process restart removes temporary data.
+9. Recorded audio, generated narration, transcripts, and overview artifacts
    follow the same session ownership and cleanup lifecycle.
 
 Target TTL: 60 minutes. The UI clearly says temporary uploads may disappear on

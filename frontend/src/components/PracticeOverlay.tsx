@@ -335,7 +335,7 @@ function QuizPractice({
           <p className="misconception-summary">
             {misconceptionCount} confident misconception{' '}
             {misconceptionCount === 1 ? 'signal needs' : 'signals need'} priority
-            review in Studio.
+            repair in Learning memory.
           </p>
         )}
         {misconceptionCount === 0 && needsPracticeCount > 0 && (

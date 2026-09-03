@@ -38,7 +38,8 @@ sources with backend-validated page citations, and opens cited PDFs in an
 evidence sheet. Studio generates cited summaries plus focused Flashcard and
 Quiz practice experiences, records deterministic confidence-aware learning
 signals, recommends weak concepts, and provides cited Teach-Back feedback.
-Cached demo artifacts keep the bundled source presentable during a live OpenAI
+The same attempt stream now feeds a session-scoped Learning memory map that
+Chat and Studio share. Cached demo artifacts keep the bundled source presentable during a live OpenAI
 generation outage.
 
 Phase 6 adds English-India push-to-talk dictation with an editable transcript,

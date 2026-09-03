@@ -14,6 +14,12 @@ from luma_spikes.retrieval import Embedder, retrieve
 
 from .artifacts import InvalidArtifactError
 from .chat import SelectedIndex, combine_indexes
+from .memory import (
+    LearningMemoryResponse,
+    build_learning_memory,
+    citation_pages_from_content,
+    resolve_concept,
+)
 from .sessions import DemoSession, utc_now
 
 Confidence = Literal[1, 2, 3]
@@ -60,6 +66,7 @@ class ProgressResponse(BaseModel):
     concepts: list[ConceptProgress]
     recommended_concept: str | None
     recommendation: str
+    learning_memory: LearningMemoryResponse
 
 
 class TeachBackRequest(BaseModel):
@@ -202,11 +209,14 @@ def record_quiz_attempt(
             "Use the expected answer and evidence for a formative comparison."
         ),
     }[classification]
+    concept_label = resolve_concept(
+        str(question.get("concept_label") or "")
+    ).label
     attempt = AttemptResponse(
         id=uuid4(),
         artifact_id=artifact_id,
         activity_type="quiz",
-        concept_label=question.get("concept_label"),
+        concept_label=concept_label,
         confidence=request.confidence,
         is_correct=is_correct,
         classification=classification,
@@ -215,16 +225,22 @@ def record_quiz_attempt(
     )
     stored = attempt.model_dump(mode="json")
     stored["response_text"] = request.response_text
+    stored["citations"] = question.get("citations") or []
     session.attempts.append(stored)
     return attempt
 
 
-def build_progress(session: DemoSession) -> ProgressResponse:
+def build_progress(
+    session: DemoSession,
+    *,
+    default_suggestions: list[str] | None = None,
+) -> ProgressResponse:
     grouped: dict[str, list[dict[str, object]]] = {}
     for attempt in session.attempts:
         label = attempt.get("concept_label")
         if isinstance(label, str) and label.strip():
-            grouped.setdefault(label, []).append(attempt)
+            canonical = resolve_concept(label).label
+            grouped.setdefault(canonical, []).append(attempt)
 
     priority = {
         "confident_misconception": 4,
@@ -258,21 +274,29 @@ def build_progress(session: DemoSession) -> ProgressResponse:
         (item for item in concepts if item.classification != "mastered"),
         None,
     )
+    memory = build_learning_memory(
+        session,
+        default_suggestions=default_suggestions,
+    )
+    recommendation = (
+        f"Teach back {recommended.concept_label} using the source evidence."
+        if recommended is not None
+        else (
+            "Complete a quiz to reveal the next concept to revisit."
+            if not concepts
+            else "Your attempted concepts are currently showing mastered signals."
+        )
+    )
     return ProgressResponse(
         total_attempts=len(session.attempts),
         concepts=concepts,
         recommended_concept=(
-            recommended.concept_label if recommended is not None else None
+            memory.recommended_concept
+            if memory.recommended_concept is not None
+            else (recommended.concept_label if recommended is not None else None)
         ),
-        recommendation=(
-            f"Teach back {recommended.concept_label} using the source evidence."
-            if recommended is not None
-            else (
-                "Complete a quiz to reveal the next concept to revisit."
-                if not concepts
-                else "Your attempted concepts are currently showing mastered signals."
-            )
-        ),
+        recommendation=memory.next_action or recommendation,
+        learning_memory=memory,
     )
 
 
@@ -323,3 +347,41 @@ def materialize_teach_back(
         "check_this": [point_payload(point) for point in raw.check_this],
         "next_prompt": raw.next_prompt,
     }
+
+
+def record_teach_back_attempt(
+    *,
+    session: DemoSession,
+    artifact_id: UUID,
+    concept: str,
+    explanation: str,
+    content: dict[str, object],
+) -> None:
+    missing = content.get("missing") if isinstance(content.get("missing"), list) else []
+    check_this = (
+        content.get("check_this") if isinstance(content.get("check_this"), list) else []
+    )
+    missing_points = [
+        str(point.get("text"))
+        for point in missing
+        if isinstance(point, dict) and point.get("text")
+    ]
+    spec = resolve_concept(concept)
+    session.attempts.append(
+        {
+            "id": str(uuid4()),
+            "artifact_id": str(artifact_id),
+            "activity_type": "teach_back",
+            "concept_label": spec.label,
+            "response_text": explanation,
+            "confidence": None,
+            "is_correct": None,
+            "classification": "unscored",
+            "feedback": "Formative source-grounded Teach-Back feedback.",
+            "created_at": utc_now().isoformat(),
+            "missing_count": len(missing) if isinstance(missing, list) else 0,
+            "check_this_count": len(check_this) if isinstance(check_this, list) else 0,
+            "missing_points": missing_points[:3],
+            "citations": citation_pages_from_content(content),
+        }
+    )

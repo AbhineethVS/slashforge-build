@@ -35,6 +35,7 @@ Suggested tools: Vitest, React Testing Library, and axe.
 - NumPy retrieval filtering and ranking.
 - Citation allow-list validation.
 - Deterministic mastery classification.
+- Derived session learning memory and misconception repair states.
 - Error mapping and retry policy.
 - Speech media/size/duration limits, narration resource ownership, and cleanup.
 - Audio Overview chunk allow-listing before narration.

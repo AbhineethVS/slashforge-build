@@ -96,7 +96,7 @@ Use three regions:
 2. **Chat**, flexible and dominant: conversation, suggested questions,
    citations, and anchored composer.
 3. **Studio**, approximately 300–360 px: Summary, Flashcards, Quiz, Teach Back,
-   Audio Overview, and Progress tools.
+   Audio Overview, Learning memory, and Progress tools.
 
 Each panel has a clear heading and independent scrolling. The page itself
 should not develop multiple competing scrollbars. Sources and Studio may
@@ -149,6 +149,8 @@ Only one dominant call to action should appear per state.
 
 - The default Studio view uses compact tool cards for Summary, Flashcards,
   Quiz, Teach Back, and Audio Overview.
+- Learning memory sits below the tool cards and shows concept state, open
+  misconceptions, cited evidence pages, and the next repair action.
 - Summary opens in place within Studio with a clear Back to Studio action.
 - Flashcards and Quiz open in a large, centered Practice overlay. The workspace
   remains visible under restrained dimming and background blur.
@@ -174,7 +176,8 @@ Only one dominant call to action should appear per state.
 - Feedback visually separates result, explanation, and source evidence.
 - Progress shows question number, not an artificial percentage mastery claim.
 - At completion, prioritize misconceptions and next action over celebratory
-  effects.
+  effects. Direct the student back to Learning memory when a confident
+  misconception was recorded.
 
 ### Teach Back
 
@@ -273,6 +276,7 @@ Domain:
 - Flashcard deck and card.
 - Quiz question, confidence selector, and answer feedback.
 - Concept state badge.
+- Learning memory map and open-misconception card.
 - Teach-Back editor and rubric feedback.
 - Push-to-talk recorder and editable transcript review.
 - Owned-answer narration controls and accessible audio player.

@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from .memory import LearningMemoryResponse
+
 
 class SourceSummary(BaseModel):
     id: UUID
@@ -94,6 +96,7 @@ class SessionResponse(BaseModel):
     artifacts: list[dict[str, Any]]
     attempts: list[dict[str, Any]]
     suggested_questions: list[str] = []
+    learning_memory: LearningMemoryResponse | None = None
 
 
 class ErrorBody(BaseModel):

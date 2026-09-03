@@ -24,6 +24,7 @@ are runtime structures, not database tables.
 - `messages: list[Message]`
 - `artifacts: dict[artifact_id, Artifact]`
 - `attempts: list[Attempt]`
+- `learning_memory`: derived concept records, not a durable store
 - `audio_assets: dict[audio_id, TemporaryAudioAsset]`
 
 ### Source
@@ -99,6 +100,29 @@ single-narrator and scoped to selected ready sources.
 
 Classifications: `mastered`, `lucky_guess`, `needs_practice`,
 `confident_misconception`, `unscored`.
+
+### Learning memory
+
+Derived at request time from session attempts and a bundled demo concept graph.
+It is not a database and is not written by the model.
+
+Each concept record contains:
+
+- `concept_id` and canonical `concept_label`
+- `state`: `unseen`, `emerging`, `stable`, or `needs_recheck`
+- latest deterministic `classification`
+- optional `confidence_pattern`
+- optional `misconception` with `claim`, `status` (`open`, `repairing`,
+  `rechecked`), evidence pages, and a transfer question
+- `confused_with` neighbouring concepts when the demo graph has them
+- `next_action`: `counterexample`, `teach_back`, or `transfer_question`
+
+A misconception stores the diagnosed faulty assumption plus contradicting
+source pages. It never promotes a student answer into course truth.
+
+`GET /api/v1/session` and `GET /api/v1/studio/progress` both return the current
+`learning_memory`. Suggested Chat questions prefer the open misconception's
+transfer question. Reset, expiry, and restart clear it with the session.
 
 ### Temporary audio asset
 
@@ -197,7 +221,7 @@ Stable user-facing error codes include:
 - `POST /api/v1/session`
   - Creates a temporary session with the bundled demo source attached.
 - `GET /api/v1/session`
-  - Returns current sources, messages, artifacts, and expiry.
+  - Returns current sources, messages, artifacts, learning memory, and expiry.
 - `DELETE /api/v1/session`
   - Removes uploaded files and in-memory data, then allows a clean demo reset.
 
@@ -275,10 +299,12 @@ submission before revealing feedback.
 - `POST /api/v1/artifacts/{artifact_id}/attempts`
 - `GET /api/v1/studio/progress`
 
-The API calculates correctness for MCQs. Short answers and Teach-Back may use
+Progress includes concept counts and the derived `learning_memory` object used
+by Chat and Studio. The API calculates correctness for MCQs. Short answers and Teach-Back may use
 model-assisted judgments in a later iteration. The scoped release stores them
 as `unscored` formative comparisons; deterministic classifications are emitted
-only when correctness is known.
+only when correctness is known. Teach-Back still updates learning memory using
+covered, missing, and check-this counts.
 
 ### Voice
 

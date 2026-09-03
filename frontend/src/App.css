@@ -481,9 +481,7 @@
   min-height: 0;
 }
 
-.workspace-grid > .sources-panel,
-.workspace-grid > .chat-panel,
-.workspace-grid > .studio-region {
+.workspace-grid > .sources-panel {
   overflow-y: auto;
 }
 
@@ -1015,11 +1013,46 @@ body.is-resizing-panels * {
   border-top: 1px solid var(--color-border);
 }
 
-.studio-progress h2 {
-  margin: 4px 0 10px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1rem;
-  font-weight: 500;
+.memory-focus {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 4px;
+  padding: 10px;
+  background: #fbe5e3;
+  border: 1px solid #f0c7c3;
+}
+
+.memory-focus strong {
+  font-size: 0.78rem;
+}
+
+.memory-focus p {
+  margin: 0;
+  color: #5c2e2e;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.memory-ask {
+  margin-top: 8px;
+  color: var(--color-primary) !important;
+  background: transparent !important;
+  border: 1px solid var(--color-primary) !important;
+}
+
+.memory-chat-note {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  color: #5c2e2e;
+  background: #fbe5e3;
+  border-left: 3px solid #c45b55;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.studio-progress > button + .memory-ask {
+  display: block;
+  width: 100%;
 }
 
 .studio-progress > p,
@@ -1105,6 +1138,7 @@ body.is-resizing-panels * {
 }
 
 .studio-progress > button,
+.memory-ask,
 .teach-back-submit {
   min-height: 38px;
   padding: 8px 11px;

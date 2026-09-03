@@ -230,6 +230,13 @@ Deterministic classification:
 Concept mastery is a transparent weighted score over recent attempts. Exact
 weights will be calibrated with sample sessions and documented in code.
 
+Session learning memory is derived from the same attempt stream. Application
+code owns concept state, misconception status, and the next repair action. The
+bundled economics source may use a hardcoded concept graph for aliases,
+commonly confused neighbours, and contrast questions. The model may generate
+language for Teach-Back points, but it cannot assign memory state or invent
+evidence pages.
+
 ## 13. Teach-Back
 
 1. Retrieve source evidence for the selected concept.
