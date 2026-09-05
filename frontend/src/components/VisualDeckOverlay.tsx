@@ -4,6 +4,7 @@ import {
   fetchVisualDeckPdf,
   type VisualDeckArtifact,
 } from '../lib/session'
+import { Icon } from './Icon'
 
 type VisualDeckOverlayProps = {
   artifact: VisualDeckArtifact
@@ -88,10 +89,14 @@ export function VisualDeckOverlay({
             <h1 id="visual-deck-title">{artifact.title}</h1>
           </div>
           <button type="button" onClick={onClose} aria-label="Close Visual Deck">
+            <Icon name="close" size={15} />
             Close
           </button>
         </header>
-        <p className="fallback-notice">Cached bundled demo deck</p>
+        <p className="fallback-notice">
+          <Icon name="alert" size={14} />
+          Cached bundled demo deck
+        </p>
         {error ? (
           <div className="studio-error" role="alert">
             <strong>Deck preview unavailable</strong>
@@ -111,6 +116,7 @@ export function VisualDeckOverlay({
               href={pdfUrl}
               download="the-economic-blueprint.pdf"
             >
+              <Icon name="download" size={15} />
               Download PDF presentation
             </a>
           </>

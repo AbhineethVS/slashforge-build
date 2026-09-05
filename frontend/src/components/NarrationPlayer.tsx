@@ -7,6 +7,7 @@ import {
   fetchAudioClip,
   type AudioClip,
 } from '../lib/session'
+import { Icon } from './Icon'
 
 type NarrationPlayerProps = {
   sessionId: string
@@ -130,6 +131,7 @@ export function NarrationPlayer({
           onClick={() => void loadNarration()}
           disabled={status === 'loading'}
         >
+          <Icon name="audio" size={14} />
           {status === 'loading' ? 'Preparing audio…' : 'Listen'}
         </button>
         <span className="sr-only" role="status" aria-live="polite">
@@ -143,6 +145,7 @@ export function NarrationPlayer({
     return (
       <div className={`narration-player ${compact ? 'is-compact' : ''}`}>
         <button type="button" onClick={() => void loadNarration()}>
+          <Icon name="refresh" size={14} />
           Retry audio
         </button>
         <span className="voice-inline-error" role="status">
@@ -163,6 +166,7 @@ export function NarrationPlayer({
         onPlay={() => setPlaying(true)}
       />
       <button className="voice-control" type="button" onClick={togglePlayback}>
+        <Icon name={playing ? 'pause' : 'play'} size={14} />
         {playing ? 'Pause' : 'Play'}
       </button>
       <span className="narration-position">
@@ -182,6 +186,7 @@ export function NarrationPlayer({
         </select>
       </label>
       <button type="button" onClick={replay}>
+        <Icon name="refresh" size={14} />
         Replay
       </button>
       {error && (

@@ -20,6 +20,7 @@ import {
   generateVisualDeck as generateVisualDeckArtifact,
 } from '../lib/session'
 import { AudioOverviewOverlay } from './AudioOverviewOverlay'
+import { Icon, type IconName } from './Icon'
 import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
 import { VisualDeckOverlay } from './VisualDeckOverlay'
@@ -48,11 +49,16 @@ type StudioPanelProps = {
   onLearningMemory?: (memory: LearningMemory) => void
 }
 
-const tools = [
-  ['summary', 'Summary', 'Build a cited revision brief.'],
-  ['flashcards', 'Flashcards', 'Recall key ideas in a focused deck.'],
-  ['quiz', 'Quiz', 'Test understanding and confidence.'],
-] as const
+const tools: readonly (readonly [
+  'summary' | 'flashcards' | 'quiz',
+  string,
+  string,
+  IconName,
+])[] = [
+  ['summary', 'Summary', 'Build a cited revision brief.', 'book'],
+  ['flashcards', 'Flashcards', 'Recall key ideas in a focused deck.', 'cards'],
+  ['quiz', 'Quiz', 'Test understanding and confidence.', 'check-circle'],
+]
 
 const DEFAULT_VISUAL_DECK_PROMPT =
   'Create a presentation that visualizes and explains the key economic graphs from the sources. Include the Production Possibility Frontier, Law of Variable Proportions, Market Equilibrium, short-run cost curves, the long-run average cost envelope curve, the Break-Even Chart, and demand and revenue curves for different market structures.'
@@ -304,22 +310,32 @@ export function StudioPanel({
           type="button"
           onClick={() => setVisualDeckOpen(false)}
         >
+          <Icon name="arrow-left" size={15} />
           Back to Studio
         </button>
-        <p className="panel-kicker">Visual study deck</p>
-        <h1 id="visual-deck-form-title">Infographics</h1>
+        <div>
+          <p className="panel-kicker">Visual study deck</p>
+          <h1 id="visual-deck-form-title">Infographics</h1>
+        </div>
+        <p>
+          Describe the diagrams, comparisons, and explanations the deck should
+          cover. Slides stay grounded in your selected sources.
+        </p>
         <form onSubmit={(event) => void submitVisualDeck(event)}>
           <label>
-            <span>What should the deck cover?</span>
+            <span>Deck prompt</span>
             <textarea
-              rows={12}
+              rows={10}
               maxLength={2000}
               value={visualDeckPrompt}
               onChange={(event) => setVisualDeckPrompt(event.target.value)}
               placeholder="Describe the graphs, comparisons, and explanations to include."
             />
           </label>
-          <p className="visual-deck-form-note">Bundled demo deck</p>
+          <p className="visual-deck-form-note">
+            <Icon name="alert" size={14} />
+            Bundled demo deck
+          </p>
           <button
             className="teach-back-submit"
             type="submit"
@@ -353,12 +369,16 @@ export function StudioPanel({
           type="button"
           onClick={() => setActiveSummary(null)}
         >
+          <Icon name="arrow-left" size={15} />
           Back to Studio
         </button>
-        <p className="panel-kicker">Cited summary</p>
-        <h1 id="studio-title">{activeSummary.title}</h1>
+        <div>
+          <p className="panel-kicker">Cited summary</p>
+          <h1 id="studio-title">{activeSummary.title}</h1>
+        </div>
         {activeSummary.content.fallback && (
           <p className="fallback-notice">
+            <Icon name="alert" size={14} />
             Cached demo brief · live generation was unavailable.
           </p>
         )}
@@ -397,10 +417,13 @@ export function StudioPanel({
             setTeachBackResult(null)
           }}
         >
+          <Icon name="arrow-left" size={15} />
           Back to Studio
         </button>
-        <p className="panel-kicker">Explain it in your words</p>
-        <h1 id="teach-back-title">Teach Back</h1>
+        <div>
+          <p className="panel-kicker">Explain it in your words</p>
+          <h1 id="teach-back-title">Teach Back</h1>
+        </div>
         {!teachBackResult ? (
           <form className="teach-back-form" onSubmit={(event) => void submitTeachBack(event)}>
             <label>
@@ -415,7 +438,7 @@ export function StudioPanel({
             <label>
               <span>Your explanation</span>
               <textarea
-                rows={9}
+                rows={8}
                 maxLength={4000}
                 value={teachBackExplanation}
                 onChange={(event) => setTeachBackExplanation(event.target.value)}
@@ -503,6 +526,9 @@ export function StudioPanel({
     )
   }
 
+  const isBusy = generation.status === 'loading'
+  const noSources = selectedSources.length === 0
+
   return (
     <>
       <aside className="studio-panel" aria-labelledby="studio-title">
@@ -518,6 +544,7 @@ export function StudioPanel({
               aria-label="Close Studio panel"
               onClick={onCloseResponsive}
             >
+              <Icon name="close" size={15} />
               Close
             </button>
           )}
@@ -528,26 +555,30 @@ export function StudioPanel({
         </p>
         {selectedSources.length > 0 && (
           <p className="studio-source-names">
+            <Icon name="file" size={13} />
             {selectedSources.map((source) => source.display_name).join(', ')}
           </p>
         )}
 
         <div className="studio-tools">
-          {tools.map(([kind, title, description]) => (
+          {tools.map(([kind, title, description, icon]) => (
             <button
               key={kind}
               type="button"
               onClick={(event) => void generate(kind, event.currentTarget)}
-              disabled={
-                selectedSources.length === 0 || generation.status === 'loading'
-              }
+              disabled={noSources || isBusy}
             >
-              <strong>
-                {generation.status === 'loading' && generation.kind === kind
-                  ? `Generating ${title}…`
-                  : title}
-              </strong>
-              <span>{description}</span>
+              <span className="tool-icon" aria-hidden="true">
+                <Icon name={icon} size={17} />
+              </span>
+              <span className="tool-copy">
+                <strong>
+                  {isBusy && generation.kind === kind
+                    ? `Generating ${title}…`
+                    : title}
+                </strong>
+                <span>{description}</span>
+              </span>
             </button>
           ))}
           <button
@@ -558,10 +589,15 @@ export function StudioPanel({
               setTeachBackResult(null)
               setGeneration({ status: 'idle' })
             }}
-            disabled={selectedSources.length === 0 || generation.status === 'loading'}
+            disabled={noSources || isBusy}
           >
-            <strong>Teach Back</strong>
-            <span>Explain a concept and find gaps with cited feedback.</span>
+            <span className="tool-icon" aria-hidden="true">
+              <Icon name="teach" size={17} />
+            </span>
+            <span className="tool-copy">
+              <strong>Teach Back</strong>
+              <span>Explain a concept and find gaps with cited feedback.</span>
+            </span>
           </button>
           <button
             type="button"
@@ -570,23 +606,32 @@ export function StudioPanel({
               setVisualDeckOpen(true)
               setGeneration({ status: 'idle' })
             }}
-            disabled={selectedSources.length === 0 || generation.status === 'loading'}
+            disabled={noSources || isBusy}
           >
-            <strong>Infographics</strong>
-            <span>Describe a visual deck of diagrams and graphs.</span>
+            <span className="tool-icon" aria-hidden="true">
+              <Icon name="chart" size={17} />
+            </span>
+            <span className="tool-copy">
+              <strong>Infographics</strong>
+              <span>Describe a visual deck of diagrams and graphs.</span>
+            </span>
           </button>
           <button
             type="button"
             onClick={(event) => void generateOverview(event.currentTarget)}
-            disabled={selectedSources.length === 0 || generation.status === 'loading'}
+            disabled={noSources || isBusy}
           >
-            <strong>
-              {generation.status === 'loading' &&
-              generation.kind === 'audio_overview'
-                ? 'Generating Audio Overview…'
-                : 'Audio Overview'}
-            </strong>
-            <span>Listen to a focused, cited 3–5 minute source overview.</span>
+            <span className="tool-icon" aria-hidden="true">
+              <Icon name="audio" size={17} />
+            </span>
+            <span className="tool-copy">
+              <strong>
+                {isBusy && generation.kind === 'audio_overview'
+                  ? 'Generating Audio Overview…'
+                  : 'Audio Overview'}
+              </strong>
+              <span>Listen to a focused, cited 3–5 minute source overview.</span>
+            </span>
           </button>
         </div>
 
@@ -628,7 +673,10 @@ export function StudioPanel({
         )}
 
         {artifacts.length > 0 && (
-          <section className="recent-artifacts" aria-labelledby="recent-title">
+          <section
+            className="recent-artifacts studio-section"
+            aria-labelledby="recent-title"
+          >
             <h2 id="recent-title">Generated study tools</h2>
             <ul>
               {artifacts.map((artifact) => (
@@ -661,7 +709,7 @@ export function StudioPanel({
                     onClick={() => void removeArtifact(artifact.id)}
                     aria-label={`Remove ${artifact.title}`}
                   >
-                    Remove
+                    <Icon name="trash" size={14} />
                   </button>
                 </li>
               ))}
@@ -737,7 +785,10 @@ function ProgressSummary({
       }))
 
   return (
-    <section className="studio-progress" aria-labelledby="progress-title">
+    <section
+      className="studio-progress studio-section"
+      aria-labelledby="progress-title"
+    >
       <div>
         <p className="panel-kicker">Session learning memory</p>
         <h2 id="progress-title">Learning memory</h2>
@@ -792,6 +843,7 @@ function ProgressSummary({
               type="button"
               onClick={() => onTeachBack(progress.recommended_concept!)}
             >
+              <Icon name="teach" size={15} />
               Teach back {progress.recommended_concept}
             </button>
           )}
@@ -801,6 +853,7 @@ function ProgressSummary({
               type="button"
               onClick={() => onAskQuestion(focus.misconception!.transfer_question)}
             >
+              <Icon name="target" size={15} />
               Ask contrast question
             </button>
           )}

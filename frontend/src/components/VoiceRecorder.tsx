@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { ApiRequestError, transcribeVoice } from '../lib/session'
+import { Icon } from './Icon'
 
 type VoiceRecorderProps = {
   sessionId: string
@@ -172,6 +173,7 @@ export function VoiceRecorder({
             onClick={() => stopRecording()}
             aria-label={`Stop recording, ${secondsLeft} seconds remaining`}
           >
+            <Icon name="stop" size={14} />
             Stop · 0:{String(secondsLeft).padStart(2, '0')}
           </button>
           <button type="button" onClick={() => stopRecording(true)}>
@@ -187,6 +189,7 @@ export function VoiceRecorder({
             disabled || state === 'requesting' || state === 'transcribing'
           }
         >
+          <Icon name="mic" size={14} />
           {state === 'requesting'
             ? 'Opening microphone…'
             : state === 'transcribing'

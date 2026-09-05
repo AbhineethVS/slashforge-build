@@ -15,6 +15,7 @@ import {
   type QuizArtifact,
 } from '../lib/session'
 import { EvidencePanel } from './EvidencePanel'
+import { Icon } from './Icon'
 
 const markdownElements = [
   'p',
@@ -107,6 +108,7 @@ export function PracticeOverlay({
             <h1 id="practice-title">{artifact.title}</h1>
           </div>
           <button type="button" onClick={onClose}>
+            <Icon name="close" size={15} />
             Close
           </button>
         </header>
@@ -222,6 +224,7 @@ function FlashcardPractice({
       </div>
       <div className="practice-controls">
         <button type="button" onClick={() => move(-1)} disabled={position === 0}>
+          <Icon name="arrow-left" size={15} />
           Previous
         </button>
         <button type="button" onClick={shuffle}>
@@ -233,6 +236,7 @@ function FlashcardPractice({
           disabled={position === order.length - 1}
         >
           Next
+          <Icon name="arrow-right" size={15} />
         </button>
       </div>
       <p className="keyboard-hint">
@@ -396,6 +400,7 @@ function QuizPractice({
             type="button"
             onClick={() => setAnswer(question.demo_response)}
           >
+            <Icon name="sparkle" size={14} />
             Fill demo answer
             <span>Presentation aid</span>
           </button>

@@ -10,9 +10,12 @@ import {
 import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
+import { BrandMark } from '../components/BrandMark'
 import { EvidencePanel } from '../components/EvidencePanel'
+import { Icon } from '../components/Icon'
 import { NarrationPlayer } from '../components/NarrationPlayer'
 import { StudioPanel } from '../components/StudioPanel'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { VoiceRecorder } from '../components/VoiceRecorder'
 import {
   ApiRequestError,
@@ -477,47 +480,53 @@ export function WorkspacePage() {
   return (
     <div className="workspace-page">
       <header className="workspace-header">
-        <Link className="wordmark" to="/" aria-label="LUMA home">
-          LUMA
+        <Link className="brand-link" to="/" aria-label="LUMA home">
+          <BrandMark size={30} tagline="Study desk" />
         </Link>
         <div className="workspace-title">
           <strong>Study workspace</strong>
-          <span>Temporary session</span>
+          <span className="pill pill-quiet pill-live">Temporary session</span>
         </div>
-        <nav className="workspace-panel-nav" aria-label="Workspace panels">
+        <div className="header-actions">
+          <nav className="workspace-panel-nav" aria-label="Workspace panels">
+            <button
+              ref={sourcesNavRef}
+              type="button"
+              aria-expanded={sideSheet === 'sources'}
+              onClick={() =>
+                setSideSheet((current) =>
+                  current === 'sources' ? null : 'sources',
+                )
+              }
+            >
+              <Icon name="panel-left" size={15} />
+              Sources
+            </button>
+            <button
+              ref={studioNavRef}
+              type="button"
+              aria-expanded={sideSheet === 'studio'}
+              onClick={() =>
+                setSideSheet((current) =>
+                  current === 'studio' ? null : 'studio',
+                )
+              }
+            >
+              <Icon name="panel-right" size={15} />
+              Studio
+            </button>
+          </nav>
+          <ThemeToggle />
           <button
-            ref={sourcesNavRef}
+            className="button-quiet button-small"
             type="button"
-            aria-expanded={sideSheet === 'sources'}
-            onClick={() =>
-              setSideSheet((current) =>
-                current === 'sources' ? null : 'sources',
-              )
-            }
+            onClick={handleReset}
+            disabled={state.status !== 'ready' || isResetting}
           >
-            Sources
+            <Icon name="refresh" size={15} />
+            <span>{isResetting ? 'Resetting…' : 'Reset session'}</span>
           </button>
-          <button
-            ref={studioNavRef}
-            type="button"
-            aria-expanded={sideSheet === 'studio'}
-            onClick={() =>
-              setSideSheet((current) =>
-                current === 'studio' ? null : 'studio',
-              )
-            }
-          >
-            Studio
-          </button>
-        </nav>
-        <button
-          className="quiet-button"
-          type="button"
-          onClick={handleReset}
-          disabled={state.status !== 'ready' || isResetting}
-        >
-          {isResetting ? 'Resetting…' : 'Reset session'}
-        </button>
+        </div>
       </header>
 
       {state.status === 'loading' && (
@@ -534,6 +543,7 @@ export function WorkspacePage() {
           <h1>We couldn’t start your session.</h1>
           <p>{state.message}</p>
           <button className="button" type="button" onClick={retrySession}>
+            <Icon name="refresh" size={16} />
             Try again
           </button>
         </main>
@@ -589,6 +599,7 @@ export function WorkspacePage() {
                 aria-label="Close Sources panel"
                 onClick={closeSideSheet}
               >
+                <Icon name="close" size={15} />
                 Close
               </button>
               <button
@@ -597,6 +608,7 @@ export function WorkspacePage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={pendingUpload !== null || uploadLimitReached}
               >
+                <Icon name="plus" size={15} />
                 {uploadLimitReached ? '2 uploads added' : 'Add source'}
               </button>
               <input
@@ -613,7 +625,7 @@ export function WorkspacePage() {
             {state.session.sources.length === 0 ? (
               <div className="panel-empty">
                 <span className="empty-file" aria-hidden="true">
-                  PDF
+                  <Icon name="file" size={22} />
                 </span>
                 <h2>No sources attached</h2>
                 <p>
@@ -624,16 +636,22 @@ export function WorkspacePage() {
             ) : (
               <ul className="source-list">
                 {state.session.sources.map((source) => (
-                  <li key={source.id} className="source-card">
+                  <li
+                    key={source.id}
+                    className={`source-card ${
+                      selectedSourceIds.includes(source.id) ? 'is-active' : ''
+                    }`}
+                  >
                     <div className="source-card-header">
                       <span className="file-mark" aria-hidden="true">
-                        PDF
+                        <Icon name="file" size={16} />
                       </span>
                       <div>
                         <strong title={source.display_name}>
                           {source.display_name}
                         </strong>
                         <span className="source-kind">
+                          PDF ·{' '}
                           {source.kind === 'bundled' ? 'Bundled demo' : 'Upload'}
                         </span>
                       </div>
@@ -663,6 +681,7 @@ export function WorkspacePage() {
                           onClick={() => void handleDeleteSource(source.id)}
                           disabled={deletingSourceId === source.id}
                         >
+                          <Icon name="trash" size={14} />
                           {deletingSourceId === source.id
                             ? 'Removing…'
                             : 'Remove'}
@@ -675,7 +694,7 @@ export function WorkspacePage() {
                   <li className={`source-card source-${pendingUpload.status}`}>
                     <div className="source-card-header">
                       <span className="file-mark" aria-hidden="true">
-                        PDF
+                        <Icon name="file" size={16} />
                       </span>
                       <div>
                         <strong>{pendingUpload.displayName}</strong>
@@ -728,9 +747,12 @@ export function WorkspacePage() {
               </p>
             )}
             <p className="temporary-note">
-              Uploaded PDFs are sent to OpenAI for indexing. Uploads and
-              activity are temporary and disappear after one hour of inactivity,
-              reset, or a server restart.
+              <Icon name="shield" size={15} />
+              <span>
+                Uploaded PDFs are sent to OpenAI for indexing. Uploads and
+                activity are temporary and disappear after one hour of
+                inactivity, reset, or a server restart.
+              </span>
             </p>
           </aside>
 
@@ -770,7 +792,7 @@ export function WorkspacePage() {
                 <p className="panel-kicker">Selected material</p>
                 <h1 id="chat-title">Chat</h1>
               </div>
-              <span className="source-count">
+              <span className="pill pill-quiet source-count">
                 {activeCount} active {activeCount === 1 ? 'source' : 'sources'}
               </span>
             </div>
@@ -778,6 +800,9 @@ export function WorkspacePage() {
             <div className="chat-content">
               {messages.length === 0 && chatState.status === 'idle' ? (
                 <div className="chat-empty">
+                  <span className="chat-empty-mark" aria-hidden="true">
+                    <Icon name="sparkle" size={22} />
+                  </span>
                   <p className="eyebrow">Grounded study chat</p>
                   <h2>Ask your material, not the open web.</h2>
                   <p>
@@ -785,7 +810,10 @@ export function WorkspacePage() {
                     trusted page evidence.
                   </p>
                     {memoryNote && (
-                      <p className="memory-chat-note">{memoryNote}</p>
+                      <p className="memory-chat-note">
+                        <Icon name="target" size={15} />
+                        <span>{memoryNote}</span>
+                      </p>
                     )}
                     <div
                       className="suggestion-list"
@@ -799,6 +827,7 @@ export function WorkspacePage() {
                         disabled={activeCount === 0}
                       >
                         {suggestion}
+                        <Icon name="arrow-right" size={15} />
                       </button>
                     ))}
                   </div>
@@ -808,16 +837,25 @@ export function WorkspacePage() {
                   {messages.map((message) =>
                     message.role === 'user' ? (
                       <section key={message.id} className="user-question">
-                        <p className="panel-kicker">You asked</p>
+                        <p className="panel-kicker">
+                          <Icon name="quote" size={13} />
+                          You asked
+                        </p>
                         <p>{message.content_markdown}</p>
                       </section>
                     ) : (
                       <article key={message.id} className="grounded-answer">
-                        <p className="panel-kicker">Grounded answer</p>
+                        <p className="panel-kicker">
+                          <Icon name="spark-small" size={13} />
+                          Grounded answer
+                        </p>
                         {message.insufficient_evidence && (
                           <p className="evidence-warning">
-                            The selected material does not contain enough
-                            evidence for a supported answer.
+                            <Icon name="alert" size={16} />
+                            <span>
+                              The selected material does not contain enough
+                              evidence for a supported answer.
+                            </span>
                           </p>
                         )}
                         <StructuredAnswer
@@ -874,7 +912,10 @@ export function WorkspacePage() {
                   {chatState.status === 'submitting' && (
                     <>
                       <section className="user-question">
-                        <p className="panel-kicker">You asked</p>
+                        <p className="panel-kicker">
+                          <Icon name="quote" size={13} />
+                          You asked
+                        </p>
                         <p>{chatState.question}</p>
                       </section>
                       <div className="answer-pending" role="status">
@@ -914,74 +955,81 @@ export function WorkspacePage() {
               )}
             </div>
 
-            <form className="chat-composer" onSubmit={handleAsk}>
-              <label className="sr-only" htmlFor="question">
-                Ask your selected sources
-              </label>
-              <textarea
-                ref={questionInputRef}
-                id="question"
-                rows={2}
-                maxLength={2000}
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                placeholder={
-                  activeCount
-                    ? 'Ask a question about your selected sources'
-                    : 'Add or select a source to ask a question'
-                }
-                disabled={
-                  activeCount === 0 || chatState.status === 'submitting'
-                }
-              />
-              <div className="chat-composer-actions">
-                <VoiceRecorder
-                  sessionId={state.session.id}
+            <div className="chat-composer-dock">
+              <form className="chat-composer" onSubmit={handleAsk}>
+                <label className="sr-only" htmlFor="question">
+                  Ask your selected sources
+                </label>
+                <textarea
+                  ref={questionInputRef}
+                  id="question"
+                  rows={2}
+                  maxLength={2000}
+                  value={question}
+                  onChange={(event) => setQuestion(event.target.value)}
+                  placeholder={
+                    activeCount
+                      ? 'Ask a question about your selected sources'
+                      : 'Add or select a source to ask a question'
+                  }
                   disabled={
                     activeCount === 0 || chatState.status === 'submitting'
                   }
-                  onTranscript={(transcript) => {
-                    setQuestion((current) =>
-                      [current.trim(), transcript.trim()]
-                        .filter(Boolean)
-                        .join(' '),
-                    )
-                    window.setTimeout(() => questionInputRef.current?.focus(), 0)
-                  }}
                 />
-                <span>
-                  {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
-                  selected
-                </span>
-                <label className="answer-format">
-                  <span>Answer format</span>
-                  <select
-                    value={answerFormat}
-                    onChange={(event) =>
-                      setAnswerFormat(event.target.value as AnswerFormat)
+                <div className="chat-composer-actions">
+                  <VoiceRecorder
+                    sessionId={state.session.id}
+                    disabled={
+                      activeCount === 0 || chatState.status === 'submitting'
                     }
-                    disabled={chatState.status === 'submitting'}
+                    onTranscript={(transcript) => {
+                      setQuestion((current) =>
+                        [current.trim(), transcript.trim()]
+                          .filter(Boolean)
+                          .join(' '),
+                      )
+                      window.setTimeout(
+                        () => questionInputRef.current?.focus(),
+                        0,
+                      )
+                    }}
+                  />
+                  <span className="composer-count">
+                    {activeCount} {activeCount === 1 ? 'source' : 'sources'}{' '}
+                    selected
+                  </span>
+                  <label className="answer-format">
+                    <span>Answer format</span>
+                    <select
+                      value={answerFormat}
+                      onChange={(event) =>
+                        setAnswerFormat(event.target.value as AnswerFormat)
+                      }
+                      disabled={chatState.status === 'submitting'}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="bullets">Concise points</option>
+                      <option value="table">Table</option>
+                      <option value="steps">Steps</option>
+                      <option value="code">Code</option>
+                      <option value="paragraph">Paragraph</option>
+                    </select>
+                  </label>
+                  <button
+                    className="composer-submit"
+                    type="submit"
+                    disabled={
+                      activeCount === 0 ||
+                      !question.trim() ||
+                      chatState.status === 'submitting'
+                    }
                   >
-                    <option value="auto">Auto</option>
-                    <option value="bullets">Concise points</option>
-                    <option value="table">Table</option>
-                    <option value="steps">Steps</option>
-                    <option value="code">Code</option>
-                    <option value="paragraph">Paragraph</option>
-                  </select>
-                </label>
-                <button
-                  type="submit"
-                  disabled={
-                    activeCount === 0 ||
-                    !question.trim() ||
-                    chatState.status === 'submitting'
-                  }
-                >
-                  {chatState.status === 'submitting' ? 'Working…' : 'Ask'}
-                </button>
-              </div>
-            </form>
+                    {chatState.status === 'submitting' ? 'Working…' : 'Ask'}
+                    <Icon name="send" size={15} />
+                  </button>
+                </div>
+              </form>
+            </div>
           </section>
 
           <div
@@ -1166,4 +1214,3 @@ function AnswerSectionView({
     </section>
   )
 }
-

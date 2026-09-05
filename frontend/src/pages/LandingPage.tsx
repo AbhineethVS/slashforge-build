@@ -1,20 +1,24 @@
 import { Link } from 'react-router-dom'
 
-const features = [
+import { BrandMark } from '../components/BrandMark'
+import { Icon, type IconName } from '../components/Icon'
+import { ThemeToggle } from '../components/ThemeToggle'
+
+const features: { icon: IconName; title: string; description: string }[] = [
   {
-    number: '01',
+    icon: 'file',
     title: 'Bring your sources',
     description:
       'Study from a ready demo or add readable course PDFs for the current session.',
   },
   {
-    number: '02',
+    icon: 'quote',
     title: 'Ask with evidence',
     description:
       'Get focused answers tied to the exact source pages that support them.',
   },
   {
-    number: '03',
+    icon: 'target',
     title: 'Practise actively',
     description:
       'Turn selected material into quizzes, teach-back, and a session memory of what you still confuse.',
@@ -25,12 +29,13 @@ export function LandingPage() {
   return (
     <div className="landing-page">
       <header className="site-header">
-        <Link className="wordmark" to="/" aria-label="LUMA home">
-          LUMA
+        <Link className="brand-link" to="/" aria-label="LUMA home">
+          <BrandMark size={32} tagline="Source-grounded study" />
         </Link>
         <nav aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#trust">Why LUMA</a>
+          <ThemeToggle />
           <Link className="button button-small" to="/workspace">
             Start studying
           </Link>
@@ -40,10 +45,13 @@ export function LandingPage() {
       <main>
         <section className="hero-section" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow">Your material. Clearer understanding.</p>
+            <p className="hero-badge">
+              <Icon name="spark-small" size={15} />
+              Your material. Clearer understanding.
+            </p>
             <h1 id="hero-title">
               Study what matters.
-              <span>Verify every answer.</span>
+              <span className="gradient-text">Verify every answer.</span>
             </h1>
             <p className="hero-lede">
               LUMA turns course PDFs into a source-grounded study desk for
@@ -52,13 +60,14 @@ export function LandingPage() {
             <div className="hero-actions">
               <Link className="button" to="/workspace">
                 Start studying
-                <span aria-hidden="true">→</span>
+                <Icon name="arrow-right" size={17} />
               </Link>
               <a className="text-link" href="#how-it-works">
                 See how it works
               </a>
             </div>
             <p className="session-note">
+              <Icon name="shield" size={14} />
               No account required. Your workspace is temporary.
             </p>
           </div>
@@ -66,13 +75,20 @@ export function LandingPage() {
           <div className="workspace-preview" aria-hidden="true">
             <div className="preview-bar">
               <span>LUMA</span>
+              <span className="preview-dots">
+                <i />
+                <i />
+                <i />
+              </span>
               <span className="preview-status">Study workspace</span>
             </div>
             <div className="preview-grid">
               <div className="preview-sources">
                 <p>Sources</p>
                 <div className="preview-source">
-                  <span className="file-mark">PDF</span>
+                  <span className="file-mark">
+                    <Icon name="file" size={13} />
+                  </span>
                   <span>
                     Course notes
                     <small>Ready · 24 pages</small>
@@ -90,10 +106,22 @@ export function LandingPage() {
               </div>
               <div className="preview-studio">
                 <p>Studio</p>
-                <span>Summary</span>
-                <span>Flashcards</span>
-                <span>Quiz</span>
-                <span>Teach Back</span>
+                <span>
+                  <Icon name="book" size={13} />
+                  Summary
+                </span>
+                <span>
+                  <Icon name="cards" size={13} />
+                  Flashcards
+                </span>
+                <span>
+                  <Icon name="check-circle" size={13} />
+                  Quiz
+                </span>
+                <span>
+                  <Icon name="teach" size={13} />
+                  Teach Back
+                </span>
               </div>
             </div>
           </div>
@@ -110,8 +138,10 @@ export function LandingPage() {
           </div>
           <ol className="feature-list">
             {features.map((feature) => (
-              <li key={feature.number}>
-                <span>{feature.number}</span>
+              <li key={feature.title}>
+                <span className="feature-icon" aria-hidden="true">
+                  <Icon name={feature.icon} size={19} />
+                </span>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </li>
@@ -129,18 +159,17 @@ export function LandingPage() {
             not contain enough evidence, LUMA says so instead of filling the
             gap with a confident guess.
           </p>
-          <Link className="button button-light" to="/workspace">
+          <Link className="button button-ghost" to="/workspace">
             Open the workspace
-            <span aria-hidden="true">→</span>
+            <Icon name="arrow-right" size={17} />
           </Link>
         </section>
       </main>
 
       <footer>
-        <span className="wordmark">LUMA</span>
+        <BrandMark size={24} />
         <p>Source-grounded study for focused revision.</p>
       </footer>
     </div>
   )
 }
-

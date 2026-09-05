@@ -2,8 +2,8 @@ const SESSION_STORAGE_KEY = 'luma.session_id'
 const SELECTED_SOURCES_STORAGE_KEY = 'luma.selected_source_ids'
 const PANEL_WIDTHS_STORAGE_KEY = 'luma.panel_widths'
 
-export const DEFAULT_SOURCES_WIDTH = 260
-export const DEFAULT_STUDIO_WIDTH = 330
+export const DEFAULT_SOURCES_WIDTH = 272
+export const DEFAULT_STUDIO_WIDTH = 344
 export const MIN_SOURCES_WIDTH = 200
 export const MAX_SOURCES_WIDTH = 420
 export const MIN_STUDIO_WIDTH = 260

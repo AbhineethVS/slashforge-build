@@ -4,6 +4,7 @@ import {
   fetchSourcePdf,
   type Citation,
 } from '../lib/session'
+import { Icon } from './Icon'
 
 type EvidencePanelProps = {
   citation: Citation
@@ -99,7 +100,7 @@ export function EvidencePanel({
           aria-label="Close evidence"
           autoFocus
         >
-          Close
+          <Icon name="close" size={16} />
         </button>
       </div>
 

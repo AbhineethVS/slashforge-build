@@ -222,29 +222,48 @@ Only one dominant call to action should appear per state.
 
 ## 6. Visual system
 
-The product name is **LUMA**. Use that wordmark on the landing page and in the
-workspace header. Keep colors and spacing on semantic tokens so logo refinements
-do not force component rewrites.
+The product name is **LUMA**. The brand mark is the gradient `L` app icon
+(`frontend/public/luma-mark.png`, with `favicon-32.png`, `favicon-64.png`, and
+`luma-mark-512.png` derived from the same artwork). Pair the mark with the LUMA
+wordmark on the landing page and in the workspace header. Keep colors and
+spacing on semantic tokens so logo refinements do not force component rewrites.
+
+### Themes
+
+The product ships a light and a dark theme. Both are first-class: no screen may
+be legible in only one of them.
+
+- `data-theme` on `<html>` selects the theme; every component reads semantic
+  tokens only, never a raw hex value or a theme-specific override.
+- An inline script in `index.html` resolves the theme before first paint from
+  `localStorage['luma.theme']`, falling back to `prefers-color-scheme`.
+- The header exposes one labelled toggle. An explicit choice is persisted; until
+  the student makes one, the system preference wins.
 
 ### Color intent
 
-- Background: warm near-white.
-- Surface: white and a subtle warm secondary surface.
-- Text: near-black slate.
-- Primary: deep blue for actions and active navigation.
-- Accent: restrained teal for learning progress.
-- Warning: amber for needs-practice.
-- Critical: muted red for failed processing and confident misconceptions.
-- Success: green reserved for verified completion, not decoration.
+Neutrals are cool rather than warm, matching the brand mark.
 
-All text and interactive states must meet WCAG AA contrast. Do not accept a
-palette solely because the hex values look cohesive.
+- Background: near-white in light, near-black indigo in dark.
+- Surface: an elevated panel surface plus a quieter secondary surface.
+- Text: primary, muted, and faint roles at AA contrast in both themes.
+- Accent: indigo for actions, selection, citations, and active navigation. The
+  blue-to-violet brand gradient is reserved for the mark, the header hairline,
+  the selected-source indicator, and one hero word.
+- Warning: amber for needs-practice and cached fallbacks.
+- Critical: muted red for failed processing and confident misconceptions.
+- Success: green reserved for ready sources and verified completion.
+
+All text and interactive states must meet WCAG AA contrast in both themes.
+Status never depends on color alone. Do not accept a palette solely because the
+hex values look cohesive.
 
 ### Typography
 
-- Interface: a highly legible sans-serif.
-- Long study content: the same sans-serif initially; an editorial serif may be
-  evaluated later for headings only.
+- Interface: Inter, with a system sans-serif fallback stack.
+- Display: Instrument Serif for page, panel, and artifact titles only, with a
+  Georgia fallback. It never carries body copy or interface labels.
+- Code: a monospace stack for generated code blocks.
 - Body line length: approximately 65–80 characters.
 - Minimum body size: 16 px in reading surfaces.
 - Use tabular numerals for page numbers and progress counts.
@@ -253,13 +272,15 @@ palette solely because the hex values look cohesive.
 
 - Base spacing unit: 4 px.
 - Common rhythm: 8, 12, 16, 24, 32 px.
-- Moderate corner radius; nested cards should not each add another border.
-- Use separators and whitespace before shadows.
+- Radius tokens run from 6 px controls to 24 px dialogs; nested cards should not
+  each add another border.
+- Use separators and whitespace before shadows; shadows stay soft and low.
 
 ### Iconography
 
-Use one SVG icon family such as Lucide. Icons clarify actions but do not replace
-critical labels. Emojis are content only, never interface icons.
+Use the single stroke icon family in `frontend/src/components/Icon.tsx`. Icons
+are always `aria-hidden` and clarify actions but never replace critical labels.
+Emojis are content only, never interface icons.
 
 ## 7. Component inventory
 

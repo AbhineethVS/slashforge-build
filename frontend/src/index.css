@@ -1,50 +1,188 @@
+/* ==========================================================================
+   LUMA design tokens
+   Semantic tokens only. Components never reference raw hex values.
+   ========================================================================== */
+
 :root {
-  --color-ink: #17201e;
-  --color-muted: #626c68;
-  --color-faint: #8a938f;
-  --color-canvas: #f4f1e9;
-  --color-surface: #fffefa;
-  --color-surface-subtle: #ece9df;
-  --color-border: #d7d3c7;
-  --color-primary: #173f70;
-  --color-primary-hover: #0e315e;
-  --color-teal: #1f7068;
-  --color-focus: #d49b33;
-  --color-critical: #9c3e3e;
-  --shadow-float: 0 24px 70px rgb(23 32 30 / 12%);
-  font-family:
-    Inter, Aptos, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+  color-scheme: light;
+
+  /* Brand — sampled from the LUMA mark */
+  --brand-blue: #2f6bff;
+  --brand-violet: #6d5cf6;
+  --brand-lilac: #b984f5;
+  --brand-gradient: linear-gradient(
+    135deg,
+    var(--brand-blue) 0%,
+    var(--brand-violet) 52%,
+    var(--brand-lilac) 100%
+  );
+
+  /* Surfaces */
+  --bg: #eff1f7;
+  --surface: #ffffff;
+  --surface-2: #f7f8fc;
+  --surface-3: #eceef6;
+  --surface-inset: #f4f5fa;
+  --border: #e2e5ef;
+  --border-strong: #cdd2e2;
+  --overlay: rgb(12 14 26 / 46%);
+
+  /* Text */
+  --text: #101223;
+  --text-muted: #545a72;
+  --text-faint: #656b82;
+  --text-on-accent: #ffffff;
+
+  /* Action */
+  --accent: #4a41d8;
+  --accent-hover: #3a32bb;
+  --accent-text: #3f37c4;
+  --accent-soft: #eeecfd;
+  --accent-border: #d6d2fb;
+
+  /* Semantic */
+  --success: #0c7355;
+  --success-soft: #e2f4ed;
+  --success-border: #b7e0d1;
+  --warning: #8a5a12;
+  --warning-soft: #fcf1dc;
+  --warning-border: #eed6a5;
+  --danger: #a83228;
+  --danger-soft: #fdeceb;
+  --danger-border: #f0c4c0;
+  --info: #1a5a9e;
+  --info-soft: #e9f1fb;
+  --info-border: #c4dbf2;
+
+  --focus: #6d5cf6;
+  --scrollbar: #c9cddd;
+  --scrollbar-hover: #aeb4cb;
+
+  /* Shape */
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-xs: 0 1px 2px rgb(16 18 35 / 6%);
+  --shadow-sm:
+    0 1px 2px rgb(16 18 35 / 5%), 0 3px 10px rgb(16 18 35 / 5%);
+  --shadow-md:
+    0 1px 2px rgb(16 18 35 / 5%), 0 10px 26px rgb(16 18 35 / 8%);
+  --shadow-lg: 0 28px 80px rgb(16 18 35 / 18%);
+  --shadow-glow: 0 8px 24px rgb(74 65 216 / 22%);
+
+  /* Type */
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', sans-serif;
-  color: var(--color-ink);
-  background: var(--color-canvas);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --font-display:
+    'Instrument Serif', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Layout */
+  --header-height: 60px;
 }
 
-* {
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #06070f;
+  --surface: #0d0f1c;
+  --surface-2: #121525;
+  --surface-3: #191d31;
+  --surface-inset: #0a0c18;
+  --border: #222741;
+  --border-strong: #333a5c;
+  --overlay: rgb(2 3 8 / 68%);
+
+  --text: #e9ebf6;
+  --text-muted: #a0a7c2;
+  --text-faint: #828aa8;
+  --text-on-accent: #ffffff;
+
+  --accent: #5b53f0;
+  --accent-hover: #6f68f6;
+  --accent-text: #aeaaff;
+  --accent-soft: rgb(109 92 246 / 16%);
+  --accent-border: rgb(139 124 255 / 32%);
+
+  --success: #5fd3a8;
+  --success-soft: rgb(16 185 129 / 14%);
+  --success-border: rgb(16 185 129 / 30%);
+  --warning: #efb567;
+  --warning-soft: rgb(217 152 47 / 15%);
+  --warning-border: rgb(217 152 47 / 32%);
+  --danger: #ff8f83;
+  --danger-soft: rgb(239 78 68 / 14%);
+  --danger-border: rgb(239 78 68 / 30%);
+  --info: #8ab4f8;
+  --info-soft: rgb(59 130 246 / 14%);
+  --info-border: rgb(59 130 246 / 30%);
+
+  --focus: #9b8cff;
+  --scrollbar: #2c3252;
+  --scrollbar-hover: #3d4570;
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%), 0 3px 12px rgb(0 0 0 / 30%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 40%), 0 12px 30px rgb(0 0 0 / 40%);
+  --shadow-lg: 0 28px 80px rgb(0 0 0 / 60%);
+  --shadow-glow: 0 8px 28px rgb(91 83 240 / 30%);
+}
+
+/* ========================================================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
-}
-
-#root {
-  min-height: 100svh;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100svh;
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background-color 240ms ease,
+    color 240ms ease;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
 }
 
 button,
 textarea,
-input {
+input,
+select {
   font: inherit;
+  color: inherit;
 }
 
 button,
@@ -52,25 +190,81 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button {
+  cursor: pointer;
+}
+
 a {
   color: inherit;
 }
 
-button:focus-visible,
-a:focus-visible,
-textarea:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
 button:disabled,
-textarea:disabled {
+textarea:disabled,
+select:disabled,
+input:disabled {
   cursor: not-allowed;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* Quiet, consistent scrollbars in both themes. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border: 3px solid transparent;
+  border-radius: var(--radius-pill);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+  background-clip: content-box;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

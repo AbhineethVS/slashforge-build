@@ -5,6 +5,7 @@ import type {
   Citation,
 } from '../lib/session'
 import { EvidencePanel } from './EvidencePanel'
+import { Icon } from './Icon'
 import { NarrationPlayer } from './NarrationPlayer'
 
 type AudioOverviewOverlayProps = {
@@ -86,12 +87,14 @@ export function AudioOverviewOverlay({
             </p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close Audio Overview">
+            <Icon name="close" size={15} />
             Close
           </button>
         </header>
 
         {artifact.content.fallback && (
           <p className="fallback-notice">
+            <Icon name="alert" size={14} />
             Cached demo transcript · live generation was unavailable.
           </p>
         )}

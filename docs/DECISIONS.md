@@ -329,3 +329,34 @@ Consequences:
   source-supported code or pseudocode block.
 - Unsupported evidence still produces an abstention, not a cleaned-up
   hallucination.
+
+## ADR-021: Brand refresh with a dual-theme semantic token system
+
+Status: accepted (2026-09-05)
+
+Decision: rebuild the frontend visual layer around the LUMA gradient mark. All
+color, type, radius, and elevation values move into semantic custom properties
+in `frontend/src/index.css`, with a full second value set under
+`[data-theme='dark']`. `index.html` gains the mark as favicon and apple-touch
+icon plus an inline bootstrap script that resolves the theme before first paint
+from `localStorage['luma.theme']`, falling back to `prefers-color-scheme`. A
+header toggle persists an explicit choice. Typography becomes Inter for the
+interface and Instrument Serif for display headings only. One hand-authored
+stroke icon family lives in `frontend/src/components/Icon.tsx`.
+
+Reason: the earlier warm-neutral, deep-blue treatment did not match the product
+mark and had no dark mode, which is the default environment for most evening
+revision and for demo projection. Centralising the values also removed the
+page-specific hex literals that had accumulated in `App.css`.
+
+Consequences:
+
+- Components reference tokens only; a theme is added by supplying one more
+  token block, not by editing components.
+- The dark theme is a supported surface, so every state must be checked twice.
+- Icons are decorative and `aria-hidden`; every control keeps its text label or
+  an explicit accessible name, so no test selector depends on a glyph.
+- Google Fonts is a network dependency for the display face; the fallback stack
+  keeps the layout intact offline.
+- The bundled mark PNGs are generated from the source artwork and are the only
+  binary brand assets in `frontend/public/`.
