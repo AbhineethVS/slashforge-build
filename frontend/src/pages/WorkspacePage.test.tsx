@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { WorkspacePage } from './WorkspacePage'
 
@@ -30,6 +30,19 @@ const session = {
 describe('WorkspacePage', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    })
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    })
   })
 
   it('creates a temporary session and shows the workspace shell', async () => {
@@ -401,6 +414,154 @@ describe('WorkspacePage', () => {
         },
       }),
     )
+  })
+
+  it('shows a compact Go interactive tip under a cited circuit answer', async () => {
+    const answer = {
+      id: 'circuit-answer',
+      role: 'assistant',
+      content_markdown:
+        'In an RC circuit, current falls as the capacitor charges over time.',
+      citations: [
+        {
+          id: 'citation-rc',
+          chunk_id: 'chunk-rc',
+          source_id: session.sources[0].id,
+          source_name: session.sources[0].display_name,
+          page_start: 12,
+          page_end: 12,
+          excerpt: 'An RC circuit charges through a resistor.',
+          claim: 'Current in an RC circuit changes over time.',
+          viewer_url: `/api/v1/sources/${session.sources[0].id}/file#page=12`,
+        },
+      ],
+      insufficient_evidence: false,
+      follow_up_questions: [],
+      status: 'complete',
+      created_at: '2026-09-07T05:00:00Z',
+    }
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(answer), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('heading', { name: 'Chat' })
+    const input = screen.getByRole('textbox', {
+      name: 'Ask your selected sources',
+    })
+    fireEvent.change(input, {
+      target: { value: 'How does current change in an RC circuit?' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }))
+
+    const tip = await screen.findByRole('link', { name: /Go interactive/i })
+    expect(tip).toHaveAttribute('target', '_blank')
+    expect(tip).toHaveClass('is-compact')
+    expect(tip.textContent).toMatch(/Falstad|Circuit|PhET|LTspice|Multisim/i)
+    expect(screen.queryByRole('link', { name: 'Browse tools' })).not.toBeInTheDocument()
+  })
+
+  it('autoscrolls on ask and jumps from the prompt rail', async () => {
+    const firstAnswer = {
+      id: 'answer-1',
+      role: 'assistant',
+      content_markdown: 'Merge sort splits the list, then merges sorted halves.',
+      citations: [
+        {
+          id: 'citation-1',
+          chunk_id: 'chunk-1',
+          source_id: session.sources[0].id,
+          source_name: session.sources[0].display_name,
+          page_start: 3,
+          page_end: 3,
+          excerpt: 'Merge sort divides then conquers.',
+          claim: 'Merge sort splits then merges.',
+          viewer_url: `/api/v1/sources/${session.sources[0].id}/file#page=3`,
+        },
+      ],
+      insufficient_evidence: false,
+      follow_up_questions: [],
+      status: 'complete',
+      created_at: '2026-09-07T06:00:00Z',
+    }
+    const secondAnswer = {
+      ...firstAnswer,
+      id: 'answer-2',
+      content_markdown: 'Quicksort picks a pivot and partitions around it.',
+      created_at: '2026-09-07T06:01:00Z',
+    }
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(firstAnswer), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(secondAnswer), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('heading', { name: 'Chat' })
+    const input = screen.getByRole('textbox', {
+      name: 'Ask your selected sources',
+    })
+
+    fireEvent.change(input, {
+      target: { value: 'How does merge sort work?' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }))
+    expect(
+      await screen.findByText(/Merge sort splits the list/i),
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(HTMLElement.prototype.scrollTo).toHaveBeenCalled(),
+    )
+
+    fireEvent.change(input, {
+      target: { value: 'How does quicksort pick a pivot?' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }))
+    expect(
+      await screen.findByText(/Quicksort picks a pivot/i),
+    ).toBeInTheDocument()
+
+    const rail = screen.getByRole('navigation', {
+      name: 'Jump to earlier questions',
+    })
+    expect(rail).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'How does merge sort work?' }),
+    )
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
   })
 
   it('renders a cited table answer and sends the selected format', async () => {

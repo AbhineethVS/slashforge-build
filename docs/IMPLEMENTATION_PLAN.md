@@ -501,6 +501,7 @@ Never cut:
 - OpenAI outage fallback for the demo.
 - Backend citation validation for any Audio Overview that remains in scope.
 - Curated `/tools` catalog sourced from `docs/LUMA_TOOL_COLLECTION.md`.
+- Sparse Chat **Go interactive** tips from the same client-side catalog.
 
 ## 9. Definition of done
 

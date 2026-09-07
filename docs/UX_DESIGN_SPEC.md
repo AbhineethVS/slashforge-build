@@ -154,6 +154,10 @@ Only one dominant call to action should appear per state.
 - Hover/focus shows source name, page, and excerpt.
 - Selection opens evidence and highlights the active citation.
 - Follow-up prompts appear after the answer, not before evidence.
+- New questions autoscroll the Chat panel to the latest turn.
+- When the session has prompts, a thin marker rail sits on the right edge of
+  Chat. Hover or focus reveals truncated earlier questions; choosing one
+  scrolls that prompt into view.
 
 ### Studio
 
@@ -242,6 +246,11 @@ second study product and does not mix external pages into grounded answers.
   taps toggle the same inspect state. External tools always open in a new tab.
 - Studio may show at most one **Go interactive** recommendation when session
   learning memory already has a recommended concept.
+- Chat may show at most one compact **Go interactive** tip under a cited
+  grounded answer when the question and answer match a catalog tool strongly
+  enough. Skip abstentions and answers without citations. Do not repeat the
+  same tool for the next two tips. Keep the tip Listen-sized, open the tool
+  externally, and never mix it into citation evidence.
 
 ## 6. Visual system
 

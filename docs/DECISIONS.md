@@ -391,16 +391,19 @@ Status: accepted (2026-09-07)
 Decision: LUMA ships a third surface at `/tools` backed by the curated catalog
 in `docs/LUMA_TOOL_COLLECTION.md`. Search and filters run client-side. External
 tools open in a new tab. Studio may recommend one matching tool from the same
-catalog when learning memory already has a concept. The catalog is not a RAG
-source and is never embedded or iframed.
+catalog when learning memory already has a concept. Chat may also surface one
+compact tip under a cited grounded answer when client-side scoring clears a
+threshold; abstentions and citation-free answers get none. The catalog is not a
+RAG source and is never embedded or iframed.
 
 Reason: specialist simulators and 3D viewers help when static PDF text is not
 enough, but mixing those sites into grounded answers would break citation
-trust. A dedicated explore page plus sparse in-workspace routing keeps the
-study desk intact.
+trust. A dedicated explore page plus sparse in-workspace and in-chat routing
+keeps the study desk intact.
 
 Consequences:
 
 - Adding a tool means updating the catalog data, not a page component.
 - Workspace Chat still answers only from selected PDFs.
+- Chat tips are optional UX, never part of retrieval or citation validation.
 - The landing primary CTA remains Start studying.

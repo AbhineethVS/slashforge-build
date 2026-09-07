@@ -11,12 +11,18 @@ import ReactMarkdown from 'react-markdown'
 import { Link } from 'react-router-dom'
 
 import { BrandMark } from '../components/BrandMark'
+import {
+  ChatPromptRail,
+  promptAnchorId,
+} from '../components/ChatPromptRail'
 import { EvidencePanel } from '../components/EvidencePanel'
 import { Icon } from '../components/Icon'
 import { NarrationPlayer } from '../components/NarrationPlayer'
 import { StudioPanel } from '../components/StudioPanel'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { ToolRecommendation } from '../components/tools/ToolRecommendation'
 import { VoiceRecorder } from '../components/VoiceRecorder'
+import { recommendChatTool } from '../lib/tools/recommend'
 import {
   ApiRequestError,
   askQuestion,
@@ -96,6 +102,7 @@ export function WorkspacePage() {
   )
   const fileInputRef = useRef<HTMLInputElement>(null)
   const questionInputRef = useRef<HTMLTextAreaElement>(null)
+  const chatContentRef = useRef<HTMLDivElement>(null)
   const citationTriggerRef = useRef<HTMLButtonElement | null>(null)
   const workspaceGridRef = useRef<HTMLElement>(null)
   const sourcesPanelRef = useRef<HTMLElement>(null)
@@ -415,6 +422,29 @@ export function WorkspacePage() {
     setSideSheet(null)
     window.setTimeout(() => questionInputRef.current?.focus(), 0)
   }
+
+  function scrollChatToBottom(behavior: ScrollBehavior = 'smooth') {
+    const root = chatContentRef.current
+    if (!root || typeof root.scrollTo !== 'function') return
+    root.scrollTo({ top: root.scrollHeight, behavior })
+  }
+
+  function jumpToPrompt(promptId: string) {
+    const root = chatContentRef.current
+    if (!root) return
+    const target = root.querySelector<HTMLElement>(
+      `#${CSS.escape(promptAnchorId(promptId))}`,
+    )
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  useEffect(() => {
+    if (chatState.status !== 'submitting' && messages.length === 0) return
+    const frame = window.requestAnimationFrame(() => {
+      scrollChatToBottom('smooth')
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [messages, chatState])
 
   async function submitQuestion(normalized: string) {
     if (
@@ -800,7 +830,7 @@ export function WorkspacePage() {
               </span>
             </div>
 
-            <div className="chat-content">
+            <div className="chat-content" ref={chatContentRef}>
               {messages.length === 0 && chatState.status === 'idle' ? (
                 <div className="chat-empty">
                   <span className="chat-empty-mark" aria-hidden="true">
@@ -837,84 +867,117 @@ export function WorkspacePage() {
                 </div>
               ) : (
                 <div className="chat-thread" aria-live="polite">
-                  {messages.map((message) =>
-                    message.role === 'user' ? (
-                      <section key={message.id} className="user-question">
-                        <p className="panel-kicker">
-                          <Icon name="quote" size={13} />
-                          You asked
-                        </p>
-                        <p>{message.content_markdown}</p>
-                      </section>
-                    ) : (
-                      <article key={message.id} className="grounded-answer">
-                        <p className="panel-kicker">
-                          <Icon name="spark-small" size={13} />
-                          Grounded answer
-                        </p>
-                        {message.insufficient_evidence && (
-                          <p className="evidence-warning">
-                            <Icon name="alert" size={16} />
-                            <span>
-                              The selected material does not contain enough
-                              evidence for a supported answer.
-                            </span>
-                          </p>
-                        )}
-                        <StructuredAnswer
-                          message={message}
-                          onCitation={showCitation}
-                        />
-                        <NarrationPlayer
-                          compact
-                          sessionId={state.session.id}
-                          resource={{ kind: 'message', id: message.id }}
-                        />
-                        {message.citations.length > 0 &&
-                          (!message.sections || message.sections.length === 0) && (
-                          <div
-                            className="citation-list"
-                            aria-label="Answer citations"
+                  {(() => {
+                    const recentToolIds: string[] = []
+                    return messages.map((message, index) => {
+                      if (message.role === 'user') {
+                        return (
+                          <section
+                            key={message.id}
+                            id={promptAnchorId(message.id)}
+                            className="user-question"
                           >
-                            {message.citations.map((citation, index) => (
-                              <button
-                                key={citation.id}
-                                type="button"
-                                title={`${citation.source_name}, page ${citation.page_start}: ${citation.excerpt}`}
-                                aria-label={`Citation ${index + 1}: ${citation.source_name}, page ${citation.page_start}`}
-                                onClick={(event) =>
-                                  showCitation(citation, event.currentTarget)
-                                }
-                              >
-                                [{index + 1}] {citation.source_name}, p.
-                                {citation.page_start}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        {message.follow_up_questions &&
-                          message.follow_up_questions.length > 0 && (
-                            <div
-                              className="follow-up-list"
-                              aria-label="Follow-up questions"
-                            >
-                              {message.follow_up_questions.map((followUp) => (
-                                <button
-                                  key={followUp}
-                                  type="button"
-                                  onClick={() => chooseQuestion(followUp)}
-                                >
-                                  {followUp}
-                                </button>
-                              ))}
-                            </div>
+                            <p className="panel-kicker">
+                              <Icon name="quote" size={13} />
+                              You asked
+                            </p>
+                            <p>{message.content_markdown}</p>
+                          </section>
+                        )
+                      }
+
+                      const prior = index > 0 ? messages[index - 1] : null
+                      const question =
+                        prior?.role === 'user' ? prior.content_markdown : ''
+                      const tip = recommendChatTool({
+                        question,
+                        answer: message.content_markdown,
+                        insufficientEvidence: message.insufficient_evidence,
+                        hasCitations: message.citations.length > 0,
+                        excludeIds: recentToolIds.slice(-2),
+                      })
+                      if (tip) recentToolIds.push(tip.id)
+
+                      return (
+                        <article key={message.id} className="grounded-answer">
+                          <p className="panel-kicker">
+                            <Icon name="spark-small" size={13} />
+                            Grounded answer
+                          </p>
+                          {message.insufficient_evidence && (
+                            <p className="evidence-warning">
+                              <Icon name="alert" size={16} />
+                              <span>
+                                The selected material does not contain enough
+                                evidence for a supported answer.
+                              </span>
+                            </p>
                           )}
-                      </article>
-                    ),
-                  )}
+                          <StructuredAnswer
+                            message={message}
+                            onCitation={showCitation}
+                          />
+                          <div className="answer-actions">
+                            <NarrationPlayer
+                              compact
+                              sessionId={state.session.id}
+                              resource={{ kind: 'message', id: message.id }}
+                            />
+                            {tip && <ToolRecommendation compact tool={tip} />}
+                          </div>
+                          {message.citations.length > 0 &&
+                            (!message.sections ||
+                              message.sections.length === 0) && (
+                              <div
+                                className="citation-list"
+                                aria-label="Answer citations"
+                              >
+                                {message.citations.map((citation, cIndex) => (
+                                  <button
+                                    key={citation.id}
+                                    type="button"
+                                    title={`${citation.source_name}, page ${citation.page_start}: ${citation.excerpt}`}
+                                    aria-label={`Citation ${cIndex + 1}: ${citation.source_name}, page ${citation.page_start}`}
+                                    onClick={(event) =>
+                                      showCitation(
+                                        citation,
+                                        event.currentTarget,
+                                      )
+                                    }
+                                  >
+                                    [{cIndex + 1}] {citation.source_name}, p.
+                                    {citation.page_start}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          {message.follow_up_questions &&
+                            message.follow_up_questions.length > 0 && (
+                              <div
+                                className="follow-up-list"
+                                aria-label="Follow-up questions"
+                              >
+                                {message.follow_up_questions.map((followUp) => (
+                                  <button
+                                    key={followUp}
+                                    type="button"
+                                    onClick={() => chooseQuestion(followUp)}
+                                  >
+                                    {followUp}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                        </article>
+                      )
+                    })
+                  })()}
                   {chatState.status === 'submitting' && (
                     <>
-                      <section className="user-question">
+                      <section
+                        id={promptAnchorId('pending')}
+                        className="user-question"
+                      >
                         <p className="panel-kicker">
                           <Icon name="quote" size={13} />
                           You asked
@@ -957,6 +1020,21 @@ export function WorkspacePage() {
                 </div>
               )}
             </div>
+
+            <ChatPromptRail
+              prompts={[
+                ...messages
+                  .filter((message) => message.role === 'user')
+                  .map((message) => ({
+                    id: message.id,
+                    text: message.content_markdown,
+                  })),
+                ...(chatState.status === 'submitting'
+                  ? [{ id: 'pending', text: chatState.question }]
+                  : []),
+              ]}
+              onJump={jumpToPrompt}
+            />
 
             <div className="chat-composer-dock">
               <form className="chat-composer" onSubmit={handleAsk}>

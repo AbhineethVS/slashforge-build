@@ -96,6 +96,9 @@ Acceptance criteria:
 - The catalog comes from the curated collection, not invented placeholders.
 - External sites are never iframed or mixed into RAG answers.
 - Studio recommendations stay sparse and concept-triggered.
+- Chat may show at most one compact tip under a cited grounded answer when the
+  question and answer clearly match a catalog tool; abstentions and
+  citation-free answers get none.
 
 ### 5.3 Ask a grounded question
 
