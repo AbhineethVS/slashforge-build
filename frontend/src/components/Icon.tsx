@@ -36,6 +36,12 @@ export type IconName =
   | 'book'
   | 'check'
   | 'spark-small'
+  | 'search'
+  | 'external'
+  | 'cube'
+  | 'bolt'
+  | 'compass'
+  | 'layers'
 
 const paths: Record<IconName, ReactElement> = {
   plus: <path d="M12 5v14M5 12h14" />,
@@ -164,6 +170,33 @@ const paths: Record<IconName, ReactElement> = {
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
   'spark-small': (
     <path d="M12 4.5 13.6 10 19 11.6 13.6 13.2 12 18.7 10.4 13.2 5 11.6 10.4 10z" />
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.2" />
+      <path d="m16 16 4 4" />
+    </>
+  ),
+  external: <path d="M9 5.5H18.5V15M18.2 5.8 6.5 17.5" />,
+  cube: (
+    <>
+      <path d="M12 4 20 8.2v7.6L12 20l-8-4.2V8.2z" />
+      <path d="M12 20v-7.8M4.2 8.3 12 12.2l7.8-3.9" />
+    </>
+  ),
+  bolt: <path d="M13 3 6.5 13h5L11 21l6.5-10h-5z" />,
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="8.2" />
+      <path d="m14.8 9.2-1.2 4.4-4.4 1.2 1.2-4.4z" />
+    </>
+  ),
+  layers: (
+    <>
+      <path d="m4.5 8.5 7.5 4 7.5-4-7.5-4z" />
+      <path d="m4.5 12.2 7.5 4 7.5-4" />
+      <path d="m4.5 15.8 7.5 4 7.5-4" />
+    </>
   ),
 }
 

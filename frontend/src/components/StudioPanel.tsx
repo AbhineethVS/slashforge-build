@@ -24,8 +24,10 @@ import { Icon, type IconName } from './Icon'
 import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
 import { QuizSetupOverlay } from './QuizSetupOverlay'
+import { ToolRecommendation } from './tools/ToolRecommendation'
 import { VisualDeckOverlay } from './VisualDeckOverlay'
 import { VoiceRecorder } from './VoiceRecorder'
+import { recommendTools } from '../lib/tools/recommend'
 
 const summaryMarkdownElements = [
   'p',
@@ -656,6 +658,19 @@ export function StudioPanel({
           }}
           onAskQuestion={onAskQuestion}
         />
+        {progress?.recommended_concept &&
+          recommendTools(progress.recommended_concept, 1).map((tool) => (
+            <section
+              key={tool.id}
+              className="studio-section studio-tool-lane"
+              aria-label="Go interactive"
+            >
+              <ToolRecommendation
+                tool={tool}
+                concept={progress.recommended_concept ?? undefined}
+              />
+            </section>
+          ))}
 
         {generation.status === 'error' &&
           !(quizSetupOpen && generation.kind === 'quiz') && (

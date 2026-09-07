@@ -83,6 +83,20 @@ Acceptance criteria:
 - Reset removes temporary files, chunks, embeddings, messages, and artifacts.
 - The UI clearly labels temporary-session behavior.
 
+### 5.2b Explore interactive tools
+
+1. From the landing page or workspace header, the student opens `/tools`.
+2. They search a concept or browse by subject and activity.
+3. Inspecting a card explains why the tool is useful.
+4. **Open tool** launches the specialist site in a new tab.
+
+Acceptance criteria:
+
+- Start studying remains the primary landing action.
+- The catalog comes from the curated collection, not invented placeholders.
+- External sites are never iframed or mixed into RAG answers.
+- Studio recommendations stay sparse and concept-triggered.
+
 ### 5.3 Ask a grounded question
 
 1. The student chooses which ready sources are active.

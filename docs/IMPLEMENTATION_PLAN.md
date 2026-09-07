@@ -500,6 +500,7 @@ Never cut:
 - Summary, flashcards, and quiz in Studio.
 - OpenAI outage fallback for the demo.
 - Backend citation validation for any Audio Overview that remains in scope.
+- Curated `/tools` catalog sourced from `docs/LUMA_TOOL_COLLECTION.md`.
 
 ## 9. Definition of done
 

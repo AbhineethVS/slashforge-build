@@ -35,6 +35,7 @@ export function LandingPage() {
         <nav aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#trust">Why LUMA</a>
+          <Link to="/tools">Explore tools</Link>
           <ThemeToggle />
           <Link className="button button-small" to="/workspace">
             Start studying
@@ -62,10 +63,14 @@ export function LandingPage() {
                 Start studying
                 <Icon name="arrow-right" size={17} />
               </Link>
-              <a className="text-link" href="#how-it-works">
-                See how it works
-              </a>
+              <Link className="button-ghost" to="/tools">
+                Explore tools
+                <Icon name="compass" size={16} />
+              </Link>
             </div>
+            <a className="text-link" href="#how-it-works">
+              See how it works
+            </a>
             <p className="session-note">
               <Icon name="shield" size={14} />
               No account required. Your workspace is temporary.

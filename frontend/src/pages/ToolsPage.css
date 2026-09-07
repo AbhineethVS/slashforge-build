@@ -1,0 +1,418 @@
+.tools-page {
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgb(109 92 246 / 10%), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgb(47 107 255 / 8%), transparent),
+    var(--bg);
+}
+
+.tools-page main {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 96px;
+}
+
+.tools-hero {
+  max-width: 720px;
+  padding: 36px 0 18px;
+}
+
+.tools-hero h1 {
+  margin: 14px 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.4vw, 4.1rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+}
+
+.tools-hero h1 span {
+  display: block;
+}
+
+.tools-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 0 18px;
+  min-height: 56px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.tools-search:focus-within {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md), 0 0 0 4px var(--accent-soft);
+}
+
+.tools-search input {
+  width: 100%;
+  min-height: 54px;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  font-size: 1rem;
+}
+
+.tools-search input:focus {
+  outline: none;
+}
+
+.tools-count,
+.tools-footnote {
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.tools-section {
+  margin-top: 64px;
+}
+
+.tools-section .section-intro {
+  max-width: 640px;
+  margin-bottom: 28px;
+}
+
+.tools-section h2 {
+  margin: 6px 0 8px;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.explore-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explore-pills button,
+.tools-filters button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 0.84rem;
+  font-weight: 600;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.explore-pills button:hover,
+.tools-filters button:hover {
+  color: var(--accent-text);
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.tools-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.tools-filters .is-active {
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border-color: transparent;
+  box-shadow: var(--shadow-glow);
+}
+
+.tools-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px 24px;
+  padding: 8px 4px 48px;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.tool-card {
+  position: relative;
+  z-index: 1;
+  min-height: 168px;
+}
+
+.tool-card-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 168px;
+  padding: 22px 20px;
+  overflow: hidden;
+  color: inherit;
+  text-align: left;
+  background:
+    linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 48%),
+    var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+.tool-card-face::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: var(--brand-gradient);
+  opacity: 0.55;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  pointer-events: none;
+}
+
+.tool-card:not(.is-expanded) .tool-card-face:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-border);
+}
+
+.tool-card-face h3,
+.tool-card-inspect h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.tool-card-subjects,
+.tool-card-modes,
+.tool-inspect-lede {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.tool-card-modes {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.tool-card-inspect {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 12;
+  width: min(340px, calc(100% + 48px));
+  padding: 20px;
+  visibility: hidden;
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg), 0 0 40px rgb(91 83 240 / 18%);
+  transform: translateX(-50%) scale(0.94);
+  transform-origin: top center;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0ms linear 220ms;
+}
+
+.tool-card-inspect.is-open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) scale(1.05);
+  transition:
+    opacity 200ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0ms linear 0ms;
+}
+
+.tool-card-inspect.align-end {
+  left: auto;
+  right: 0;
+  transform: scale(0.94);
+  transform-origin: top right;
+}
+
+.tool-card-inspect.align-end.is-open {
+  transform: scale(1.05);
+}
+
+.tool-card-inspect.align-start {
+  left: 0;
+  right: auto;
+  transform: scale(0.94);
+  transform-origin: top left;
+}
+
+.tool-card-inspect.align-start.is-open {
+  transform: scale(1.05);
+}
+
+.tool-card-inspect .eyebrow {
+  margin: 0 0 6px;
+}
+
+.tool-inspect-why,
+.tool-inspect-meta {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.tool-inspect-why strong,
+.tool-inspect-meta strong {
+  color: var(--text-faint);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tool-inspect-why p,
+.tool-inspect-meta p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.tool-inspect-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.tool-inspect-tags span {
+  padding: 4px 9px;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.tool-card-inspect .button {
+  margin-top: 18px;
+  width: 100%;
+}
+
+.tool-card.is-expanded {
+  z-index: 20;
+}
+
+.tool-card.is-expanded .tool-card-face {
+  opacity: 0.08;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
+}
+
+.tools-grid.is-inspecting .tool-card:not(.is-expanded) {
+  z-index: 0;
+}
+
+.tools-grid.is-inspecting .tool-card:not(.is-expanded) .tool-card-face {
+  opacity: 0.55;
+  filter: none;
+}
+
+.tools-empty {
+  padding: 36px 8px;
+}
+
+.tools-empty h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+}
+
+.tools-page footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 1100px) {
+  .tools-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+}
+
+@media (max-width: 800px) {
+  .tools-page main {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .tools-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 16px;
+  }
+
+  .tool-card-inspect {
+    width: calc(100% + 16px);
+  }
+}
+
+@media (max-width: 560px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-hero h1 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-card-face,
+  .tool-card-inspect,
+  .explore-pills button,
+  .tools-filters button,
+  .tools-grid.is-inspecting .tool-card:not(.is-expanded) .tool-card-face {
+    transition: none;
+  }
+
+  .tool-card:not(.is-expanded) .tool-card-face:hover {
+    transform: none;
+  }
+}

@@ -22,6 +22,9 @@ describe('LandingPage', () => {
     expect(
       screen.getAllByRole('link', { name: /start studying/i })[0],
     ).toHaveAttribute('href', '/workspace')
+    expect(
+      screen.getAllByRole('link', { name: /explore tools/i })[0],
+    ).toHaveAttribute('href', '/tools')
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()
   })

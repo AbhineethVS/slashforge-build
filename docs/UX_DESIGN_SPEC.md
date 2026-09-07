@@ -26,6 +26,9 @@ persistent notebooks:
 
 - `/`: product landing page.
 - `/workspace`: Sources–Chat–Studio workspace.
+- `/tools`: curated Learning Tools / Explore page for specialist interactive
+  sites. Same catalog can recommend a tool inside Studio when a concept is
+  already in session memory.
 - No account, notebook list, settings area, or separate progress route.
 
 The three permanent desktop regions are:
@@ -45,7 +48,8 @@ demo. It must not become a second product.
 ### Navigation
 
 - **LUMA** wordmark on the left.
-- Optional anchor links to How it works and Features.
+- Optional anchor links to How it works and Why LUMA.
+- A quiet **Explore tools** link to `/tools`.
 - Primary **Start studying** button on the right.
 
 ### Hero
@@ -54,7 +58,8 @@ demo. It must not become a second product.
 - One short supporting paragraph explaining source-grounded chat and active
   revision.
 - Primary **Start studying** button linking to `/workspace`.
-- Secondary text link such as **See how it works** that scrolls down.
+- Secondary **Explore tools** button linking to `/tools`.
+- A **See how it works** text link that scrolls down.
 - A polished static or lightweight interactive preview of the
   Sources–Chat–Studio workspace.
 
@@ -225,6 +230,18 @@ Only one dominant call to action should appear per state.
   the successful core artifact and offer Retry audio.
 - Cached bundled overview audio must be labeled as a fallback artifact and
   used only when redistribution is allowed.
+
+### Explore tools
+
+`/tools` is a discovery library for curated interactive sites. It is not a
+second study product and does not mix external pages into grounded answers.
+
+- Hero search matches name, description, subjects, modes, and keywords.
+- Featured picks appear first; the full catalog is reached by search or filter.
+- Hover or focus inspects a card in place without reflowing the grid. Touch
+  taps toggle the same inspect state. External tools always open in a new tab.
+- Studio may show at most one **Go interactive** recommendation when session
+  learning memory already has a recommended concept.
 
 ## 6. Visual system
 

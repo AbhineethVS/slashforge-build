@@ -1420,6 +1420,38 @@ body.is-resizing-panels * {
   border-top: 1px solid var(--border);
 }
 
+.studio-tool-lane {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-recommendation {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.tool-recommendation h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.tool-recommendation p,
+.tool-recommendation-modes,
+.tool-recommendation-concept {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.tool-recommendation .button-ghost {
+  justify-self: start;
+  margin-top: 6px;
+}
+
 .studio-progress {
   margin: 0;
 }

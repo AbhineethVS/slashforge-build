@@ -383,3 +383,24 @@ Consequences:
   unlimited essays.
 - Scanned PYQs need selectable text; OCR is out of scope.
 - Cached demo quizzes are not used when papers were supplied.
+
+## ADR-023: Curated tool collection is discovery, not retrieval
+
+Status: accepted (2026-09-07)
+
+Decision: LUMA ships a third surface at `/tools` backed by the curated catalog
+in `docs/LUMA_TOOL_COLLECTION.md`. Search and filters run client-side. External
+tools open in a new tab. Studio may recommend one matching tool from the same
+catalog when learning memory already has a concept. The catalog is not a RAG
+source and is never embedded or iframed.
+
+Reason: specialist simulators and 3D viewers help when static PDF text is not
+enough, but mixing those sites into grounded answers would break citation
+trust. A dedicated explore page plus sparse in-workspace routing keeps the
+study desk intact.
+
+Consequences:
+
+- Adding a tool means updating the catalog data, not a page component.
+- Workspace Chat still answers only from selected PDFs.
+- The landing primary CTA remains Start studying.

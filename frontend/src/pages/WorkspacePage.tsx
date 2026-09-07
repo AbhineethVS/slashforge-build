@@ -517,6 +517,9 @@ export function WorkspacePage() {
             </button>
           </nav>
           <ThemeToggle />
+          <Link className="button-quiet button-small" to="/tools">
+            Explore tools
+          </Link>
           <button
             className="button-quiet button-small"
             type="button"
