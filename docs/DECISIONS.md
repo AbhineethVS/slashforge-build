@@ -360,3 +360,26 @@ Consequences:
   keeps the layout intact offline.
 - The bundled mark PNGs are generated from the source artwork and are the only
   binary brand assets in `frontend/public/`.
+
+## ADR-022: Previous-year papers shape quiz style, not quiz facts
+
+Status: accepted (2026-09-07)
+
+Decision: Quiz generation may accept up to two optional previous-year PDF
+papers. The server extracts their text, analyzes exam style with a structured
+OpenAI profile, and generates the usual five cited questions from selected
+study sources in that style. The papers are never attached as sources, never
+embedded, never cited, and are deleted after analysis. Skip remains the default
+mixed quiz. Image-only scans are rejected with a generate-without-papers path.
+
+Reason: exam familiarity is a high-value revision beat, but grounding must stay
+tied to the student's selected notes. Treating PYQs as extra RAG sources would
+let mark schemes or unrelated papers leak into answers.
+
+Consequences:
+
+- Facts still require selected-source chunk IDs.
+- Long-answer papers map onto LUMA's existing short-answer quiz items, not
+  unlimited essays.
+- Scanned PYQs need selectable text; OCR is out of scope.
+- Cached demo quizzes are not used when papers were supplied.

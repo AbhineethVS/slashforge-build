@@ -54,6 +54,7 @@ where useful.
 - Sarvam authentication, rate limit, timeout, malformed response, and partial
   speech failure handled without losing the text path.
 - Cross-session recording and generated-audio access is rejected.
+- Optional previous-year papers change quiz style without becoming sources.
 
 ### End-to-end tests
 

@@ -231,6 +231,12 @@ Validation:
 Generate more candidates than needed, validate, then keep five. Retry invalid
 items once rather than regenerating the entire quiz.
 
+Optional previous-year papers are style exemplars, not evidence. Extract their
+text, wrap it as untrusted quoted data, and analyze item type, difficulty, and
+stem style. Generate new questions from selected-source chunks in that style.
+Do not copy exam questions, use mark schemes as answers, or cite paper pages.
+Scanned image-only papers are rejected; the student can generate without them.
+
 ## 12. Confidence and mastery
 
 Confidence values:
@@ -336,6 +342,7 @@ Prompts live as versioned files or constants grouped by task:
 - `flashcard_generation`
 - `quiz_generation`
 - `quiz_validation`
+- `quiz_style`
 - `teach_back_rubric`
 - `teach_back_feedback`
 - `audio_overview`

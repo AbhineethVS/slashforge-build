@@ -117,11 +117,12 @@ The student generates a structured brief containing:
 
 ### 5.5 Practice active recall
 
-1. The student starts a five-question quiz.
-2. Questions mix MCQ and short-answer formats.
-3. Before revealing feedback, the student records confidence.
-4. The app shows the answer, explanation, and cited evidence.
-5. The attempt updates concept mastery.
+1. The student chooses Quiz and may optionally upload one or two previous-year question papers.
+2. If papers are provided, LUMA reads them for exam style only and generates a five-question quiz in that style from selected sources.
+3. The student may skip papers and receive the mixed cited quiz.
+4. Before revealing feedback, the student records confidence.
+5. The app shows the answer, explanation, and cited evidence.
+6. The attempt updates concept mastery.
 
 Attempt classifications:
 

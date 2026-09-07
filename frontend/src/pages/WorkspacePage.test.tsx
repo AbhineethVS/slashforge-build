@@ -638,6 +638,7 @@ describe('WorkspacePage', () => {
       </MemoryRouter>,
     )
     fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip and generate' }))
     await screen.findByRole('dialog', { name: 'Theory of Cost quiz' })
 
     expect(screen.queryByText('Expected answer')).not.toBeInTheDocument()
@@ -649,6 +650,135 @@ describe('WorkspacePage', () => {
     expect(await screen.findByText('Expected answer')).toBeInTheDocument()
     expect(screen.getByText('Lucky guess signal')).toBeInTheDocument()
     expect(screen.getByText('Explanation 1')).toBeInTheDocument()
+  })
+
+  it('sends uploaded previous-year papers with quiz generation', async () => {
+    const quiz = {
+      id: 'ed4d3f55-00c5-4db1-bf08-438e0d9fbb93',
+      type: 'quiz',
+      title: 'Theory of Cost quiz',
+      content: {
+        exam_style: {
+          applied: true,
+          paper_count: 1,
+          dominant_type: 'mcq',
+          difficulty: 'application',
+          summary: 'Mostly application MCQs with four options.',
+        },
+        questions: Array.from({ length: 5 }, (_, index) => ({
+          id: `question-${index}`,
+          type: 'mcq',
+          prompt: `Quiz prompt ${index + 1}?`,
+          options: ['Correct answer', 'Option B', 'Option C', 'Option D'],
+          expected_answer: 'Correct answer',
+          explanation_markdown: `Explanation ${index + 1}`,
+          demo_response: 'Correct answer',
+          concept_label: 'Costs',
+          difficulty: 'understanding',
+          citations: [],
+        })),
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(quiz), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Match exam style' })
+    const paper = new File(['%PDF-1.7 exam'], 'board-pyq.pdf', {
+      type: 'application/pdf',
+    })
+    fireEvent.change(screen.getByLabelText('Choose previous-year papers'), {
+      target: { files: [paper] },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Generate styled quiz' }))
+
+    await screen.findByRole('dialog', { name: 'Theory of Cost quiz' })
+    expect(dialog).not.toBeInTheDocument()
+    expect(screen.getByText('Mostly application MCQs with four options.')).toBeInTheDocument()
+    const quizCall = fetchMock.mock.calls[1]
+    expect(quizCall?.[0]).toBe('/api/v1/studio/quiz')
+    expect(quizCall?.[1]?.body).toBeInstanceOf(FormData)
+  })
+
+  it('dismisses quiz setup as soon as generation starts', async () => {
+    const quiz = {
+      id: 'ed4d3f55-00c5-4db1-bf08-438e0d9fbb93',
+      type: 'quiz',
+      title: 'Theory of Cost quiz',
+      content: {
+        questions: Array.from({ length: 5 }, (_, index) => ({
+          id: `question-${index}`,
+          type: 'mcq',
+          prompt: `Quiz prompt ${index + 1}?`,
+          options: ['Correct answer', 'Option B', 'Option C', 'Option D'],
+          expected_answer: 'Correct answer',
+          explanation_markdown: `Explanation ${index + 1}`,
+          demo_response: 'Correct answer',
+          concept_label: 'Costs',
+          difficulty: 'understanding',
+          citations: [],
+        })),
+      },
+      source_ids: [session.sources[0].id],
+      created_at: '2026-08-30T05:00:00Z',
+    }
+    let finishQuiz: ((value: Response) => void) | undefined
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(session), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishQuiz = resolve
+          }),
+      )
+
+    render(
+      <MemoryRouter>
+        <WorkspacePage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip and generate' }))
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Match exam style' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(
+      await screen.findByRole('button', { name: /Generating Quiz/ }),
+    ).toBeInTheDocument()
+
+    finishQuiz?.(
+      new Response(JSON.stringify(quiz), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    await screen.findByRole('dialog', { name: 'Theory of Cost quiz' })
   })
 
   it('keeps cited summaries inside Studio', async () => {
@@ -847,6 +977,7 @@ describe('WorkspacePage', () => {
       </MemoryRouter>,
     )
     fireEvent.click(await screen.findByRole('button', { name: /^Quiz/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Skip and generate' }))
     await screen.findByRole('dialog', { name: 'Confidence check' })
     fireEvent.click(screen.getByRole('radio', { name: 'TC = TFC - TVC' }))
     fireEvent.click(screen.getByRole('radio', { name: 'High' }))

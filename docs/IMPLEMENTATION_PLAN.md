@@ -243,6 +243,8 @@ Phase 3 status (2026-08-30):
 - Generate structured cited summaries.
 - Generate and validate flashcard decks.
 - Generate extra quiz candidates and retain five valid questions.
+- Optional previous-year papers may shape quiz item type and stem style without
+  becoming retrievable sources.
 - Implement one-question-at-a-time quiz and confidence selection.
 - Preserve Studio state when evidence opens.
 

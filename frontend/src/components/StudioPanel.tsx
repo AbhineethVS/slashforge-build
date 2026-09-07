@@ -23,6 +23,7 @@ import { AudioOverviewOverlay } from './AudioOverviewOverlay'
 import { Icon, type IconName } from './Icon'
 import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
+import { QuizSetupOverlay } from './QuizSetupOverlay'
 import { VisualDeckOverlay } from './VisualDeckOverlay'
 import { VoiceRecorder } from './VoiceRecorder'
 
@@ -101,6 +102,7 @@ export function StudioPanel({
   >({ status: 'idle' })
   const launcherRef = useRef<HTMLButtonElement | null>(null)
   const onLearningMemoryRef = useRef(onLearningMemory)
+  const [quizSetupOpen, setQuizSetupOpen] = useState(false)
 
   useEffect(() => {
     onLearningMemoryRef.current = onLearningMemory
@@ -128,15 +130,23 @@ export function StudioPanel({
   async function generate(
     kind: 'summary' | 'flashcards' | 'quiz',
     trigger?: HTMLButtonElement,
+    examPapers: File[] = [],
   ) {
     if (selectedSources.length === 0 || generation.status === 'loading') return
+    if (kind === 'quiz' && trigger && !quizSetupOpen) {
+      launcherRef.current = trigger
+      setQuizSetupOpen(true)
+      return
+    }
     if (trigger) launcherRef.current = trigger
+    if (kind === 'quiz') setQuizSetupOpen(false)
     setGeneration({ status: 'loading', kind })
     try {
       const artifact = await generateStudioArtifact(
         sessionId,
         kind,
         selectedSources.map((source) => source.id),
+        examPapers,
       )
       setArtifacts((current) => [
         artifact,
@@ -566,7 +576,9 @@ export function StudioPanel({
               key={kind}
               type="button"
               onClick={(event) => void generate(kind, event.currentTarget)}
-              disabled={noSources || isBusy}
+              disabled={
+                noSources || isBusy || (kind === 'quiz' && quizSetupOpen)
+              }
             >
               <span className="tool-icon" aria-hidden="true">
                 <Icon name={icon} size={17} />
@@ -645,7 +657,8 @@ export function StudioPanel({
           onAskQuestion={onAskQuestion}
         />
 
-        {generation.status === 'error' && (
+        {generation.status === 'error' &&
+          !(quizSetupOpen && generation.kind === 'quiz') && (
           <div className="studio-error" role="alert">
             <strong>Generation failed</strong>
             <p>{generation.message}</p>
@@ -657,12 +670,10 @@ export function StudioPanel({
                   const kind = generation.kind
                   if (kind === 'audio_overview') {
                     void generateOverview()
-                  } else if (
-                    kind === 'summary' ||
-                    kind === 'flashcards' ||
-                    kind === 'quiz'
-                  ) {
+                  } else if (kind === 'summary' || kind === 'flashcards') {
                     void generate(kind)
+                  } else if (kind === 'quiz') {
+                    setQuizSetupOpen(true)
                   }
                 }}
               >
@@ -723,6 +734,25 @@ export function StudioPanel({
         </div>
       </aside>
 
+      {quizSetupOpen && (
+        <QuizSetupOverlay
+          sourceNames={selectedSources.map((source) => source.display_name)}
+          busy={generation.status === 'loading' && generation.kind === 'quiz'}
+          error={
+            generation.status === 'error' && generation.kind === 'quiz'
+              ? { message: generation.message, action: generation.action }
+              : undefined
+          }
+          onGenerate={(papers) => void generate('quiz', undefined, papers)}
+          onClose={() => {
+            setQuizSetupOpen(false)
+            if (generation.status === 'error' && generation.kind === 'quiz') {
+              setGeneration({ status: 'idle' })
+            }
+            launcherRef.current?.focus()
+          }}
+        />
+      )}
       {practiceArtifact && (
         <PracticeOverlay
           artifact={practiceArtifact}

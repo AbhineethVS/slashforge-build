@@ -106,6 +106,9 @@ export function PracticeOverlay({
               {artifact.type === 'flashcards' ? 'Flashcard deck' : 'Quiz'}
             </p>
             <h1 id="practice-title">{artifact.title}</h1>
+            {artifact.type === 'quiz' && artifact.content.exam_style?.applied && (
+              <p>{artifact.content.exam_style.summary}</p>
+            )}
           </div>
           <button type="button" onClick={onClose}>
             <Icon name="close" size={15} />

@@ -288,8 +288,14 @@ selected source is not ready and owned by the current session.
 - `DELETE /api/v1/artifacts/{artifact_id}`
 - `GET /api/v1/visual-decks/{artifact_id}/file`
 
-Generation requests include selected `source_ids`. Quiz requests may include
-question count and difficulty, but the server enforces safe bounds.
+Generation requests include selected `source_ids`. Quiz requests may be JSON or
+`multipart/form-data`. The multipart form accepts the same `source_ids` plus up
+to two optional `pyq` PDF files. Those papers are parsed for exam style only:
+item-type mix, difficulty, and stem wording. They are never attached as study
+sources, never retrieved for factual evidence, and are deleted after analysis.
+If the quiz is generated from papers, the artifact content includes an
+`exam_style` summary. Quiz requests may include question count and difficulty,
+but the server enforces safe bounds.
 
 Audio Overview requests include selected ready `source_ids`. The response is
 an `audio_overview` artifact with three or four transcript sections, a 3–5

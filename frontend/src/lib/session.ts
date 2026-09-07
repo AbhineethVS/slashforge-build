@@ -122,6 +122,13 @@ export type QuizArtifact = {
   title: string
   content: {
     fallback?: boolean
+    exam_style?: {
+      applied: boolean
+      paper_count: number
+      dominant_type: 'mcq' | 'short_answer' | 'mixed'
+      difficulty: 'recall' | 'understanding' | 'application' | 'mixed'
+      summary: string
+    }
     questions: {
       id: string
       type: 'mcq' | 'short_answer'
@@ -540,14 +547,23 @@ export async function generateStudioArtifact(
   sessionId: string,
   kind: 'summary' | 'flashcards' | 'quiz',
   sourceIds: string[],
+  examPapers: File[] = [],
 ): Promise<StudioArtifact> {
+  const headers: HeadersInit = { 'X-Session-ID': sessionId }
+  let body: BodyInit
+  if (kind === 'quiz' && examPapers.length > 0) {
+    const form = new FormData()
+    for (const sourceId of sourceIds) form.append('source_ids', sourceId)
+    for (const paper of examPapers.slice(0, 2)) form.append('pyq', paper)
+    body = form
+  } else {
+    headers['Content-Type'] = 'application/json'
+    body = JSON.stringify({ source_ids: sourceIds })
+  }
   const response = await fetch(`/api/v1/studio/${kind}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Session-ID': sessionId,
-    },
-    body: JSON.stringify({ source_ids: sourceIds }),
+    headers,
+    body,
   })
   if (!response.ok) throw await readError(response)
   return (await response.json()) as StudioArtifact

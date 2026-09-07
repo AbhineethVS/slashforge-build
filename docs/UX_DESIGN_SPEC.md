@@ -166,6 +166,12 @@ Only one dominant call to action should appear per state.
 - Flashcards show one large card at a time and support reveal, previous/next,
   shuffle, touch swipe, and keyboard navigation without decorative 3D motion.
 - Quiz shows one question at a time and follows the confidence flow below.
+- Choosing Quiz first opens a compact setup dialog. Uploading previous-year
+  papers is optional. Skip continues with the mixed cited quiz. Papers are
+  described as style-only, session-temporary, and not added to Sources.
+  Starting generation dismisses the setup dialog so the student can keep
+  using the workspace; Close and Escape also dismiss it without cancelling
+  generation.
 - Evidence opens over the right side of Practice and restores the exact card
   or question when closed.
 - Tool state survives opening a citation or temporarily collapsing Studio.

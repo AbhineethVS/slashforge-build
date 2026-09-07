@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, Header, Response, UploadFile, status
+from fastapi import Depends, FastAPI, Header, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from openai import (
@@ -20,7 +20,9 @@ from openai import (
     RateLimitError,
 )
 from starlette.concurrency import run_in_threadpool
+from starlette.datastructures import UploadFile as StarletteUploadFile
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from pydantic import ValidationError
 
 from luma_spikes.config import load_project_environment
 from luma_spikes.citations import (
@@ -69,6 +71,15 @@ from .learning import (
     retrieve_teach_back_chunks,
 )
 from .memory import build_learning_memory, overlay_follow_up_questions
+from .quiz_style import (
+    MAX_PYQ_FILES,
+    ExamPaperText,
+    QuizStyleProfile,
+    analyze_exam_style,
+    extract_exam_papers,
+    temporary_paper_name,
+    temporary_paper_path,
+)
 from .schemas import (
     ChatMessageResponse,
     ChatRequest,
@@ -155,6 +166,141 @@ def _pdf_api_error(error: PdfSpikeError) -> ApiError:
     return ApiError(status_code, error.code, message, False, action)
 
 
+def _pyq_api_error(error: PdfSpikeError) -> ApiError:
+    details = {
+        "SOURCE_TOO_LARGE": (
+            status.HTTP_413_CONTENT_TOO_LARGE,
+            "A previous-year paper exceeds 20 MB.",
+            "Choose a smaller PDF, or generate the quiz without papers.",
+        ),
+        "SOURCE_PAGE_LIMIT": (
+            status.HTTP_413_CONTENT_TOO_LARGE,
+            "A previous-year paper exceeds the 30-page style-matching limit.",
+            "Choose a shorter paper, or generate the quiz without papers.",
+        ),
+        "SOURCE_TYPE_UNSUPPORTED": (
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            "Previous-year papers must be valid PDFs.",
+            "Upload a digitally generated PDF, or generate without papers.",
+        ),
+        "SOURCE_ENCRYPTED": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Encrypted previous-year papers are not supported.",
+            "Remove the password, or generate the quiz without papers.",
+        ),
+        "SOURCE_TEXT_NOT_FOUND": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "The previous-year paper does not contain enough readable text.",
+            "Upload a text PDF rather than a scan, or generate without papers.",
+        ),
+        "SOURCE_PROCESSING_FAILED": (
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "The previous-year paper could not be read.",
+            "Check that the file opens, or generate the quiz without papers.",
+        ),
+    }
+    status_code, message, action = details.get(
+        error.code,
+        details["SOURCE_PROCESSING_FAILED"],
+    )
+    return ApiError(status_code, error.code, message, False, action)
+
+
+async def _parse_quiz_request(
+    request: Request,
+) -> tuple[ArtifactRequest, list[StarletteUploadFile]]:
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith("multipart/form-data"):
+        form = await request.form()
+        raw_ids = [str(value) for value in form.getlist("source_ids")]
+        uploads = [
+            item
+            for item in form.getlist("pyq")
+            if isinstance(item, StarletteUploadFile) and (item.filename or "").strip()
+        ]
+        try:
+            source_ids = [UUID(value) for value in raw_ids]
+            artifact_request = ArtifactRequest(source_ids=source_ids)
+        except (ValueError, ValidationError) as error:
+            raise ApiError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "SOURCE_PROCESSING_FAILED",
+                "Select ready sources before generating a quiz.",
+                False,
+                "Choose one to three ready sources and try again.",
+            ) from error
+        return artifact_request, uploads
+    try:
+        payload = await request.json()
+        return ArtifactRequest.model_validate(payload), []
+    except (ValueError, ValidationError) as error:
+        raise ApiError(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "SOURCE_PROCESSING_FAILED",
+            "Select ready sources before generating a quiz.",
+            False,
+            "Choose one to three ready sources and try again.",
+        ) from error
+
+
+async def _store_exam_papers(
+    session: DemoSession,
+    uploads: Sequence[StarletteUploadFile],
+) -> list[tuple[str, Path]]:
+    if len(uploads) > MAX_PYQ_FILES:
+        raise ApiError(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "SOURCE_PROCESSING_FAILED",
+            "Upload at most two previous-year papers.",
+            False,
+            "Choose one or two PDFs, or generate the quiz without papers.",
+        )
+    stored: list[tuple[str, Path]] = []
+    directory = session.ensure_temporary_directory()
+    try:
+        for upload in uploads:
+            content_type = upload.content_type or "application/pdf"
+            if content_type not in {"application/pdf", "application/octet-stream"}:
+                raise ApiError(
+                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    "SOURCE_TYPE_UNSUPPORTED",
+                    "Previous-year papers must be PDF files.",
+                    False,
+                    "Upload a PDF, or generate the quiz without papers.",
+                )
+            path = temporary_paper_path(directory)
+            size = 0
+            signature = b""
+            with path.open("wb") as stream:
+                while data := await upload.read(64 * 1024):
+                    if not signature:
+                        signature = data[: len(PDF_SIGNATURE)]
+                    size += len(data)
+                    if size > MAX_PDF_BYTES:
+                        raise ApiError(
+                            status.HTTP_413_CONTENT_TOO_LARGE,
+                            "SOURCE_TOO_LARGE",
+                            "A previous-year paper exceeds 20 MB.",
+                            False,
+                            "Choose a smaller PDF, or generate without papers.",
+                        )
+                    stream.write(data)
+            if signature != PDF_SIGNATURE:
+                raise ApiError(
+                    status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    "SOURCE_TYPE_UNSUPPORTED",
+                    "A previous-year paper is not a valid PDF.",
+                    False,
+                    "Upload a digitally generated PDF, or generate without papers.",
+                )
+            stored.append((temporary_paper_name(upload.filename), path))
+        return stored
+    except Exception:
+        for _, path in stored:
+            path.unlink(missing_ok=True)
+        raise
+
+
 def _voice_api_error(error: Exception) -> ApiError:
     if isinstance(error, VoiceBusyError):
         return ApiError(
@@ -220,6 +366,9 @@ def create_app(
     ) = None,
     audio_overview_generator: (
         Callable[[Sequence[Chunk]], RawAudioOverview] | None
+    ) = None,
+    quiz_style_analyzer: (
+        Callable[[Sequence[ExamPaperText]], QuizStyleProfile] | None
     ) = None,
     voice_provider: VoiceProvider | None = None,
 ) -> FastAPI:
@@ -325,6 +474,7 @@ def create_app(
     def generate_artifact(
         kind: ArtifactKind,
         chunks: Sequence[Chunk],
+        style: QuizStyleProfile | None = None,
     ) -> RawArtifact:
         if artifact_generator is not None:
             return artifact_generator(kind, chunks)
@@ -333,6 +483,16 @@ def create_app(
             model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
             kind=kind,
             chunks=chunks,
+            style=style if kind == "quiz" else None,
+        )
+
+    def resolve_quiz_style(papers: Sequence[ExamPaperText]) -> QuizStyleProfile:
+        if quiz_style_analyzer is not None:
+            return quiz_style_analyzer(papers)
+        return analyze_exam_style(
+            client=OpenAI(timeout=60.0, max_retries=1),
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5-mini"),
+            papers=papers,
         )
 
     def generate_teach_back(
@@ -392,9 +552,11 @@ def create_app(
         kind: ArtifactKind,
         request: ArtifactRequest,
         session: DemoSession,
+        allow: bool = True,
     ) -> ArtifactResponse | None:
         if (
-            catalog is None
+            not allow
+            or catalog is None
             or request.source_ids != [catalog.source_id]
         ):
             return None
@@ -417,6 +579,7 @@ def create_app(
         kind: ArtifactKind,
         request: ArtifactRequest,
         session: DemoSession,
+        exam_papers: Sequence[tuple[str, Path]] = (),
     ) -> ArtifactResponse:
         if not session.generation_lock.acquire(blocking=False):
             raise ApiError(
@@ -426,7 +589,15 @@ def create_app(
                 True,
                 "Wait for it to finish and try again.",
             )
+        allow_cache = not exam_papers
         try:
+            style = None
+            if exam_papers:
+                try:
+                    papers = extract_exam_papers(exam_papers)
+                except PdfSpikeError as error:
+                    raise _pyq_api_error(error) from error
+                style = resolve_quiz_style(papers)
             sources = selected_indexes(session, request.source_ids)
             chunks = retrieve_artifact_chunks(
                 kind=kind,
@@ -437,13 +608,14 @@ def create_app(
             content: dict | None = None
             last_error: InvalidArtifactError | None = None
             for _ in range(2):
-                raw = generate_artifact(kind, chunks)
+                raw = generate_artifact(kind, chunks, style)
                 try:
                     title, content = materialize_artifact(
                         kind=kind,
                         raw=raw,
                         chunks=chunks,
                         sources=sources,
+                        style=style,
                     )
                     break
                 except InvalidArtifactError as error:
@@ -466,7 +638,10 @@ def create_app(
             raise
         except RateLimitError as error:
             cached = cached_demo_artifact(
-                kind=kind, request=request, session=session
+                kind=kind,
+                request=request,
+                session=session,
+                allow=allow_cache,
             )
             if cached is not None:
                 return cached
@@ -479,7 +654,10 @@ def create_app(
             ) from error
         except AuthenticationError as error:
             cached = cached_demo_artifact(
-                kind=kind, request=request, session=session
+                kind=kind,
+                request=request,
+                session=session,
+                allow=allow_cache,
             )
             if cached is not None:
                 return cached
@@ -492,7 +670,10 @@ def create_app(
             ) from error
         except (APIConnectionError, APITimeoutError, APIStatusError) as error:
             cached = cached_demo_artifact(
-                kind=kind, request=request, session=session
+                kind=kind,
+                request=request,
+                session=session,
+                allow=allow_cache,
             )
             if cached is not None:
                 return cached
@@ -505,7 +686,10 @@ def create_app(
             ) from error
         except (InvalidArtifactError, ValueError) as error:
             cached = cached_demo_artifact(
-                kind=kind, request=request, session=session
+                kind=kind,
+                request=request,
+                session=session,
+                allow=allow_cache,
             )
             if cached is not None:
                 return cached
@@ -518,7 +702,10 @@ def create_app(
             ) from error
         except OpenAIError as error:
             cached = cached_demo_artifact(
-                kind=kind, request=request, session=session
+                kind=kind,
+                request=request,
+                session=session,
+                allow=allow_cache,
             )
             if cached is not None:
                 return cached
@@ -1065,15 +1252,28 @@ def create_app(
         "/api/v1/studio/quiz",
         response_model=ArtifactResponse,
     )
-    def create_quiz(
-        request: ArtifactRequest,
+    async def create_quiz(
+        request: Request,
         session: DemoSession = Depends(current_session),
     ) -> ArtifactResponse:
-        return create_studio_artifact(
-            kind="quiz",
-            request=request,
-            session=session,
-        )
+        artifact_request, uploads = await _parse_quiz_request(request)
+        papers: list[tuple[str, Path]] = []
+        try:
+            if uploads:
+                papers = await _store_exam_papers(session, uploads)
+            return await run_in_threadpool(
+                lambda: create_studio_artifact(
+                    kind="quiz",
+                    request=artifact_request,
+                    session=session,
+                    exam_papers=papers,
+                )
+            )
+        finally:
+            for _, path in papers:
+                path.unlink(missing_ok=True)
+            for upload in uploads:
+                await upload.close()
 
     @application.post(
         "/api/v1/studio/visual-deck",

@@ -17,6 +17,7 @@ from luma_api.artifacts import (
     RawSummarySection,
 )
 from luma_api.main import create_app
+from luma_api.quiz_style import QuizStyleProfile
 from luma_spikes.models import Chunk
 from tests.demo_fixtures import write_test_demo_assets
 
@@ -94,7 +95,11 @@ def quiz_output(chunks: Sequence[Chunk]) -> RawQuiz:
     )
 
 
-def make_client(tmp_path: Path, generator) -> tuple[TestClient, str]:
+def make_client(
+    tmp_path: Path,
+    generator,
+    analyzer=None,
+) -> tuple[TestClient, str]:
     catalog = write_test_demo_assets(tmp_path / "demo_assets")
     client = TestClient(
         create_app(
@@ -102,6 +107,7 @@ def make_client(tmp_path: Path, generator) -> tuple[TestClient, str]:
             demo_catalog=catalog,
             embedder_factory=FakeEmbedder,
             artifact_generator=generator,
+            quiz_style_analyzer=analyzer,
         )
     )
     return client, str(catalog.source_id)
@@ -284,3 +290,104 @@ def test_visual_deck_validates_prompt_before_creating_an_artifact(
     )
 
     assert response.status_code == 422
+
+
+def _write_exam_pdf(path: Path, text: str) -> None:
+    import pymupdf
+
+    document = pymupdf.open()
+    page = document.new_page()
+    page.insert_textbox(pymupdf.Rect(50, 50, 550, 790), text, fontsize=12)
+    document.save(path)
+    document.close()
+
+
+def test_quiz_matches_uploaded_exam_style_without_attaching_a_source(
+    tmp_path: Path,
+) -> None:
+    paper = tmp_path / "pyq.pdf"
+    _write_exam_pdf(
+        paper,
+        "1. Choose the correct option. Explicit cost is a payment.\n"
+        "(a) True (b) False (c) Neither (d) Both",
+    )
+
+    def analyzer(_papers):
+        return QuizStyleProfile(
+            dominant_type="mcq",
+            difficulty="application",
+            stem_style="One-best-answer stems with four options.",
+            option_style="Letter-labelled distractors.",
+            summary="Mostly application MCQs with four options.",
+            paper_count=1,
+        )
+
+    client, source_id = make_client(
+        tmp_path,
+        lambda kind, chunks: quiz_output(chunks),
+        analyzer,
+    )
+    session = client.post("/api/v1/session").json()
+    source_count = len(session["sources"])
+
+    response = client.post(
+        "/api/v1/studio/quiz",
+        headers={"X-Session-ID": session["id"]},
+        data={"source_ids": source_id},
+        files={"pyq": ("board-pyq.pdf", paper.read_bytes(), "application/pdf")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["content"]["exam_style"]["applied"] is True
+    assert body["content"]["exam_style"]["dominant_type"] == "mcq"
+    assert [question["type"] for question in body["content"]["questions"][:4]] == [
+        "mcq",
+        "mcq",
+        "mcq",
+        "mcq",
+    ]
+    listed = client.get(
+        "/api/v1/studio/artifacts",
+        headers={"X-Session-ID": session["id"]},
+    ).json()
+    assert listed[0]["id"] == body["id"]
+    refreshed = client.get(
+        "/api/v1/session",
+        headers={"X-Session-ID": session["id"]},
+    ).json()
+    assert len(refreshed["sources"]) == source_count
+    assert all(source["kind"] != "uploaded" for source in refreshed["sources"])
+
+
+def test_quiz_rejects_more_than_two_exam_papers(tmp_path: Path) -> None:
+    paper = tmp_path / "pyq.pdf"
+    _write_exam_pdf(paper, "Question 1. Explain explicit cost with an example.")
+    pdf_bytes = paper.read_bytes()
+    client, source_id = make_client(
+        tmp_path,
+        lambda kind, chunks: quiz_output(chunks),
+        lambda _papers: QuizStyleProfile(
+            dominant_type="short_answer",
+            difficulty="understanding",
+            stem_style="Explain and discuss prompts.",
+            option_style="No options.",
+            summary="Mostly written answers.",
+            paper_count=2,
+        ),
+    )
+    session = client.post("/api/v1/session").json()
+
+    response = client.post(
+        "/api/v1/studio/quiz",
+        headers={"X-Session-ID": session["id"]},
+        data={"source_ids": source_id},
+        files=[
+            ("pyq", ("one.pdf", pdf_bytes, "application/pdf")),
+            ("pyq", ("two.pdf", pdf_bytes, "application/pdf")),
+            ("pyq", ("three.pdf", pdf_bytes, "application/pdf")),
+        ],
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "SOURCE_PROCESSING_FAILED"
