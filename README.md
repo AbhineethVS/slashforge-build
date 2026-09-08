@@ -53,24 +53,30 @@ The desktop workspace opens with pre-indexed demo sources (Economics and DSA), a
 
 ## Screenshots
 
-Add the captures below under `screenshots/` when ready. The README will pick them up automatically.
+<p align="center">
+  <img src="./screenshots/landing.png" alt="LUMA landing page" width="900"/>
+</p>
+<p align="center"><b>Landing</b></p>
 
-| Surface | File | Status |
-| --- | --- | --- |
-| Landing page | `screenshots/landing.png` | Placeholder |
-| Sources-Chat-Studio workspace | `screenshots/workspace.png` | Placeholder |
-| Cited grounded chat | `screenshots/chat.png` | Placeholder |
-| Studio summary / practice | `screenshots/studio.png` | Placeholder |
+<p align="center">
+  <img src="./screenshots/workspace.png" alt="LUMA Sources Chat Studio workspace" width="900"/>
+</p>
+<p align="center"><b>Workspace</b></p>
 
-```text
-screenshots/
-  landing.png
-  workspace.png
-  chat.png
-  studio.png
-```
+<p align="center">
+  <img src="./screenshots/chat.png" alt="LUMA grounded chat with citations" width="900"/>
+</p>
+<p align="center"><b>Cited chat</b></p>
 
-Recommended width: about 1400px from the live demo or local workspace.
+<p align="center">
+  <img src="./screenshots/summary.png" alt="LUMA cited summary output" width="900"/>
+</p>
+<p align="center"><b>Cited summary</b></p>
+
+<p align="center">
+  <img src="./screenshots/tools.png" alt="LUMA Explore Tools page" width="900"/>
+</p>
+<p align="center"><b>Explore tools</b></p>
 
 ## Features implemented
 
