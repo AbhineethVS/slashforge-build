@@ -10,6 +10,51 @@ export const MIN_STUDIO_WIDTH = 260
 export const MAX_STUDIO_WIDTH = 560
 export const MIN_CHAT_WIDTH = 360
 
+const VISIBLE_CHUNK_ID_PATTERN =
+  /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g
+const BRACKETED_CHUNK_ID_PATTERN = new RegExp(
+  String.raw`\s*\[\s*${VISIBLE_CHUNK_ID_PATTERN.source}\s*\]`,
+  'g',
+)
+const PARENTHETICAL_CHUNK_ID_PATTERN = new RegExp(
+  String.raw`\s*\((?:\s*${VISIBLE_CHUNK_ID_PATTERN.source}\s*(?:[;,]\s*)?)+\)`,
+  'g',
+)
+
+export function stripVisibleChunkIds(value: string): string {
+  return value
+    .replace(BRACKETED_CHUNK_ID_PATTERN, '')
+    .replace(PARENTHETICAL_CHUNK_ID_PATTERN, '')
+    .replace(VISIBLE_CHUNK_ID_PATTERN, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+export function answerPlainText(message: ChatMessage): string {
+  if (message.sections && message.sections.length > 0) {
+    const parts = message.sections.map((section) => {
+      if (section.kind === 'bullets' || section.kind === 'steps') {
+        return [
+          section.title,
+          ...section.items.map((item) => `- ${item}`),
+        ]
+          .filter(Boolean)
+          .join('\n')
+      }
+      if (section.kind === 'table') {
+        const header = section.columns.join(' | ')
+        const rows = section.rows.map((row) => row.join(' | '))
+        return [section.title, header, ...rows].filter(Boolean).join('\n')
+      }
+      return [section.title, section.content_markdown].filter(Boolean).join('\n')
+    })
+    return stripVisibleChunkIds(parts.join('\n\n'))
+  }
+  return stripVisibleChunkIds(message.content_markdown)
+}
+
 export type PanelWidths = {
   sources: number
   studio: number

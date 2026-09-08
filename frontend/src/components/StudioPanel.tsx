@@ -14,6 +14,7 @@ import {
   type Progress,
   type SourceSummary,
   type StudioArtifact,
+  stripVisibleChunkIds,
   type SummaryArtifact,
   type TeachBackArtifact,
   type VisualDeckArtifact,
@@ -24,6 +25,7 @@ import { Icon, type IconName } from './Icon'
 import { NarrationPlayer } from './NarrationPlayer'
 import { PracticeOverlay } from './PracticeOverlay'
 import { QuizSetupOverlay } from './QuizSetupOverlay'
+import { SummaryOverlay } from './SummaryOverlay'
 import { ToolRecommendation } from './tools/ToolRecommendation'
 import { VisualDeckOverlay } from './VisualDeckOverlay'
 import { VoiceRecorder } from './VoiceRecorder'
@@ -80,6 +82,7 @@ export function StudioPanel({
     useState<StudioArtifact[]>(initialArtifacts)
   const [activeSummary, setActiveSummary] =
     useState<SummaryArtifact | null>(null)
+  const [summaryExpanded, setSummaryExpanded] = useState(false)
   const [audioOverview, setAudioOverview] =
     useState<AudioOverviewArtifact | null>(null)
   const [visualDeck, setVisualDeck] = useState<VisualDeckArtifact | null>(null)
@@ -238,6 +241,7 @@ export function StudioPanel({
 
   function openArtifact(artifact: StudioArtifact) {
     if (artifact.type === 'summary') {
+      setSummaryExpanded(false)
       setActiveSummary(artifact)
     } else if (artifact.type === 'teach_back') {
       setTeachBackResult(artifact)
@@ -375,46 +379,68 @@ export function StudioPanel({
 
   if (activeSummary) {
     return (
-      <aside className="studio-panel studio-summary" aria-labelledby="studio-title">
-        <button
-          className="studio-back"
-          type="button"
-          onClick={() => setActiveSummary(null)}
-        >
-          <Icon name="arrow-left" size={15} />
-          Back to Studio
-        </button>
-        <div>
-          <p className="panel-kicker">Cited summary</p>
-          <h1 id="studio-title">{activeSummary.title}</h1>
-        </div>
-        {activeSummary.content.fallback && (
-          <p className="fallback-notice">
-            <Icon name="alert" size={14} />
-            Cached demo brief · live generation was unavailable.
-          </p>
-        )}
-        {activeSummary.content.sections.map((section) => (
-          <section key={section.title}>
-            <h2>{section.title}</h2>
-            <ReactMarkdown allowedElements={summaryMarkdownElements}>
-              {section.content_markdown}
-            </ReactMarkdown>
-            <CitationButtons
-              citations={section.citations}
-              onCitation={onCitation}
-            />
+      <>
+        <aside className="studio-panel studio-summary" aria-labelledby="studio-title">
+          <div className="studio-summary-toolbar">
+            <button
+              className="studio-back"
+              type="button"
+              onClick={() => {
+                setSummaryExpanded(false)
+                setActiveSummary(null)
+              }}
+            >
+              <Icon name="arrow-left" size={15} />
+              Back to Studio
+            </button>
+            <button
+              className="studio-expand"
+              type="button"
+              onClick={() => setSummaryExpanded(true)}
+            >
+              <Icon name="maximize" size={15} />
+              Expand summary
+            </button>
+          </div>
+          <div>
+            <p className="panel-kicker">Cited summary</p>
+            <h1 id="studio-title">{stripVisibleChunkIds(activeSummary.title)}</h1>
+          </div>
+          {activeSummary.content.fallback && (
+            <p className="fallback-notice">
+              <Icon name="alert" size={14} />
+              Cached demo brief · live generation was unavailable.
+            </p>
+          )}
+          {activeSummary.content.sections.map((section) => (
+            <section key={section.title}>
+              <h2>{stripVisibleChunkIds(section.title)}</h2>
+              <ReactMarkdown allowedElements={summaryMarkdownElements}>
+                {stripVisibleChunkIds(section.content_markdown)}
+              </ReactMarkdown>
+              <CitationButtons
+                citations={section.citations}
+                onCitation={onCitation}
+              />
+            </section>
+          ))}
+          <section className="revision-questions">
+            <h2>Revision questions</h2>
+            <ul>
+              {activeSummary.content.revision_questions.map((question) => (
+                <li key={question}>{stripVisibleChunkIds(question)}</li>
+              ))}
+            </ul>
           </section>
-        ))}
-        <section className="revision-questions">
-          <h2>Revision questions</h2>
-          <ul>
-            {activeSummary.content.revision_questions.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ul>
-        </section>
-      </aside>
+        </aside>
+        {summaryExpanded && (
+          <SummaryOverlay
+            artifact={activeSummary}
+            sessionId={sessionId}
+            onClose={() => setSummaryExpanded(false)}
+          />
+        )}
+      </>
     )
   }
 

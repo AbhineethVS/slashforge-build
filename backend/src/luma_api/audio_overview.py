@@ -6,13 +6,14 @@ from uuid import UUID
 from openai import OpenAI
 from pydantic import BaseModel, Field, model_validator
 
+from luma_spikes.citations import sanitize_visible_text
 from luma_spikes.models import Chunk
 from luma_spikes.retrieval import Embedder, retrieve
 
 from .artifacts import InvalidArtifactError
 from .chat import SelectedIndex, combine_indexes
 
-AUDIO_OVERVIEW_PROMPT_VERSION = "audio_overview.v1"
+AUDIO_OVERVIEW_PROMPT_VERSION = "audio_overview.v2"
 AUDIO_OVERVIEW_RETRIEVAL_LIMIT = 14
 
 AUDIO_OVERVIEW_SYSTEM_PROMPT = """Create a calm single-narrator study overview
@@ -140,13 +141,13 @@ def materialize_audio_overview(
         total_words += len(section.narration_text.split())
         sections.append(
             {
-                "title": section.title,
-                "transcript": section.narration_text,
+                "title": sanitize_visible_text(section.title),
+                "transcript": sanitize_visible_text(section.narration_text),
                 "citations": citations,
                 "audio_clip_ids": [],
             }
         )
-    return raw.title, {
+    return sanitize_visible_text(raw.title), {
         "sections": sections,
         "estimated_duration_seconds": round(total_words / 145 * 60),
         "audio_status": "pending",

@@ -25,6 +25,7 @@ import { VoiceRecorder } from '../components/VoiceRecorder'
 import { recommendChatTool } from '../lib/tools/recommend'
 import {
   ApiRequestError,
+  answerPlainText,
   askQuestion,
   constrainPanelWidths,
   deleteSource,
@@ -118,6 +119,7 @@ export function WorkspacePage() {
     | { status: 'error'; question: string; message: string; action?: string }
   >({ status: 'idle' })
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const [sideSheet, setSideSheet] = useState<'sources' | 'studio' | null>(null)
   const [sessionNotice, setSessionNotice] = useState<string | null>(null)
   const [panelWidths, setPanelWidths] = useState<PanelWidths>(() =>
@@ -520,6 +522,22 @@ export function WorkspacePage() {
     if (normalized) void submitQuestion(normalized)
   }
 
+  async function copyAnswer(message: ChatMessage) {
+    const text = answerPlainText(message)
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedMessageId(message.id)
+      window.setTimeout(() => {
+        setCopiedMessageId((current) =>
+          current === message.id ? null : current,
+        )
+      }, 1800)
+    } catch {
+      setCopiedMessageId(null)
+    }
+  }
+
   function showCitation(
     citation: Citation,
     trigger: HTMLButtonElement,
@@ -832,6 +850,13 @@ export function WorkspacePage() {
               </p>
             )}
             <p className="temporary-note">
+              <Icon name="alert" size={15} />
+              <span>
+                FYI: upload digitally readable PDFs (text you can select), not
+                scanned image-only pages.
+              </span>
+            </p>
+            <p className="temporary-note">
               <Icon name="shield" size={15} />
               <span>
                 Uploaded PDFs are sent to OpenAI for indexing. Uploads and
@@ -970,6 +995,28 @@ export function WorkspacePage() {
                             onCitation={showCitation}
                           />
                           <div className="answer-actions">
+                            <button
+                              className="copy-answer"
+                              type="button"
+                              onClick={() => void copyAnswer(message)}
+                              aria-label={
+                                copiedMessageId === message.id
+                                  ? 'Answer copied'
+                                  : 'Copy answer'
+                              }
+                            >
+                              <Icon
+                                name={
+                                  copiedMessageId === message.id
+                                    ? 'check'
+                                    : 'copy'
+                                }
+                                size={14}
+                              />
+                              {copiedMessageId === message.id
+                                ? 'Copied'
+                                : 'Copy'}
+                            </button>
                             <NarrationPlayer
                               compact
                               sessionId={state.session.id}
@@ -1100,6 +1147,19 @@ export function WorkspacePage() {
                   maxLength={2000}
                   value={question}
                   onChange={(event) => setQuestion(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' || event.shiftKey) return
+                    if (event.nativeEvent.isComposing) return
+                    event.preventDefault()
+                    if (
+                      activeCount === 0 ||
+                      !question.trim() ||
+                      chatState.status === 'submitting'
+                    ) {
+                      return
+                    }
+                    event.currentTarget.form?.requestSubmit()
+                  }}
                   placeholder={
                     activeCount
                       ? 'Ask a question about your selected sources'

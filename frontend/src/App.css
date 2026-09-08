@@ -2016,6 +2016,75 @@ body.is-resizing-panels * {
   border-color: var(--border);
 }
 
+.studio-summary-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 0.75rem;
+}
+
+.studio-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.studio-expand:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.summary-dialog {
+  width: min(920px, calc(100vw - 2rem));
+  max-height: min(88vh, 920px);
+}
+
+.summary-overlay-body {
+  display: grid;
+  gap: 1.15rem;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.summary-overlay-body section h2 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.summary-overlay-body section p,
+.summary-overlay-body section li {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.copy-answer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-answer:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
 .studio-summary > h1,
 .teach-back-panel > h1,
 .visual-deck-form-panel > h1 {

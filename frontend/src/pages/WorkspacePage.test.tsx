@@ -214,6 +214,9 @@ describe('WorkspacePage', () => {
     expect(await screen.findByText('Ready · 3 pages')).toBeInTheDocument()
     expect(screen.getByText('my-notes.pdf')).toBeInTheDocument()
     expect(screen.getByText('2 active sources')).toBeInTheDocument()
+    expect(
+      screen.getByText(/FYI: upload digitally readable PDFs/i),
+    ).toBeInTheDocument()
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/v1/sources',
       expect.objectContaining({
@@ -1003,6 +1006,14 @@ describe('WorkspacePage', () => {
       await screen.findByRole('heading', { name: 'Theory of Cost summary' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Direct monetary payments.')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Expand summary' }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Expand summary' }))
+    expect(
+      screen.getByRole('dialog', { name: 'Theory of Cost summary' }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(
       screen.getByRole('button', { name: 'Back to Studio' }),
     ).toBeInTheDocument()

@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from luma_spikes.citations import sanitize_visible_text
 from luma_spikes.models import Chunk
 from luma_spikes.retrieval import Embedder, retrieve
 
@@ -331,21 +332,24 @@ def materialize_teach_back(
                     "page_start": chunk.page_start,
                     "page_end": chunk.page_end,
                     "excerpt": chunk.content[:300],
-                    "claim": point.text,
+                    "claim": sanitize_visible_text(point.text),
                     "viewer_url": (
                         f"/api/v1/sources/{chunk.source_id}/file"
                         f"#page={chunk.page_start}"
                     ),
                 }
             )
-        return {"text": point.text, "citations": citations}
+        return {
+            "text": sanitize_visible_text(point.text),
+            "citations": citations,
+        }
 
-    return raw.title, {
+    return sanitize_visible_text(raw.title), {
         "rubric_points": [point_payload(point) for point in raw.rubric_points],
         "covered": [point_payload(point) for point in raw.covered],
         "missing": [point_payload(point) for point in raw.missing],
         "check_this": [point_payload(point) for point in raw.check_this],
-        "next_prompt": raw.next_prompt,
+        "next_prompt": sanitize_visible_text(raw.next_prompt),
     }
 
 

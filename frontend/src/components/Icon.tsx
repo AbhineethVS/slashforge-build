@@ -42,6 +42,8 @@ export type IconName =
   | 'bolt'
   | 'compass'
   | 'layers'
+  | 'copy'
+  | 'maximize'
 
 const paths: Record<IconName, ReactElement> = {
   plus: <path d="M12 5v14M5 12h14" />,
@@ -196,6 +198,17 @@ const paths: Record<IconName, ReactElement> = {
       <path d="m4.5 8.5 7.5 4 7.5-4-7.5-4z" />
       <path d="m4.5 12.2 7.5 4 7.5-4" />
       <path d="m4.5 15.8 7.5 4 7.5-4" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+      <path d="M6.5 15.5H5.8A2.3 2.3 0 0 1 3.5 13.2V5.8A2.3 2.3 0 0 1 5.8 3.5h7.4A2.3 2.3 0 0 1 15.5 5.8v.7" />
+    </>
+  ),
+  maximize: (
+    <>
+      <path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15" />
     </>
   ),
 }
