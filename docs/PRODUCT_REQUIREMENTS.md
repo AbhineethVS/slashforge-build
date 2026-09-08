@@ -35,7 +35,8 @@ Initial constraints:
 - English, digitally readable PDFs only; Phase 6 speech is English-India
   (`en-IN`) only.
 - One temporary session per browser with no login.
-- One bundled demo PDF plus up to two temporary uploads.
+- Two bundled demo PDFs (economics theory of cost, DSA) plus up to two
+  temporary uploads.
 - Up to 50 pages per uploaded PDF and 100 uploaded pages per session.
 - Temporary uploads and activity may disappear after 60 minutes or a server
   restart.
@@ -68,7 +69,7 @@ Acceptance criteria:
 
 ### 5.2 Open and prepare the workspace
 
-1. The workspace opens with a polished, pre-indexed demo source ready.
+1. The workspace opens with polished, pre-indexed demo sources ready.
 2. The student may upload one or two additional PDFs.
 3. Each uploaded source reports uploading, extracting, embedding, ready, or
    failed.
@@ -242,7 +243,7 @@ Acceptance criteria:
 
 - Concise landing page with hero, product explanation, workspace preview, and
   Start studying CTA.
-- Ready-to-use pre-indexed demo source.
+- Ready-to-use pre-indexed demo sources.
 - Temporary PDF upload, processing status, retry, delete, and reset.
 - Source-scoped chat with page-level citations.
 - Citation preview and PDF page navigation.

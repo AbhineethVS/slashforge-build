@@ -1,0 +1,492 @@
+[
+  {
+    "id": "1d0ba653-0b57-56a6-9292-9fb1043e0fa3",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 1,
+    "page_end": 1,
+    "position": 0,
+    "content": "MODULE 1\nSYLLABUS\nBasic Concepts of Data Structures Definitions; Data Abstraction; Performance Analysis - Time & Space\nComplexity, Asymptotic Notations; Polynomial representation using Arrays, Sparse matrix (Tuple\nrepresentation); Stacks and Queues - Stacks, Multi-Stacks, Queues, Circular Queues, Double Ended\nQueues; Evaluation of Expressions- Infix to Postfix, Evaluating Postfix Expressions.\nDATA STRUCTURES AND DATA ABSTRACTION\nA data structure is a way to organize, manage, and store data so that it can be used efficiently. It defines\nhow data is arranged in memory and how operations like insertion, deletion, searching, and updating can\nbe performed. In simple words: Data structures are like containers that hold data together in a certain\nformat so that computers can easily access and modify them. More formally \"A data structure is a\nmathematical and logical model of a particular organization of data. It describes the relationship among\nthe data elements, and the operations that can be performed on them.\"\nKey Points about Data Structures:\n\u25cf\u200b They help in organizing large amounts of data easily.\n\u25cf\u200b They improve the efficiency of algorithms.\n\u25cf\u200b They decide how fast and efficient programs work.\n\u25cf\u200b Different problems need different data structures for best performance.\nTypes of Data Structures:\nType\nExamples\nLinear Data Structures\n\u200b\nArray, Linked List, Stack, Queue\nNon-linear Data Structures\n\u200b\nTree, Graph\nHash-based Structures\n\u200b\nHash Table, Hash Map\nReal-life Examples:\n\u25cf\u200b Array: Like a row of boxes storing numbers: [5, 10, 15, 20]\n\u25cf\u200b Stack: Like a pile of plates (Last-In-First-Out).\n\u25cf\u200b Queue: Like a line of people waiting (First-In-First-Out).\n\u25cf\u200b Tree: Like a family tree showing relationships.\n\u25cf\u200b Graph: Like a map showing cities and roads.\nData Abstraction\nData abstraction in data structures means hiding the low-level details of how data is stored and focusing\nonly on what operations can be performed on the data. It separates what a data structure does from how it\ndoes it.\n\u25cf\u200b Abstraction = Hiding complexity, showing only the necessary operations.\n\u25cf\u200b Like driving a car \u2014 you don't need to know how the engine works to drive.\u200b\nSimilarly, when you use a Stack, you only care about push and pop, not how the stack is\nmaintained internally.\nData Abstraction refers to the idea of defining a data structure by the operations that can be performed on\nit and the properties these operations must satisfy, without specifying how these operations are\nimplemented.\nKey points:\n\u25cf\u200b Focus on what the data can do, not how it does it.\n\u25cf\u200b Helps in creating Abstract Data Types (ADTs).\n\u25cf\u200b Implementation details are hidden from the user\nConcepts in Data Abstraction:\n\u25cf\u200b Abstract Data Types (ADT):\u200b\nData abstraction leads to the concept of an ADT, where only essential operations are exposed.",
+    "content_hash": "6dfc434d4cdfa9f4345d9ba5488be4b854709855eb5412c734b5f4eec8da84a1",
+    "token_count": 630
+  },
+  {
+    "id": "91561db0-c3bf-594b-8316-bbd878616627",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 2,
+    "page_end": 2,
+    "position": 1,
+    "content": "\u25cf\u200b Interface vs Implementation:\n\u25cb\u200b Interface: What you can do (e.g., Insert, Delete, Search)\n\u25cb\u200b Implementation: How it is done (e.g., using an array or linked list)\nExample\nStack ADT\nLogical View (Abstraction):\n\u25cf\u200b A stack is a collection of elements where:\n\u25cb\u200b Insertion (push) and deletion (pop) happen at one end only (top).\n\u25cb\u200b LIFO (Last In First Out) behavior.\nImplementation (Data Structure):\n\u25cf\u200b Array (fixed size stack).\n\u25cf\u200b Linked list (dynamic size stack).\nExample:\n\u25cf\u200b Logical operations: push(x), pop(), peek().\n\u25cf\u200b Implementation:\n\u25cb\u200b Use an array where top points to the last inserted element.\n\u25cb\u200b Or use a linked list where insertion and deletion are done at the head\nAdvantages of Data Abstraction in Data Structures:\n\u25cf\u200b Makes programming easier and error-free.\n\u25cf\u200b Allows you to change the internal implementation without affecting users.\n\u25cf\u200b Encourages modularity and code reuse.\nPERFORMANCE ANALYSIS\nPerformance analysis means studying how efficient an algorithm or data structure is. Mainly, we check\ntwo things:\n\u25cf\u200b Time Complexity \u2014 How much time (number of operations) the algorithm takes.\n\u25cf\u200b Space Complexity \u2014 How much memory (space) the algorithm uses.\nGoal: To predict how the algorithm will behave as the input size grows without running the code.\nTIME COMPLEXITY\n\u25cf\u200b Measures the amount of time an algorithm takes to complete.\n\u25cf\u200b It is expressed as a function of the input size n.\n\u25cf\u200b We usually use Big-O notation (e.g., O(n), O(log n), O(n2)) to express it.\nWhy it matters?\nBecause we want algorithms that are fast even for large inputs.\nExample for Time Complexity:\nSuppose we have a simple loop:\nfor (int i = 0; i < n; i++) {\nprintf(\"%d \", i);\n}\n\u25cf\u200b The loop runs n times.\n\u25cf\u200b Each printf is a constant-time operation.\n\u25cf\u200b So, Time Complexity = O(n) (linear time).\nTypes of Common Time Complexities:\nComplexity\n\u200b\nName\n\u200b\nExample\nO(1)\nConstant time\nAccessing array element\nO(log n)\nLogarithmic time\nBinary search\nO(n)\nLinear time\nTraversing an array\nO(n log n)\nLinearithmic time Merge sort, Heap sort",
+    "content_hash": "de4667b79c17f5f0187090a9e9b4c909b9ed1c84e285fa5141fd243cf006c39f",
+    "token_count": 506
+  },
+  {
+    "id": "c180d685-0aed-5b6d-87bb-78165c4b6164",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 3,
+    "page_end": 3,
+    "position": 2,
+    "content": "O(n2)\nQuadratic time\nBubble sort, Selection sort\nO(2n)\nExponential time\nSolving Tower of Hanoi\nSPACE COMPLEXITY\n\u25cf\u200b Measures the amount of memory an algorithm needs to complete its execution.\n\u25cf\u200b Memory includes:\n\u25cb\u200b Variables\n\u25cb\u200b Data structures (arrays, linked lists)\n\u25cb\u200b Recursion stack space\nWhy it matters?\nBecause limited memory can slow down or crash a program.\nExample for Space Complexity:\nSuppose:\nint a, b, c; // 3 integers\n\u25cf\u200b These use constant memory \u2192 Space Complexity = O(1).\nNow:\nint arr[n]; // array of n elements\n\u25cf\u200b Memory used grows with n \u2192 Space Complexity = O(n).",
+    "content_hash": "c6bb7784db7cbbeff31b36e579cd35c1c97b01ec3ea4904744ef28a13b5414e5",
+    "token_count": 154
+  },
+  {
+    "id": "58ad8bf7-8a7b-55d3-9d68-ba82e6b1499b",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 4,
+    "page_end": 4,
+    "position": 3,
+    "content": "Example Combining Both:\nSuppose we want to find the sum of all elements in an array:\nint sum(int arr[], int n) {\nint total = 0;\nfor (int i = 0; i < n; i++) {\ntotal += arr[i];\n}\nreturn total;\n}\n\u25cf\u200b Time Complexity:\u200b\nThe loop runs n times \u2192 O(n).\n\u25cf\u200b Space Complexity:\u200b\nOnly total variable used (ignoring input array) \u2192 O(1).\nWhy Performance Analysis is Important?\n\u25cf\u200b Helps to choose the best algorithm.\n\u25cf\u200b Helps to predict performance for large inputs.\n\u25cf\u200b Avoids wasting time, memory, and power.\nASYMPTOTIC ANALYSIS\nAsymptotic Analysis is the process of analyzing the efficiency (especially time and space complexity) of\nan algorithm as the input size (n) grows very large.\n\u25cf\u200b It focuses on the behavior of the algorithm for large inputs.\n\u25cf\u200b It ignores smaller constants and less significant terms.\n\u25cf\u200b It helps to compare algorithms independently of machine speed, compiler optimizations, or\nprogramming languages.\nSimply: It answers \"How does the running time (or space) grow as n \u2192 \u221e?\"\nWhy do we need Asymptotic Analysis?\n\u25cf\u200b To evaluate and compare the scalability of algorithms.\n\u25cf\u200b To predict performance when input size becomes very large.\n\u25cf\u200b To find better algorithms for real-world, large-scale problems.\nKey Focus of Asymptotic Analysis:\n\u25cf\u200b Concentrates only on the dominant term (highest degree).\n\u25cf\u200b Constants (like 5, 1000) are ignored.\n\u25cf\u200b Lower-degree terms (like n, log n) are ignored if a higher degree exists.\nWhat are Asymptotic Notations?\n\u25cf\u200b Asymptotic notations are mathematical tools to describe the running time or space requirements\nof an algorithm in terms of input size (n).\n\u25cf\u200b They help us understand how an algorithm behaves when n becomes very large (i.e., in the\n\"asymptotic\" case).\n\u25cf\u200b Focus: Only the dominant factors are considered, ignoring smaller terms and constant\ncoefficients.\nExample:\u200b\nIf time taken = 3n2 + 5n + 20,\u200b\nwhen n is very large, the term 3n2 dominates.\u200b\nThus, time complexity = O(n2).",
+    "content_hash": "4913fa8b32211334368f6543b5ef54a48521abc08c9f7b0d30fb56c6c47bf41a",
+    "token_count": 484
+  },
+  {
+    "id": "46136699-a28b-5118-9a23-873fd31b293d",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 5,
+    "page_end": 5,
+    "position": 4,
+    "content": "Why Asymptotic Notations?\n\u25cf\u200b To compare algorithms independently of hardware or programming language.\n\u25cf\u200b To predict performance for very large inputs.\nFormal Definition:\nAsymptotic analysis uses mathematical functions to describe the growth rate of an algorithm with respect\nto input size n, using notations like:\n\u25cf\u200b Big O (O) \u2014 Worst case\n\u25cf\u200b Big Omega (\u03a9) \u2014 Best case\n\u25cf\u200b Big Theta (\u0398) \u2014 Average/Tight case\nTypes of Asymptotic Notations\nNotation\nName\nPurpose\nO()\nBig O\n\u200b\nUpper bound (worst case)\n\u03a9()\nBig Omega\n\u200b\nLower bound (best case)\n\u0398()\nBig Theta\n\u200b\nTight bound (average case)\n1. Big O Notation (O) \u2014 Upper Bound\n\u25cf\u200b Describes the maximum time or maximum number of steps.\n\u25cf\u200b \"At most this much time is needed.\"\n\u25cf\u200b Used for worst-case analysis.\nFormal Definition:\nA function f(n) = O(g(n)) if there exist positive constants c and n0 such that for all n \u2265 n0,\nf(n) \u2264 c \u00d7 g(n)\nExample:\u200b\nBubble Sort has O(n2) in the worst case.\nIf f(n) = 3n2 + 4n + 2,\u200b\nthen f(n) = O(n2) because as n grows, n2 dominates.\n2. Big Omega Notation (\u03a9) \u2014 Lower Bound\n\u25cf\u200b Describes the minimum time an algorithm can take.\n\u25cf\u200b \"At least this much time is needed.\"\n\u25cf\u200b Used for best-case analysis.\nFormal Definition:\nA function f(n) = \u03a9(g(n)) if there exist positive constants c and n0 such that for all n \u2265 n0,\nf(n) \u2265 c \u00d7 g(n)\nExample:\u200b\nIn Bubble Sort, if the array is already sorted,\u200b\nBest-case time = \u03a9(n) (only one pass needed).\n3. Big Theta Notation (\u0398) \u2014 Tight Bound\n\u25cf\u200b Describes an exact bound.\n\u25cf\u200b \"Both upper and lower bounds match.\"\n\u25cf\u200b Used for average case or tight bound analysis.\nFormal Definition:\nA function f(n) = \u0398(g(n)) if there exist positive constants c1, c2, and n0 such that for all n \u2265 n0,\nc1 \u00d7 g(n) \u2264 f(n) \u2264 c2 \u00d7 g(n)",
+    "content_hash": "4e2dc615c5e8ca3c0bd3600904ca9beaec5908163ff1972fee53ab12712b1ca5",
+    "token_count": 514
+  },
+  {
+    "id": "13b1aae2-cc9d-5407-a1d4-c76f9d7b2475",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 6,
+    "page_end": 6,
+    "position": 5,
+    "content": "Example:\u200b\nIf f(n) = 5n + 20, then\u200b\nf(n) = \u0398(n) because the function grows linearly with n.\nQuick Example Summary\nAlgorithm\nBest Case\nAverage Case\n\u200b\nWorst Case\nLinear Search\n\u03a9(1)\n\u0398(n)\n\u200b\n\u200b\nO(n)\nBinary Search\n\u03a9(1)\n\u0398(log n)\n\u200b\n\u200b\nO(log n)\nBubble Sort\n\u03a9(n)\n\u0398(n2)\n\u200b\n\u200b\nO(n2)\nNotation\nMeaning\nDescribes\nO(g(n))\n\u2264 c \u00d7 g(n) \u200b\n(upper bound)\nWorst case\n\u03a9(g(n))\n\u2265 c \u00d7 g(n) \u200b\n(lower bound)\nBest case\n\u0398(g(n))\nBetween two multiples of g(n)\nExact/Tight\nEasy way to remember:\n\u25cf\u200b O \u2014 Overestimate (maximum steps)\n\u25cf\u200b \u03a9 \u2014 Optimistic (minimum steps)\n\u25cf\u200b \u0398 \u2014 Tight (exact steps)\nChoosing the Best Algorithm\n\u25cf\u200b When engineers design software, many algorithms are available to solve a problem.\n\u25cf\u200b Asymptotic analysis helps compare these algorithms based on time and space efficiency.\n\u25cf\u200b For small inputs, any algorithm may work, but for large inputs, only efficient algorithms can save\ntime and resources.\nExample:\n\u25cf\u200b Linear search: O(n)\n\u25cf\u200b Binary search: O(log n)\u200b\n(When n is large, binary search is much faster.)\nIn Short:\nAsymptotic Analysis Helps In\nHow it Helps\nChoosing algorithms\n\u200b\n\u200b\nPick the fastest one for large data\nPlanning for scaling\n\u200b\n\u200b\nMake sure system works even if data grows 1000\u00d7\nSaving resources\n\u200b\n\u200b\nSave memory, processor time\nBuilding real-time systems\n\u200b\n\u200b\nEnsure guaranteed response times\nOptimizing programs\n\u200b\n\u200b\nFocus on critical slow parts\nAsymptotic Analysis is a powerful mathematical tool that helps computer engineers to:\n\u25cf\u200b Design efficient algorithms\n\u25cf\u200b Predict performance\n\u25cf\u200b Ensure scalability and reliability\n\u25cf\u200b Build faster, smarter, and safer software systems\nPOLYNOMIAL ADDITION USING ARRAYS\nWe can represent a polynomial as a collection of terms and every term is having a coefficient and\nexponent. So, we can represent this as a list of terms having coefficients and exponents.",
+    "content_hash": "8ea930fa0f84a2101fc3789cad0e9b95d9f0c144588737952a38bac304c0be49",
+    "token_count": 502
+  },
+  {
+    "id": "84b6255c-29a1-5835-bfcd-272ba201b32f",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 7,
+    "page_end": 7,
+    "position": 6,
+    "content": "Each term of a polynomial (like 3x2, 5x1, \u22127x0) can be stored in a structure having two parts:\n\u25cf\u200b coefficient (like 3, 5, -7)\n\u25cf\u200b exponent (like 2, 1, 0)\nAn array of such structures represents the whole polynomial.\nStructure Definition (Example in C)\nstruct Term {\nint coeff; // Coefficient of the term\nint expo; // Exponent of the term\n};\nAnd then you can declare:\nstruct Term poly1[10], poly2[10], polyResult[20];\nto represent polynomials.\nAlgorithm to Add Two Polynomials\nAssumption:\u200b\nBoth polynomials are sorted in decreasing order of exponents.\nSteps:\n1.\u200b Initialize three pointers (indexes):\u200b\ni = 0 for first polynomial (poly1),\u200b\nj = 0 for second polynomial (poly2),\u200b\nk = 0 for result polynomial (polyResult).\n2.\u200b Repeat while both i and j are within their respective array sizes:\n\u25cb\u200b If poly1[i].expo == poly2[j].expo:\n\u25a0\u200b Add their coefficients.\n\u25a0\u200b Store the sum and the common exponent in polyResult[k].\n\u25a0\u200b Increment i, j, and k.\n\u25cb\u200b Else if poly1[i].expo > poly2[j].expo:\n\u25a0\u200b Copy poly1[i] to polyResult[k].\n\u25a0\u200b Increment i and k.\n\u25cb\u200b Else:\n\u25a0\u200b Copy poly2[j] to polyResult[k].\n\u25a0\u200b Increment j and k.\n3.\u200b Copy any remaining terms from poly1 (if any) to polyResult.\n4.\u200b Copy any remaining terms from poly2 (if any) to polyResult.\n5.\u200b Done.\nExample\nSuppose:\nPolynomial 1: 5x3+4x2+2x0\nPolynomial 2: 5x3+5x1+5x0\nRepresented as Arrays:\npoly1\npoly2\n(5, 3)\n(5, 2)\n(4, 2) (5, 1)\n(2, 0)\n(5, 0)\nStep-by-step Addition:\nStep Compare\nAction\nResult Term\n1\n3 vs 2\n3 > 2 \u2192 copy (5,3) from poly1 \u200b\n(5,3)",
+    "content_hash": "b6074259b24f34ef8464c6401c6bc15f85e9f30ffae99290dde609fdcb71615e",
+    "token_count": 495
+  },
+  {
+    "id": "0d90212e-f4a0-5a40-983d-5c00ff1f7e29",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 8,
+    "page_end": 8,
+    "position": 7,
+    "content": "2\n2 vs 2\nEqual \u2192 add 4+5=9, exponent=2\n(9,2)\n3\n0 vs 1\n0 < 1 \u2192 copy (5,1) from poly2\n(5,1)\n4\n0 vs 0\nEqual \u2192 add 2+5=7, exponent=0\n(7,0)\nFinal polyResult:\ncoeff expo\n5\n3\n9\n2\n5\n1\n7\n0\nResulting Polynomial: 5x3+9x2+5x1+7\nC Program- Polynomial Addition using arrays\n#include <stdio.h>\nstruct Term {\nint coeff;\nint expo;\n};\nvoid addPolynomials(struct Term poly1[], int n1, struct Term poly2[], int n2, struct Term polyResult[], int\n*nResult) {\nint i = 0, j = 0, k = 0;\nwhile (i < n1 && j < n2) {\nif (poly1[i].expo == poly2[j].expo) {\npolyResult[k].coeff = poly1[i].coeff + poly2[j].coeff;\npolyResult[k].expo = poly1[i].expo;\ni++;\nj++;\nk++;\n}\nelse if (poly1[i].expo > poly2[j].expo) {\npolyResult[k] = poly1[i];\ni++;\nk++;\n}\nelse {\npolyResult[k] = poly2[j];\nj++;\nk++;\n}\n}\n// Copy remaining terms of poly1\nwhile (i < n1) {\npolyResult[k] = poly1[i];\ni++;\nk++;\n}",
+    "content_hash": "8b5afe7779350678a79a82648c54c7b26cf7693e71de40bd6503790b9474e89d",
+    "token_count": 335
+  },
+  {
+    "id": "f90df589-c888-5850-8286-8267ec66ae70",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 9,
+    "page_end": 9,
+    "position": 8,
+    "content": "// Copy remaining terms of poly2\nwhile (j < n2) {\npolyResult[k] = poly2[j];\nj++;\nk++;\n}\n*nResult = k; // Total number of terms in result\n}\nvoid displayPolynomial(struct Term poly[], int n) {\nfor (int i = 0; i < n; i++) {\nprintf(\"%dx^%d\", poly[i].coeff, poly[i].expo);\nif (i != n - 1) {\nprintf(\" + \");\n}\n}\nprintf(\"\\n\");\n}\nint main() {\nstruct Term poly1[] = { {5, 3}, {4, 2}, {2, 0} };\nstruct Term poly2[] = { {5, 2}, {5, 1}, {5, 0} };\nstruct Term polyResult[20];\nint nResult;\nint n1 = 3; // Number of terms in poly1\nint n2 = 3; // Number of terms in poly2\nprintf(\"First Polynomial: \");\ndisplayPolynomial(poly1, n1);\nprintf(\"Second Polynomial: \");\ndisplayPolynomial(poly2, n2);\naddPolynomials(poly1, n1, poly2, n2, polyResult, &nResult);\nprintf(\"Sum of Polynomials: \");\ndisplayPolynomial(polyResult, nResult);\nreturn 0;\n}\nOutput\nFirst Polynomial: 5x^3 + 4x^2 + 2x^0\nSecond Polynomial: 5x^2 + 5x^1 + 5x^0\nSum of Polynomials: 5x^3 + 9x^2 + 5x^1 + 7x^0",
+    "content_hash": "878059becaa0b6e9810e5ae05b3adca9bd84d427828e8d79ed5bcced07e210fd",
+    "token_count": 352
+  },
+  {
+    "id": "b7cdf963-e665-599c-bab9-5ffe1cd692f8",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 10,
+    "page_end": 10,
+    "position": 9,
+    "content": "SPARSE MATRIX\nA sparse matrix is a special type of matrix in which most of the elements are zero or have some\ndefault value. In contrast, a dense matrix is one in which most of the elements are non-zero. Sparse\nmatrices are used in various fields, including computer science, numerical analysis, and scientific\ncomputing, when dealing with large datasets or systems where efficiency and memory usage are\ncrucial. As a rule of thumb, if 2/3 of the total elements in a matrix are zeros, it can be called a\nsparse matrix. Using a sparse matrix representation \u2014 where only the non-zero values are stored \u2014\nthe space used for representing data and the time for scanning the matrix are reduced significantly.\nThe sparsity of a matrix refers to the proportion of its elements that are zero or some other default value\n(i.e., the number of zero elements divided by the total number of elements in the matrix). It is often\nexpressed as a percentage or a fraction. To compute the sparsity of a matrix, you can follow these steps:\nCount the number of zero elements in the matrix.\nDetermine the total number of elements in the matrix.\nCalculate the sparsity using the formula:\nSparsity (%) = (Number of Zero Elements / Total Number of Elements) * 100\nNote that most of the matrix elements will be zero since only non-zero values are important for data\nanalysis. In addition to a large amount of space used, there will be a computational time problem because\nall elements will be scanned to access non-zero elements. This process yields a computational complexity\nproblem.\nTo overcome these problems, we can use different data structures to represent a sparse matrix. the\nfollowing is a 3 tuple representation.The first row of sparse matrix always specifies the number of\nrows, number of columns and number of non zero elements in the matrix\nTRANSPOSE OF A SPARSE MATRIX\nTranspose of a matrix means rows become columns and columns become rows. In sparse matrix\nrepresentation, for each term, swap row and column. Example:",
+    "content_hash": "51bf55c1f74fd767681d300f0bb6805405444428b785c416677eb1a64e969fe9",
+    "token_count": 419
+  },
+  {
+    "id": "1c061188-b684-5efd-b8c4-9fbbe07bf5fa",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 11,
+    "page_end": 11,
+    "position": 10,
+    "content": "Consider a 3x3 matrix\n0\u200b\n5\u200b\n0\n3\u200b\n0\u200b\n0\n0\u200b\n0 6\nSparse Representation (with Metadata):\n(First row is metadata: rows, columns, total non-zero elements.)\nIndex\nRow\nColumn\nValue\n0\n3\n3\n3\n1\n0\n1\n5\n2\n1\n0\n3\n3 \u200b\n2\n2\n6\nNow let's find Transpose\nTranspose means swapping the row and column for each element.\nMetadata for transpose:\n\u25cf\u200b Rows become Columns\n\u25cf\u200b Columns become Rows\nSo metadata: (3, 3, 3)\nSo the transposed sparse matrix (with metadata):\nIndex\nRow\nColumn\nValue\n0\n\u200b\n\u200b\n3\n\u200b\n\u200b\n3\n3",
+    "content_hash": "05bfe879f928704cf031dd4f46282120b51b43f5952080a771db7c91b81d1917",
+    "token_count": 172
+  },
+  {
+    "id": "864e1ddb-d731-57f5-8430-1ca6679cdf2a",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 12,
+    "page_end": 12,
+    "position": 11,
+    "content": "1\n0\n1\n3\n2\n1\n0\n5\n3\n2\n2\n6\nAnd if you reconstruct the full matrix from this sparse data, it will look like:\n0\u200b\n3\u200b\n0\n5\u200b\n0\u200b\n0\n0\u200b\n0\u200b\n6\nAlgorithm: Transpose of Sparse Matrix\nInput:\n\u25cf\u200b A sparse matrix sparse[] in 3-tuple form where:\n\u25cb\u200b sparse[0] stores (number of rows, number of columns, number of non-zero elements).\n\u25cb\u200b sparse[1..n] store (row, column, value) of non-zero elements.\nOutput:\n\u25cf\u200b transpose[] array representing the transposed matrix.\nSteps:\n1.\u200b Read the sparse[] array, including metadata and non-zero elements.\n2.\u200b Initialize the first element (transpose[0]) of transposed matrix:\n\u25cb\u200b transpose[0].row = sparse[0].col\n\u25cb\u200b transpose[0].col = sparse[0].row\n\u25cb\u200b transpose[0].value = sparse[0].value\n3.\u200b For each column i (0 to number of columns - 1) of the original matrix:\n\u25cb\u200b For each non-zero element (from index 1 to n):\n\u25a0\u200b If the column index of the element is i:\n\u25a0\u200b Create a new entry in transpose[]:\n\u25a0\u200b transpose[k].row = sparse[j].col\n\u25a0\u200b transpose[k].col = sparse[j].row\n\u25a0\u200b transpose[k].value = sparse[j].value\n\u25a0\u200b Increment k.\n4.\u200b End",
+    "content_hash": "b29eff2b03c858237d748e0bee7cfe9135cbe9e0897cfecbdeed24356a9579a3",
+    "token_count": 333
+  },
+  {
+    "id": "56cbf069-1fe7-5e57-ab78-58fcf2dfc751",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 13,
+    "page_end": 13,
+    "position": 12,
+    "content": "Implementation of Transpose in C\n#include <stdio.h>\nstruct Term {\nint row;\nint col;\nint value;\n};\nvoid transpose(struct Term sparse[], struct Term transpose[]) {\nint i, j, n;\nn = sparse[0].value; // number of non-zero elements\n// Step 1: Metadata for transpose\ntranspose[0].row = sparse[0].col;\ntranspose[0].col = sparse[0].row;\ntranspose[0].value = sparse[0].value;\n// Step 2: Swap row and col for each non-zero element\nint k = 1; // index for transpose array\nfor (i = 0; i < sparse[0].col; i++) { // for each column of original\nfor (j = 1; j <= n; j++) { // check all elements\nif (sparse[j].col == i) {\ntranspose[k].row = sparse[j].col;\ntranspose[k].col = sparse[j].row;\ntranspose[k].value = sparse[j].value;\nk++;\n}\n}\n}\n}\nvoid display(struct Term sparse[]) {\nint n = sparse[0].value; // number of non-zero elements\nprintf(\"Row Col Value\\n\");\nfor (int i = 0; i <= n; i++) {\nprintf(\"%3d %4d %5d\\n\", sparse[i].row, sparse[i].col, sparse[i].value);\n}\n}\nint main() {\nint rows, cols, n;\nprintf(\"Enter number of rows, columns, and non-zero elements: \");\nscanf(\"%d %d %d\", &rows, &cols, &n);\nstruct Term sparse[50], transposed[50];\nsparse[0].row = rows;\nsparse[0].col = cols;\nsparse[0].value = n;\nprintf(\"Enter the non-zero elements (row column value):\\n\");\nfor (int i = 1; i <= n; i++) {\nscanf(\"%d %d %d\", &sparse[i].row, &sparse[i].col, &sparse[i].value);\n}",
+    "content_hash": "aef6843c0feba4edd0826ebaa1a0c06cc5c33b749c0cc762ab4c88fd0076b9bf",
+    "token_count": 428
+  },
+  {
+    "id": "34b1641d-56e4-5e45-9d84-dcdf76872c81",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 14,
+    "page_end": 14,
+    "position": 13,
+    "content": "printf(\"\\nOriginal Sparse Matrix Representation:\\n\");\ndisplay(sparse);\ntranspose(sparse, transposed);\nprintf(\"\\nTransposed Sparse Matrix Representation:\\n\");\ndisplay(transposed);\nreturn 0;\n}\nOutput\nEnter number of rows, columns, and non-zero elements: 3 3 3\nEnter the non-zero elements (row column value):\n0 1 5\n1 0 3\n2 2 6\nOriginal Sparse Matrix Representation:\nRow Col Value\n3 3 3\n0 1 5\n1 0 3\n2 2 6\nTransposed Sparse Matrix Representation:\nRow Col Value\n3 3 3\n0 1 3\n1 0 5\n2 2 6\nADDITION OF SPARSE MATRIX\nLets consider two sparse matrix representation A and B\nA:\nIndex\nRow\nColumn\nValue\n0\n3\n3\n3\n1\n0\n0\n5\n2\n0\n2\n7\n3 \u200b\n2\n1\n6",
+    "content_hash": "863d3429a42e4a74b20cd6097ab9f0bf5612acccf27cca6f2fa0077ca1b189e3",
+    "token_count": 216
+  },
+  {
+    "id": "8f089be1-d28a-5295-be50-4d9800d8f4ec",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 15,
+    "page_end": 15,
+    "position": 14,
+    "content": "B:\nIndex\nRow\nColumn\nValue\n0\n3\n3\n2\n1\n0\n0\n3\n2\n2\n2\n8\nPerform Addition\n\u25cf\u200b Compare A[1] and B[1]:\n\u25cb\u200b Same position (0,0). Add values: 5 + 3 = 8 \u2192 (0,0,8)\n\u25cf\u200b Compare A[2] and B[2]:\n\u25cb\u200b A[2] (0,2) comes before B[2] (2,2). Copy A[2] \u2192 (0,2,7)\n\u25cf\u200b Now A[3] and B[2]:\n\u25cb\u200b A[3] (2,1) comes before B[2] (2,2). Copy A[3] \u2192 (2,1,6)\n\u25cf\u200b No more A. Now copy remaining B[2] \u2192 (2,2,8)\nResultant Sparse Matrix C\nIndex\nRow\nColumn\nValue\n0\n3\n3\n4\n1\n0\n0\n8\n2\n0 2\n7\n3\n2\n1\n6\n4\n2\n2\n8\nAlgorithm: Addition of Two Sparse Matrices\nInput:\n\u25cf\u200b Two sparse matrices A[] and B[] (both in 3-tuple form with metadata in the first row).",
+    "content_hash": "6abc5d229670971a760a549b8eed07f7c2e2b7581837e39318061094cce81939",
+    "token_count": 285
+  },
+  {
+    "id": "e7d5ece6-4905-5b24-a614-09ff7d34588c",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 16,
+    "page_end": 16,
+    "position": 15,
+    "content": "\u25cf\u200b Each row of A[] and B[] has (row, column, value).\nOutput:\n\u25cf\u200b A sparse matrix C[] representing A + B.\nSteps:\n1.\u200b Check if the matrices have the same dimensions:\n\u25cb\u200b If A[0].row != B[0].row or A[0].col != B[0].col,\u200b\nthen Addition is not possible. Stop.\n2.\u200b Initialize pointers:\n\u25cb\u200b i = 1 (for A[])\n\u25cb\u200b j = 1 (for B[])\n\u25cb\u200b k = 1 (for C[])\n3.\u200b Set C[0] metadata:\n\u25cb\u200b C[0].row = A[0].row\n\u25cb\u200b C[0].col = A[0].col\n\u25cb\u200b C[0].value = 0 (for now; update later)\n4.\u200b Compare and Merge:\n\u25cb\u200b While i <= A[0].value and j <= B[0].value, do:\n\u25a0\u200b If (A[i].row < B[j].row) or\u200b\n(A[i].row == B[j].row and A[i].col < B[j].col):\n\u25a0\u200b Copy A[i] to C[k]\n\u25a0\u200b Increment i and k\n\u25a0\u200b Else if (B[j].row < A[i].row) or\u200b\n(B[j].row == A[i].row and B[j].col < A[i].col):\n\u25a0\u200b Copy B[j] to C[k]\n\u25a0\u200b Increment j and k\n\u25a0\u200b Else (Same position):\n\u25a0\u200b Add the values: sum = A[i].value + B[j].value\n\u25a0\u200b If sum != 0:\n\u25a0\u200b C[k].row = A[i].row\n\u25a0\u200b C[k].col = A[i].col\n\u25a0\u200b C[k].value = sum\n\u25a0\u200b Increment k\n\u25a0\u200b Increment both i and j\n5.\u200b Copy Remaining Elements:\n\u25cb\u200b While i <= A[0].value:\n\u25a0\u200b Copy A[i] to C[k]\n\u25a0\u200b Increment i and k\n\u25cb\u200b While j <= B[0].value:\n\u25a0\u200b Copy B[j] to C[k]\n\u25a0\u200b Increment j and k\n6.\u200b Update Metadata:",
+    "content_hash": "8fcde8e90c20860907f39d00ffa6ccb2665677c98907fbd6e3f052654e7f3e09",
+    "token_count": 469
+  },
+  {
+    "id": "be746708-a42d-5b6c-aea2-510727fa1473",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 17,
+    "page_end": 17,
+    "position": 16,
+    "content": "\u25cb\u200b Set C[0].value = k - 1\n7.\u200b End\nC Program for Sparse Matrix Addition\n#include <stdio.h>\n#define MAX 100\n// Define structure for Sparse Matrix elements\ntypedef struct {\nint row;\nint col;\nint value;\n} Element;\nint main() {\nElement A[MAX], B[MAX], C[MAX];\nint i, j, k;\nint m, n, tA, tB; // rows, columns, non-zero elements in A and B\n// Input Sparse Matrix A\nprintf(\"Enter rows, columns and number of non-zero elements of Matrix A: \");\nscanf(\"%d %d %d\", &A[0].row, &A[0].col, &A[0].value);\ntA = A[0].value;\nprintf(\"Enter elements (row column value) for Matrix A:\\n\");\nfor(i = 1; i <= tA; i++) {\nscanf(\"%d %d %d\", &A[i].row, &A[i].col, &A[i].value);\n}\n// Input Sparse Matrix B\nprintf(\"Enter rows, columns and number of non-zero elements of Matrix B: \");\nscanf(\"%d %d %d\", &B[0].row, &B[0].col, &B[0].value);\ntB = B[0].value;\nprintf(\"Enter elements (row column value) for Matrix B:\\n\");\nfor(i = 1; i <= tB; i++) {\nscanf(\"%d %d %d\", &B[i].row, &B[i].col, &B[i].value);\n}\n// Check if addition possible\nif(A[0].row != B[0].row || A[0].col != B[0].col) {\nprintf(\"Addition not possible. Matrix dimensions do not match.\\n\");\nreturn 0;\n}\ni = j = k = 1; // Initialize pointers\nC[0].row = A[0].row;\nC[0].col = A[0].col;\n// Merge and Add\nwhile(i <= tA && j <= tB) {\nif(A[i].row < B[j].row || (A[i].row == B[j].row && A[i].col < B[j].col)) {\nC[k++] = A[i++];\n}\nelse if(B[j].row < A[i].row || (B[j].row == A[i].row && B[j].col < A[i].col)) {",
+    "content_hash": "9d2b3a552bb14fa64d40dbc6cdc87164032b0f0818835a7d9664eb6f8f001a3e",
+    "token_count": 520
+  },
+  {
+    "id": "45181b8b-152e-5207-bca6-de66ce3e4292",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 18,
+    "page_end": 18,
+    "position": 17,
+    "content": "C[k++] = B[j++];\n}\nelse { // Same position\nint sum = A[i].value + B[j].value;\nif(sum != 0) {\nC[k].row = A[i].row;\nC[k].col = A[i].col;\nC[k].value = sum;\nk++;\n}\ni++;\nj++;\n}\n}\n// Copy remaining elements of A\nwhile(i <= tA) {\nC[k++] = A[i++];\n}\n// Copy remaining elements of B\nwhile(j <= tB) {\nC[k++] = B[j++];\n}\nC[0].value = k - 1; // Update number of non-zero elements\n// Display Result\nprintf(\"\\nResultant Sparse Matrix (row column value):\\n\");\nfor(i = 0; i < k; i++) {\nprintf(\"%d %d %d\\n\", C[i].row, C[i].col, C[i].value);\n}\nreturn 0;\n}\nOutput\nEnter rows, columns and number of non-zero elements of Matrix A: 3 3 3\nEnter elements (row column value) for Matrix A:\n0 0 5\n0 2 7\n2 1 6\nEnter rows, columns and number of non-zero elements of Matrix B: 3 3 2\nEnter elements (row column value) for Matrix B:\n0 0 3\n2 2 8\nResultant Sparse Matrix (row column value):\n3 3 4\n0 0 8\n0 2 7\n2 1 6\n2 2 8",
+    "content_hash": "a9f3e899876ead834b5379ab7f174ff7fb6cb3d9cd409ed3238ea2a19cc8cd16",
+    "token_count": 328
+  },
+  {
+    "id": "076ed2b0-d31e-5235-ac3f-9c3eff2378c5",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 19,
+    "page_end": 19,
+    "position": 18,
+    "content": "STACK USING ARRAYS\nA stack is a linear data structure that follows the Last In First Out (LIFO) principle.\n\u25cf\u200b Last In First Out (LIFO) means:\u200b\n\u2794 The element added last is the first one to be removed.\nThink of a stack of plates:\n\u25cf\u200b You add (push) plates on top.\n\u25cf\u200b You remove (pop) plates from the top.\nBasic Stack Operations:\nOperation\nMeaning\npush(x)\n\u200b\n\u200b\nAdd element x to the top.\npop()\n\u200b\n\u200b\nRemove the topmost element.\npeek()\n\u200b\n\u200b\nView the topmost element (without removing).\nisEmpty()\n\u200b\n\u200b\nCheck if the stack is empty.\nHow to Implement a Stack Using Arrays?\nWe maintain:\n\u25cf\u200b An array to hold the elements\n\u25cf\u200b An integer top that keeps track of the index of the top element\n\u25cb\u200b If stack is empty, top = -1\n\u25cb\u200b When we push, we increment top\n\u25cb\u200b When we pop, we decrement top\nImportant Points:\n\u25cf\u200b Stack Overflow happens when you push into a full stack.\n\u25cf\u200b Stack Underflow happens when you pop from an empty stack.\n\u25cf\u200b This stack implementation has a fixed size (MAX), so it is static.\n\u25cf\u200b You can also implement a dynamic stack using linked lists\nAlgorithms for Stack Operations\nWe assume:\n\u25cf\u200b stack[MAX] is an array to store elements.\n\u25cf\u200b top is an integer that tracks the top of the stack.\n\u25cf\u200b Initially, top = -1.\nAlgorithm for PUSH (Insert an element)\n1. If top == MAX - 1 then\nOutput \"Stack Overflow\"\nExit\n2. Else\ntop = top + 1\nstack[top] = item\n3. End If\n4. Return",
+    "content_hash": "2886ea447c108595a38888688f7fb2452b2a869c82e0da260bb6cd325da992dd",
+    "token_count": 372
+  },
+  {
+    "id": "7461f244-d7f7-5b92-956c-c09d8f233f3d",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 20,
+    "page_end": 20,
+    "position": 19,
+    "content": "Algorithm for POP(Remove top element)\n1. If top == -1 then\nOutput \"Stack Underflow\"\nExit\n2. Else\nitem = stack[top]\ntop = top - 1\n3. End If\n4. Return item\nAlgorithm for PEEK (View top element)\n1. If top == -1 then\nOutput \"Stack is Empty\"\nExit\n2. Else\nitem = stack[top]\n3. End If\n4. Return item\nAlgorithm for isEmpty (Check if stack is empty)\n1. If top == -1 then Return TRUE\n2. Else Return FALSE",
+    "content_hash": "58b1ca08676e7aeb21d01ce2d34efbef1e5f76f93037d7dd55a2b82358ed02c5",
+    "token_count": 123
+  },
+  {
+    "id": "205fcfdd-da4e-56f2-8c16-da0ca7d8a0fc",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 21,
+    "page_end": 21,
+    "position": 20,
+    "content": "Time Complexity of Stack Operations\nOperation\nTime\nComplexity\nReason\nPush (Insert)\nO(1)\nAdd element on top, only pointer update needed\nPop (Remove)\nO(1)\nRemove element from top, only pointer update needed\nPeek / Top\nO(1)\nAccess the top element directly\nisEmpty\nO(1)\nCheck if the top pointer is -1 (array) or NULL (linked list)\nC- Program Stack Implementation\n#include <stdio.h>\n#include <stdbool.h>\n#include <stdlib.h>\n#define MAX_SIZE 100\n// Global variables for the stack\nint stack[MAX_SIZE];\nint top = -1; // Initialize an empty stack\n// Function to push an element onto the stack\nvoid Push(int element) {\nif (top == MAX_SIZE - 1) {\nprintf(\"Stack overflow: Cannot push element onto a full stack\\n\");\nreturn; // Handle overflow (stack is full)\n}\ntop++;\nstack[top] = element;\n}\n// Function to pop an element from the stack\nint Pop() {\nif (top == -1) {\nprintf(\"Stack underflow: Cannot pop element from an empty stack\\n\");\nreturn -1; // Handle underflow (stack is empty)\n}\nint element = stack[top];\ntop--;\nreturn element;\n}\n// Function to peek at the top element of the stack\nint Peek() {\nif (top == -1) {\nprintf(\"Stack is empty Underflow!\\n\");\nreturn -1; // Handle underflow (stack is empty)\n}\nreturn stack[top];\n}",
+    "content_hash": "92494fa11c31d2c9d81399589f21169454ef62aae8773578d69596b7953d8685",
+    "token_count": 317
+  },
+  {
+    "id": "f790dcd5-986c-56d7-b867-fec04149fc23",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 22,
+    "page_end": 22,
+    "position": 21,
+    "content": "// Function to check if the stack is empty\nbool IsEmpty() {\nreturn (top == -1);\n}\nvoid Display()\n{ int i;\nif(IsEmpty()) printf(\"Stack is empty Under flow!\\n\");\nelse\n{\nprintf(\"Stack contents are\\n\");\nfor(i=top;i>=0;i--)\nprintf(\"%d\\n\",stack[i]);\n}\n}\nint main() {\nint item, choice;\nprintf(\"\\t\\t\\tImplementation Of Stack \");\ndo {\nprintf(\"\\n\\n1.Push\\n2.Pop\\n3.Peek\\n4.Display\\n5.exit\\n\");\nprintf(\"\\nEnter Your Choice :: \");\nscanf(\"%d\", &choice);\nswitch (choice) {\ncase 1:\nprintf(\"\\nEnter The item to be pushed :: \");\nscanf(\"%d\", &item);\nPush(item);\nbreak;\ncase 2:\nif (IsEmpty())\nprintf(\"\\nEmpty stack!Underflow !!\");\nelse {\nitem = Pop();\nprintf(\"\\nThe popped element is %d\", item);\n}\nbreak;\ncase 3:\nif (IsEmpty())\nprintf(\"\\nEmpty stack!Underflow !!\");\nelse {\nitem = Peek();\nprintf(\"\\nThe Top element is %d\", item);\n}\nbreak;\ncase 4:\nDisplay();\nbreak;\ncase 5:",
+    "content_hash": "8ef491c47b40a25d5c2e632ae505f7823296a76a4510e60a2cfc76c5a834672b",
+    "token_count": 245
+  },
+  {
+    "id": "a60c248c-5a66-5088-884c-7788ec150327",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 23,
+    "page_end": 23,
+    "position": 22,
+    "content": "exit(0);\n}\n} while (1);\nreturn 0;\n}\nComplexity Analysis:\nPush, Pop, Peek, and IsEmpty operations in a stack typically have a time complexity of O(1) when\nimplemented using an array or linked list.\nUse Cases:(Applications)\n\u25cf\u200b Function Call Stack: Stacks are crucial in programming languages for managing function\ncalls and maintaining the order of execution.\n\u25cf\u200b Expression Evaluation: Stacks are used to evaluate mathematical expressions, such as\nconverting infix expressions to postfix (RPN) or solving equations.\n\u25cf\u200b Undo/Redo Functionality: Stacks are used to implement undo and redo functionality in\napplications like text editors.\n\u25cf\u200b Backtracking Algorithms: Stacks help in backtracking algorithms like depth-first search\n(DFS).\nMULTIPLE STACKS\n\u25cf\u200b Multiple stacks mean managing two or more stacks inside a single array.\n\u25cf\u200b Purpose: To save space and share memory better instead of using separate arrays for each\nstack.\nThere are two ways to implement multiple stacks.\nType\nExplanation\n1. Fixed Division\nDivide array into fixed parts for each stack. Each stack gets its own block.\nSimple but can waste memory.\n2. Dynamic Division Allow stacks to grow toward each other. More efficient and avoids memory\nwastage.\nFixed Division (Simple Method)\nSuppose array size = 10:\n\u25cf\u200b Stack 1 \u2192 indexes 0 to 4\n\u25cf\u200b Stack 2 \u2192 indexes 5 to 9\nEach stack behaves independently within its section.\nLimitations: One stack may overflow even if other has free space.",
+    "content_hash": "ab626bbd609bd7ee25c32dad008f311a5889b4fa3ad3f86943f307fecca0fb13",
+    "token_count": 326
+  },
+  {
+    "id": "72a8c0d1-d751-56d5-b061-c9fdfa595375",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 24,
+    "page_end": 24,
+    "position": 23,
+    "content": "Dynamic Sharing (Best Method)\n\u25cf\u200b Stack 1 grows from left to right.\n\u25cf\u200b Stack 2 grows from right to left.\n\u25cf\u200b Overflow occurs only if top1 + 1 == top2.\nAlgorithm (Fixed Partition)\nFor each stack i:\n\u25cf\u200b start[i] \u2192 starting index of stack i\n\u25cf\u200b end[i] \u2192 ending index of stack i\n\u25cf\u200b top[i] \u2192 initially start[i] - 1\nPUSH Operation:\n\u25cf\u200b Check if top[i] < end[i]\n\u25cf\u200b If yes, increment top[i] and insert element.\nPOP Operation:\n\u25cf\u200b Check if top[i] >= start[i]\n\u25cf\u200b If yes, pop element and decrement top[i].\nDrawbacks of Fixed Partitioning\n\u25cf\u200b Suppose Stack 1 fills up and Stack 2 is empty: Stack 1 can't use free space of Stack 2.\n\u25cf\u200b So not memory efficient if number of stacks is large or usage is uneven.\nFLEXIBLE PARTITIONING (Advanced Method)\n\u25cf\u200b Dynamic allocation inside array.\n\u25cf\u200b Use 3 arrays:\n\u25cb\u200b arr[] \u2192 Actual data\n\u25cb\u200b top[] \u2192 Top index for each stack\n\u25cb\u200b next[] \u2192 Helps in linking free spaces\n\u25cf\u200b Also maintain a free pointer which points to the next free index.\nThis method is called k Stacks in a Single Array dynamically.\nAdvanced but very efficient.\nHOW FLEXIBLE PARTITIONING WORKS?\nSuppose you have:\n\u25cf\u200b arr[10]\n\u25cf\u200b top[k]\n\u25cf\u200b next[10]\n\u25cf\u200b free initially = 0\nAt every insertion:\n\u25cf\u200b Use free index\n\u25cf\u200b Update free using next[]",
+    "content_hash": "6e58569fb0886877d65ef35de17731f8280a58751b616dbdaebc2e9c00ef805d",
+    "token_count": 344
+  },
+  {
+    "id": "9288b780-0784-5f0c-a615-dd366d706420",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 25,
+    "page_end": 25,
+    "position": 24,
+    "content": "\u25cf\u200b Adjust next[] to point to previous top of the stack\n\u25cf\u200b Update top[]\nC Program: Multiple Stacks(3 Stacks) in One Array (Fixed Partitioning)\n#include <stdio.h>\n#include <stdlib.h>\n#define SIZE 30 // Total size of array\n#define STACKS 3 // Number of stacks\n#define PARTITION (SIZE / STACKS) // Size of each stack partition\nint arr[SIZE];\nint top[STACKS]; // Array to store tops of stacks\n// Initialize tops\nvoid initializeTops() {\nfor (int i = 0; i < STACKS; i++) {\ntop[i] = i * PARTITION - 1;\n}\n}\n// Push into a particular stack\nvoid push(int stackNum, int value) {\nif (stackNum < 0 || stackNum >= STACKS) {\nprintf(\"Invalid Stack Number!\\n\");\nreturn;\n}\n// Check for overflow\nif (top[stackNum] >= ((stackNum + 1) * PARTITION) - 1) {\nprintf(\"Stack %d Overflow!\\n\", stackNum + 1);\n} else {\ntop[stackNum]++;\narr[top[stackNum]] = value;\nprintf(\"Pushed %d into Stack %d\\n\", value, stackNum + 1);\n}\n}\n// Pop from a particular stack\nint pop(int stackNum) {\nif (stackNum < 0 || stackNum >= STACKS) {\nprintf(\"Invalid Stack Number!\\n\");\nreturn -1;\n}\nint start = stackNum * PARTITION;\n// Check for underflow\nif (top[stackNum] < start) {",
+    "content_hash": "ecce53e57d2d9ac6313755c43ca5516276161e59d5abb1f5e5126a1822395092",
+    "token_count": 337
+  },
+  {
+    "id": "a6f18bfa-d113-57fd-8a38-9a92b0193351",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 26,
+    "page_end": 26,
+    "position": 25,
+    "content": "printf(\"Stack %d Underflow!\\n\", stackNum + 1);\nreturn -1;\n} else {\nint value = arr[top[stackNum]];\ntop[stackNum]--;\nreturn value;\n}\n}\n// Display a particular stack\nvoid display(int stackNum) {\nif (stackNum < 0 || stackNum >= STACKS) {\nprintf(\"Invalid Stack Number!\\n\");\nreturn;\n}\nint start = stackNum * PARTITION;\nif (top[stackNum] < start) {\nprintf(\"Stack %d is empty!\\n\", stackNum + 1);\nreturn;\n}\nprintf(\"Stack %d elements: \", stackNum + 1);\nfor (int i = top[stackNum]; i >= start; i--) {\nprintf(\"%d \", arr[i]);\n}\nprintf(\"\\n\");\n}\nint main() {\nint choice, stackNum, value;\ninitializeTops();\nwhile (1) {\nprintf(\"\\n--- Menu ---\\n\");\nprintf(\"1. Push\\n\");\nprintf(\"2. Pop\\n\");\nprintf(\"3. Display\\n\");\nprintf(\"4. Exit\\n\");\nprintf(\"Enter your choice: \");\nscanf(\"%d\", &choice);\nswitch (choice) {\ncase 1:\nprintf(\"Enter stack number (1-%d): \", STACKS);\nscanf(\"%d\", &stackNum);\nprintf(\"Enter value to push: \");",
+    "content_hash": "21077ccfe8ea2369fd8e696dd8f4436ade3cf086948ed435fd2f21af7c767f2f",
+    "token_count": 275
+  },
+  {
+    "id": "7be341be-71bb-5a3a-8324-1fdea6c15909",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 27,
+    "page_end": 27,
+    "position": 26,
+    "content": "scanf(\"%d\", &value);\npush(stackNum - 1, value); // Adjust index\nbreak;\ncase 2:\nprintf(\"Enter stack number (1-%d): \", STACKS);\nscanf(\"%d\", &stackNum);\nvalue = pop(stackNum - 1);\nif (value != -1)\nprintf(\"Popped value: %d\\n\", value);\nbreak;\ncase 3:\nprintf(\"Enter stack number (1-%d): \", STACKS);\nscanf(\"%d\", &stackNum);\ndisplay(stackNum - 1);\nbreak;\ncase 4:\nprintf(\"Exiting program.\\n\");\nexit(0);\ndefault:\nprintf(\"Invalid choice! Try again.\\n\");\n}\n}\nreturn 0;\n}\nQUEUE USING ARRAY\nA Queue is a linear data structure that follows the First In First Out (FIFO) principle. First In First Out\n(FIFO) means: The element added first will be removed first. Think of a queue in a bank or queue at a\nticket counter: The first person to enter the queue is the first to get served.\nBasic Queue Operations:\nOperation\nMeaning\nenqueue(x\n)\n\u200b\nAdd element x to the rear (end) of the queue.\ndequeue() \u200b\nRemove the front element from the queue.\npeek()\n\u200b\nView the element at the front without removing it.\nisEmpty() \u200b\nCheck if the queue is empty.",
+    "content_hash": "ce0d6c5af83033bed4ba4a305423a06e105907d078377f7c95dfdb07f9526b60",
+    "token_count": 285
+  },
+  {
+    "id": "3cad5f21-6ab9-5b03-8e09-ff8628309402",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 28,
+    "page_end": 28,
+    "position": 27,
+    "content": "Important Queue Terminologies\nTerm\nMeaning\nFront \u200b\n\u200b\n\u200b\nPoints to the first element in the queue.\nRear \u200b\n\u200b\n\u200b\nPoints to the last element in the queue.\nSize\n\u200b\n\u200b\n\u200b\nTotal number of elements currently in the queue.\nAlgorithms for Basic Queue Operations\nWe assume:\n\u25cf\u200b queue[MAX] is an array to hold queue elements.\n\u25cf\u200b front and rear are integers.(-1 initially)\n\u25cf\u200b MAX is the maximum size.\nAlgorithm for Enqueue (Insert element)\nAlgorithm ENQUEUE(item)\n1. If rear == MAX - 1 then\nOutput \"Queue Overflow\"\nExit\n2. Else\nrear = rear + 1\nqueue[rear] = item\n4. End If\n5. Return\nAlgorithm for Dequeue (Remove element)\nAlgorithm DEQUEUE()\n1. If front == rear then\nOutput \"Queue Underflow\"\nExit\n2. Else\nfront = front + 1\nitem = queue[front]\n3. End If\n4. Return item\nNote: if front==rear we can also reset queue to utilize space\nAlgorithm for Peek (View Front Element)\nAlgorithm PEEK()\n1. If front == rear then\nOutput \"Queue is Empty\"\nExit",
+    "content_hash": "460e4460ee35dcc5fd1e543d01f526fff63825ece94ada4e8ed831c1546136cd",
+    "token_count": 258
+  },
+  {
+    "id": "089dc396-bdf7-58f9-8237-f848f1f432da",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 29,
+    "page_end": 29,
+    "position": 28,
+    "content": "2. Else\nitem = queue[front+1]\n3. End If\n4. Return item\nAlgorithm for isEmpty (Check if queue is empty)\nAlgorithm isEmpty()\n1. If front == rear then\nReturn TRUE\n2. Else\nReturn FALSE\nImportant Points\n\u25cf\u200b Queue Overflow occurs when trying to add to a full queue.\n\u25cf\u200b Queue Underflow occurs when trying to remove from an empty queue.\n\u25cf\u200b In linear queue, after a lot of enqueues and dequeues, space at the front is wasted.\u200b\n\u2794 To solve this, we can use a circular queue\nTime Complexity of Queue Operations\nOperation\nDescription\nTime\nComplexity\nEnqueue (Insert)\nAdd an element at the rear of the queue\nO(1)\nDequeue (Remove)\nRemove an element from the front of the queue\nO(1)\nFront / Peek\nGet the front element without removing it\nO(1)\nisEmpty\nCheck if the queue is empty\nO(1)\nisFull (for fixed-size array\nqueues)\nCheck if the queue is full\nO(1)",
+    "content_hash": "038cd6e05ca8f7b6bd88f7c481585c3d16e23b455431e2d2642ad3e5620c18a6",
+    "token_count": 226
+  },
+  {
+    "id": "ec600d72-ed42-56ab-88e3-fc6d34566a49",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 30,
+    "page_end": 30,
+    "position": 29,
+    "content": "5 Important Applications of Queues\n1.\u200b Process Scheduling \u2014 Managing processes waiting for CPU time in operating systems.\n2.\u200b Printer Queue Management \u2014 Handling multiple print jobs in order.\n3.\u200b Handling Requests in Web Servers \u2014 Managing incoming client requests.\n4.\u200b Breadth-First Search (BFS) \u2014 Exploring graphs level by level.\n5.\u200b Network Packet Scheduling \u2014 Queuing data packets in routers before transmission.\nC Program - queue using arrays\n#include <stdio.h>\n#include<stdlib.h>\n#include <stdbool.h>\n#define MAX 10\n// initilazing queue\nint queue[MAX];\nint rear = - 1;\nint front = -1;\n// Function to check if the queue is empty\nbool isEmpty() {\nreturn rear==front ;\n}\n// Function to check if the queue is full\nbool isFull() {\nreturn rear == MAX - 1;\n}\nvoid enqueue() // enqueue\n{\nint item;\nif (isFull())\nprintf(\"Queue Overflow \\n\");\nelse\n{\nprintf(\"\\nInset the element in queue : \");\nscanf(\"%d\", &item);\nrear = rear + 1;\nqueue[rear] = item;\n}\n} /*End of insert()*/\nvoid dequeue() //dequeue\n{\nif (isEmpty() )\n{\nprintf(\"\\nQueue Underflow \\n\");",
+    "content_hash": "5e7091b5ee963868c28f6e76c9f0506b5d14d7d289cb1b656a2938aa37c79bb1",
+    "token_count": 269
+  },
+  {
+    "id": "f81cc41b-5645-564c-b222-438210736175",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 31,
+    "page_end": 31,
+    "position": 30,
+    "content": "return ;\n}\nelse\n{\nfront = front + 1;\nprintf(\"\\nElement deleted from queue is : %d\\n\", queue[front]);\n}\n} /*End of delete() ; if front==rear we also reset queue to utilize space*/\nvoid display()// print queue\n{\nint i;\nif (isEmpty() )\nprintf(\"\\nQueue is empty \\n\");\nelse\n{\nprintf(\"\\nQueue is : \");\nfor (i = front+1; i <= rear; i++)\nprintf(\"%d \", queue[i]);\nprintf(\"\\n\");\n}\n}\n// Function to peek at the front item\nint peek() {\nif (isEmpty()) {\nprintf(\"Queue is empty. Nothing to peek.\\n\");\nreturn -1; // Error value\n} else {\nreturn queue[front+1];\n}\n}\n// Function to get the size of the queue\nint size() {\nif (isEmpty()) {\nreturn 0;\n} else {\nreturn rear - (front + 1)+1;\n}\n}\nint main()\n{\nint choice;\nwhile (1)\n{\nprintf(\"\\n1.Insert element to queue \\n\");",
+    "content_hash": "a5292dee7a986f1edb400fed8b0fe277068b2f152754a49af4fa0efe38b0e5eb",
+    "token_count": 224
+  },
+  {
+    "id": "fecfe700-b27d-5bb7-b96a-735a047dafe8",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 32,
+    "page_end": 32,
+    "position": 31,
+    "content": "printf(\"2.Delete element from queue \\n\");\nprintf(\"3.Display all elements of queue \\n\");\nprintf(\"4.Peek \\n\");\nprintf(\"5.Size of the queue\\n\");\nprintf(\"6.Quit \\n\");\nprintf(\"\\nEnter your choice : \");\nscanf(\"%d\", &choice);\nswitch (choice)\n{\ncase 1:\nenqueue();\nbreak;\ncase 2:\ndequeue();\nbreak;\ncase 3:\ndisplay();\nbreak;\ncase 4:\nint x=peek();\nif(x!=-1) printf(\"\\nfront element is=%d\\n\",x);\nbreak;\ncase 5:\nprintf(\"\\nsize of the queue is =%d\\n\",size());\nbreak;\ncase 6:\nexit(1);\ndefault:\nprintf(\"\\nWrong choice \\n\");\n} /*End of switch*/\n} /*End of while*/\nreturn 0;\n} /*End of main()*/\nCIRCULAR QUEUE USING ARRAY\nA Circular Queue is a special form of a queue where: It behaves in a circular fashion. In a normal (linear)\nqueue, once the rear reaches the last index of the array, we cannot insert even if there are empty spaces at\nthe beginning. Circular Queue solves this by wrapping around.",
+    "content_hash": "3536c72bc1b6abebd284cd2cb8115d416e896179e3892e0bf268d2c56f5b46cb",
+    "token_count": 245
+  },
+  {
+    "id": "3df49b05-5d72-58b9-8ecf-c052c183b9d7",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 33,
+    "page_end": 33,
+    "position": 32,
+    "content": "Circular Queue Operations\nOperation\nMeaning\nenqueue(x)\nInsert an element into the queue.\ndequeue()\nRemove an element from the queue.\npeek()\nGet the front element without removing it.\nisEmpty()\nCheck if the queue is empty.\nisFull()\nCheck if the queue is full.\nCircular Queue Algorithms\nAssume:\n\u25cf\u200b Queue array: queue[MAX]\n\u25cf\u200b Initially: front = 0, rear = 0\n\u25cf\u200b A slot is wasted to distinguish full and empty.\nAlgorithm for isEmpty()\nAlgorithm isEmpty(front, rear)\n1. If front == rear\nReturn TRUE\n2. Else\nReturn FALSE\nMeaning:\nIf front == rear, queue is empty.\nAlgorithm for isFull()\n1. If (rear + 1) mod MAX == front\nReturn TRUE\n2. Else\nReturn FALSEMeaning:\u200b\nIf the next position of rear is front, the queue is full.\nAlgorithm for Enqueue (Insert an element)\n1. If isFull(front, rear, MAX) then\nOutput \"Queue Overflow\"\nExit\n2. Else\nrear = (rear + 1) mod MAX\nqueue[rear] = item\n3. End If",
+    "content_hash": "f9f16294c7c295ba526b3397034216798d1533351205de8a1d487cacc06c9264",
+    "token_count": 240
+  },
+  {
+    "id": "2c5a0831-8224-55b8-ae2f-5b1de764b8ec",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 34,
+    "page_end": 34,
+    "position": 33,
+    "content": "Algorithm for Dequeue (Remove an element)\n1. If isEmpty(front, rear) then\nOutput \"Queue Underflow\"\nExit\n2. Else\nfront = (front + 1) mod MAX\nitem = queue[front]\n3. End If\n4. Return item\nAlgorithm for Peek (View Front Element)\n1. If isEmpty(front, rear) then\nOutput \"Queue is Empty\"\nExit\n2. Else\ntemp = (front + 1) mod MAX\nReturn queue[temp]\nTime Complexity of Circular Queue Operations\nOperation\nTime\nComplexity\nReason\nEnqueue (Insert)\nO(1)\nInsert element at rear, just update rear index (with wrap around)\nDequeue (Remove)\nO(1)\nRemove element from front, just update front index (with wrap around)\nFront (Peek)\nO(1)\nAccess the element at front index\nRear (Peek)\nO(1)\nAccess the element at rear index",
+    "content_hash": "5440824db1607459e0577c87804a8f15897148b74600cce81f6edf4fce864e5c",
+    "token_count": 197
+  },
+  {
+    "id": "9e8bd9bb-d76d-509f-834f-f07b3ea3d2e3",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 35,
+    "page_end": 35,
+    "position": 34,
+    "content": "isEmpty\nO(1)\nCompare front and rear indices or check size\nisFull\nO(1)\nCheck if queue is full by comparing front and rear\nC Program - Circular Queue using array\n#include <stdio.h>\n#include<stdlib.h>\n#include <stdbool.h>\n#define MAX 10\n// initilazing queue\nint cqueue[MAX];\nint rear = 0;\nint front = 0;\n// Function to check if the cqueue is empty\nbool isEmpty() {\nreturn front==rear ;\n}\n// Function to check if the cqueue is full\nbool isFull() {\nreturn (rear+1)%MAX == front;\n}\nvoid enqueue() // enqueue\n{\nint item;\nif (isFull())\nprintf(\"Queue Overflow \\n\");\nelse\n{\nprintf(\"\\nInset the element in queue : \");\nscanf(\"%d\", &item);\nrear = (rear + 1)%MAX;\ncqueue[rear] = item;\n}\n} /*End of insert()*/\nvoid dequeue() //dequeue\n{\nif(isEmpty())\n{\nprintf(\"\\nQueue Underflow \\n\");\nreturn ;\n}\nelse\n{\nfront = (front + 1) %MAX;\nprintf(\"\\nElement deleted from queue is : %d\\n\", cqueue[front]);",
+    "content_hash": "5f113ca8ecf7c9e02b77699404f8f2edf12f36f7285fd2a96328b55be34fb5e3",
+    "token_count": 256
+  },
+  {
+    "id": "1e48d741-97b1-5ade-92d0-0705e814b219",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 36,
+    "page_end": 36,
+    "position": 35,
+    "content": "}\n} /*End of delete() */\nvoid display()// print queue\n{\nint i;\nif (isEmpty() )\nprintf(\"\\nQueue is empty \\n\");\nelse\n{ printf(\"\\nQueue is : \");\nfor (i = (front+1)%MAX; i != (rear+1)%MAX; i=(i+1)%MAX)\nprintf(\"%d \", cqueue[i]);\nprintf(\"\\n\");\n}\n}\n// Function to peek at the front item\nint peek() {\nif (isEmpty()) {\nprintf(\"Queue is empty. Nothing to peek.\\n\");\nreturn -1; // Error value\n} else {\nreturn cqueue[front+1];\n}\n}\nint main()\n{\nint choice;\nwhile (1)\n{\nprintf(\"\\n1.Insert element to queue \\n\");\nprintf(\"2.Delete element from queue \\n\");\nprintf(\"3.Display all elements of queue \\n\");\nprintf(\"4.Peek \\n\");\nprintf(\"5.Quit \\n\");\nprintf(\"\\nEnter your choice : \");\nscanf(\"%d\", &choice);\nswitch (choice)\n{\ncase 1:\nenqueue();\nbreak;\ncase 2:",
+    "content_hash": "d3096d03a618ff8dd3284c6319025a6731b76eca3e23760625c11b7b31d46369",
+    "token_count": 225
+  },
+  {
+    "id": "4450a9c4-76a9-5cd8-a9eb-8287cbbc3d13",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 37,
+    "page_end": 37,
+    "position": 36,
+    "content": "dequeue();\nbreak;\ncase 3:\ndisplay();\nbreak;\ncase 4:\nint x=peek();\nif(x!=-1) printf(\"\\nfront element is=%d\\n\",x);\nbreak;\ncase 5:\nexit(1);\ndefault:\nprintf(\"\\nWrong choice \\n\");\n} /*End of switch*/\n} /*End of while*/\nreturn 0;\n} /*End of main()*/\nDOUBLE ENDED QUEUE USING ARRAY\nA Deque stands for Double Ended Queue.\nIt is a linear data structure in which insertion and deletion operations can be performed from both front\nand rear ends. Unlike a simple queue (where insert at rear and delete from front only), in Deque:\n\u25cf\u200b Insert front\n\u25cf\u200b Insert rear\n\u25cf\u200b Delete front\n\u25cf\u200b Delete rear\nTypes of Deques\nThere are two common types:\n1.\u200b Input Restricted Deque\n\u25cb\u200b Insertion at only one end (rear).\n\u25cb\u200b Deletion from both ends.\n2.\u200b Output Restricted Deque\n\u25cb\u200b Deletion at only one end (front).\n\u25cb\u200b Insertion from both ends.",
+    "content_hash": "ed9881fe8cd5f66c430917b363437ebbebfa626c59c43203627673bfa7dbef6d",
+    "token_count": 229
+  },
+  {
+    "id": "9f3b73f3-3705-5c87-b031-1e3c58a9303d",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 38,
+    "page_end": 38,
+    "position": 37,
+    "content": "Basic Operations in a General Deque:\nOperation\nDescription\nInsert Front\n\u200b\nInsert an element at the front end.\nInsert Rear\n\u200b\nInsert an element at the rear end.\nDelete Front \u200b\nDelete an element from the front end.\nDelete Rear\n\u200b\nDelete an element from the rear end.\nPeek Front\n\u200b\nGet the front element without removing it.\nPeek Rear\n\u200b\nGet the rear element without removing it.\nisFull()\n\u200b\nCheck if the deque is full.\nisEmpty()\n\u200b\nCheck if the deque is empty.\nAlgorithms (assuming circular array with front = -1, rear = -1 initially)\nAlgorithm Initialize Deque\nfront = -1\nrear= -1\nAlgorithm for isEmpty()\n1. If front ==-1 AND rear== -1\nReturn TRUE\n2. Else\nReturn FALSE\nAlgorithm for isFull()\n1. If (rear + 1) mod MAX = front then\nReturn TRUE\n2. Else\nReturn FALSE\nAlgorithm for Insert Front\n1. If Deque is Full\nOutput \"Deque Overflow\"\nExit\n2. If Deque is Empty\nSet front \u2190 0\nSet rear \u2190 0\n3. Else\nSet front \u2190 (front - 1 + MAX) mod MAX\n4. Set deque[front] \u2190 item",
+    "content_hash": "4092eb91b6190295d4115e81d2678494100abce50c1eb889fe4e132be4f69024",
+    "token_count": 271
+  },
+  {
+    "id": "11fb391d-de44-5c6c-9449-729c39e63c0c",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 39,
+    "page_end": 39,
+    "position": 38,
+    "content": "Algorithm for Insert Rear\n1. If Deque is Full\nOutput \"Deque Overflow\"\nExit\n2. If Deque is Empty\nSet front \u2190 0\nSet rear \u2190 0\n3. Else\nSet rear \u2190 (rear + 1) mod MAX\n4. Set deque[rear] \u2190 item\nAlgorithm for Delete Front\n1. If Deque is Empty\nOutput \"Deque Underflow\"\nExit\n2. Output deque[front] as deleted element\n3. If front = rear\nSet front \u2190 -1\nSet rear \u2190 -1\n4. Else\nSet front \u2190 (front + 1) mod MAX\nAlgorithm for Delete Rear\n1. If Deque is Empty\nOutput \"Deque Underflow\"\nExit\n2. Output deque[rear] as deleted element\n3. If front = rear\nSet front \u2190 -1\nSet rear \u2190 -1\n4. Else\nSet rear \u2190 (rear - 1 + MAX) mod MAX\nDisplay Deque Elements\n1. If Deque is Empty\nOutput \"Deque is empty\"\nExit\n2. Set i \u2190 front\n3. Repeat\nOutput deque[i]\nSet i \u2190 (i + 1) mod MAX\nUntil i = (rear + 1) mod MAX",
+    "content_hash": "43aaf9b2b21d8d1282ac6e95a245f909c63afb23a9a8ce373bbe81f8e3a5d4cd",
+    "token_count": 261
+  },
+  {
+    "id": "2de03f42-6a0a-5ed1-a53a-624bcce9d3d4",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 40,
+    "page_end": 40,
+    "position": 39,
+    "content": "Peek Front Element\n1. If front = -1 then\nOutput \"Deque is empty\"\nExit\n2. Else\nOutput deque[front] as the front element\nPeek Rear Element\n1. If rear = -1 then\nOutput \"Deque is empty\"\nExit\n2. Else\nOutput deque[rear] as the rear element\nNote:\n\u25cf\u200b Wrapping is handled using % MAX (modulus operator).\n\u25cf\u200b In Deque, we can move front and rear both ways (increment/decrement).\n\u25cf\u200b You can design Deque using Arrays (fixed size) or Linked Lists (dynamic size).\nC Program Double Ended Queue using array\n#include <stdio.h>\n#include <stdlib.h>\n#define MAX 5\nint deque[MAX];\nint front = -1, rear = -1;\n// Function to check if deque is full\nint isFull() {\nreturn ((rear + 1) % MAX == front);\n}\n// Function to check if deque is empty\nint isEmpty() {\nreturn (front == -1);\n}\n// Insert element at front\nvoid insertFront(int item) {\nif (isFull()) {\nprintf(\"Deque Overflow! Cannot insert at front.\\n\");\nreturn;\n}\nif (isEmpty()) {\nfront = rear = 0;\n} else {\nfront = (front - 1 + MAX) % MAX;",
+    "content_hash": "2232cf92d2a789e27fce24c2c2a42d643bb69e501fdc8491907f3f1e804f43e0",
+    "token_count": 275
+  },
+  {
+    "id": "7b0e4d06-8e14-55aa-87f4-5aa75e7b095b",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 41,
+    "page_end": 41,
+    "position": 40,
+    "content": "}\ndeque[front] = item;\nprintf(\"Inserted %d at front.\\n\", item);\n}\n// Insert element at rear\nvoid insertRear(int item) {\nif (isFull()) {\nprintf(\"Deque Overflow! Cannot insert at rear.\\n\");\nreturn;\n}\nif (isEmpty()) {\nfront = rear = 0;\n} else {\nrear = (rear + 1) % MAX;\n}\ndeque[rear] = item;\nprintf(\"Inserted %d at rear.\\n\", item);\n}\n// Delete element from front\nvoid deleteFront() {\nif (isEmpty()) {\nprintf(\"Deque Underflow! Cannot delete from front.\\n\");\nreturn;\n}\nprintf(\"Deleted element from front: %d\\n\", deque[front]);\nif (front == rear) {\nfront = rear = -1; // Only one element was present\n} else {\nfront = (front + 1) % MAX;\n}\n}\n// Delete element from rear\nvoid deleteRear() {\nif (isEmpty()) {\nprintf(\"Deque Underflow! Cannot delete from rear.\\n\");\nreturn;\n}\nprintf(\"Deleted element from rear: %d\\n\", deque[rear]);\nif (front == rear) {\nfront = rear = -1; // Only one element was present\n} else {\nrear = (rear - 1 + MAX) % MAX;\n}\n}",
+    "content_hash": "3f31d8763b06c4d55f59dbc5fd0d7db4c04143e22ebfacae97da05d8ef00d09c",
+    "token_count": 274
+  },
+  {
+    "id": "5812e1f6-b282-50b7-920d-6074ec7d4e77",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 42,
+    "page_end": 42,
+    "position": 41,
+    "content": "// Display deque elements\nvoid display() {\nint i;\nif (isEmpty()) {\nprintf(\"Deque is empty.\\n\");\nreturn;\n}\nprintf(\"Deque elements: \");\ni = front;\nwhile (1) {\nprintf(\"%d \", deque[i]);\nif (i == rear)\nbreak;\ni = (i + 1) % MAX;\n}\nprintf(\"\\n\");\n}\n// Main function\nint main() {\nint choice, item;\nwhile (1) {\nprintf(\"\\n***** MENU *****\\n\");\nprintf(\"1. Insert Front\\n\");\nprintf(\"2. Insert Rear\\n\");\nprintf(\"3. Delete Front\\n\");\nprintf(\"4. Delete Rear\\n\");\nprintf(\"5. Display\\n\");\nprintf(\"6. Exit\\n\");\nprintf(\"Enter your choice: \");\nscanf(\"%d\", &choice);\nswitch (choice) {\ncase 1:\nprintf(\"Enter the element to insert at front: \");\nscanf(\"%d\", &item);\ninsertFront(item);\nbreak;\ncase 2:\nprintf(\"Enter the element to insert at rear: \");\nscanf(\"%d\", &item);\ninsertRear(item);\nbreak;\ncase 3:",
+    "content_hash": "25b30211b31f9a012d32b692c02a89f35436b2544d14572f17ae7b58483bf1e7",
+    "token_count": 228
+  },
+  {
+    "id": "fdf3765b-c616-5a4a-97f9-cd4186f5109e",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 43,
+    "page_end": 43,
+    "position": 42,
+    "content": "deleteFront();\nbreak;\ncase 4:\ndeleteRear();\nbreak;\ncase 5:\ndisplay();\nbreak;\ncase 6:\nprintf(\"Exiting program.\\n\");\nexit(0);\ndefault:\nprintf(\"Invalid choice! Please try again.\\n\");\n}\n}\nreturn 0;\n}\nINFIX TO POSTFIX CONVERSION AND EVALUATION\nAn infix expression is the way we normally write mathematical expressions: The operator is between the\noperands. Examples of Infix expressions:\n\u25cf\u200b A + B\n\u25cf\u200b 5 * 3\n\u25cf\u200b 5 + 3 * 2\n\u25cf\u200b (A + B) * (C - D)\n\u25cf\u200b (7 + 3) * (5 - 2)\nThis is natural for humans because we understand precedence (multiplication first, then addition) and use\nparentheses.\nPostfix Expression is also called Reverse Polish Notation. A postfix expression places the operator after\nits operands.\n\u25cf\u200b No parentheses are needed.\n\u25cf\u200b No precedence rules needed \u2014 order of operations is built-in.\nExamples of Postfix expressions:\n\u25cf\u200b A B + \u2192 (means A + B)\n\u25cf\u200b 5 3 * \u2192 (means 5 * 3)\n\u25cf\u200b A B + C D - * \u2192 (means (A + B) * (C - D))\n\u25cf\u200b 7 3 + 5 2 - * \u2192 (means (7 + 3) * (5 - 2))",
+    "content_hash": "933b8a32a6f95951bebc7cc0a7593188fe6013b8eac6426e5488ba7c7eaf9c74",
+    "token_count": 301
+  },
+  {
+    "id": "f2bafb9c-d48a-5559-b314-c029fb5bdcce",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 44,
+    "page_end": 44,
+    "position": 43,
+    "content": "Computers prefer postfix because it\u2019s very easy to evaluate using a stack.\nQuick Comparison:\nFeature\nInfix\nPostfix\nOperator position\nBetween operands After operands\nNeed for parentheses?\nYes (sometimes)\nNo\nOperator precedence important?\nYes\nNo\nExample\nA + B\nA B +\nHuman or Machine friendly?\nHuman\nMachine\nExamples:\nInfix\n\u200b\n\u200b\n\u200b\n\u200b\n\u200b\n\u200b\nPostfix\n(A + B) * (C - D) / (E +\nF)\n\u200b\nA B + C D - * E F + /\n(5 + 2) * (8 - 3) / (4 + 1) \u200b \u200b\n5 2 + 8 3 - * 4 1 +\n/\n((A + B) * (C + D)) / ((E + F) * (G +\nH))\nA B + C D + * E F + G H + *\n/\nA + B * (C ^ D - E) ^ (F + G * H) - I\nA B C D ^ E - F G H * + ^ * + I -\nAlgorithm for Infix to Postfix Conversion\nWe use a stack to hold operators and parentheses during the conversion.\nSteps:\n1.\u200b Initialize an empty stack for operators and an empty postfix expression.\n2.\u200b Scan the infix expression from left to right.\n3.\u200b For each symbol in the infix expression:\n\u25cb\u200b If the symbol is an operand (letter or number), add it to the postfix expression.\n\u25cb\u200b If the symbol is (, push it onto the stack.\n\u25cb\u200b If the symbol is ):\n\u25a0\u200b Pop from the stack and append to the postfix expression until a ( is encountered.\n\u25a0\u200b Pop and discard the (.\n\u25cb\u200b If the symbol is an operator (+, -, *, /, ^):\n\u25a0\u200b While the stack is not empty, and the top of the stack has higher or equal\nprecedence than the current operator:\n\u25a0\u200b Pop from the stack and append to the postfix expression.",
+    "content_hash": "ce72006c3f7ca1627ec66ee54ea040143aac91536fe5127ba5830cc4c3c4d4d2",
+    "token_count": 424
+  },
+  {
+    "id": "0436b49d-f977-5704-acba-23225b653914",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 45,
+    "page_end": 45,
+    "position": 44,
+    "content": "\u25a0\u200b Push the current operator onto the stack.\n4.\u200b After the entire infix expression is scanned:\n\u25cb\u200b Pop all remaining operators from the stack and append them to the postfix expression\nExample:\n(A + B) * (C - D)\nInput Stack\nPostfix\n(\n(\nA\n(\nA\n+\n( +\nA\nB\n( +\nA B\n)\nA B +\n*\n*\nA B +\n(\n* (\nA B +\nC\n* ( \u200b\nA B + C\n-\n* ( -\nA B + C\nD\n* ( - A B + C D\n)\n*\nA B + C D -\n(end)\nA B + C D - *\nC Program Infix to Postfix Conversion\n#include <stdio.h>\n#include <ctype.h> // for isalpha(), isdigit()\n#include <string.h>\n#define MAX 100\nchar stack[MAX];\nint top = -1;\n// Function to push into stack\nvoid push(char c) {\nstack[++top] = c;\n}\n// Function to pop from stack\nchar pop() {\nif (top == -1)\nreturn -1;\nelse\nreturn stack[top--];\n}\n// Function to return precedence of operators\nint precedence(char c) {\nif (c == '^')\nreturn 3;",
+    "content_hash": "db3e0932af9da659071b24c02572185fbcefb3eca91fa8fe1e7004d3d48ce34c",
+    "token_count": 261
+  },
+  {
+    "id": "16d6cc40-eddb-5f77-8ddd-d980e056c5d3",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 46,
+    "page_end": 46,
+    "position": 45,
+    "content": "else if (c == '*' || c == '/')\nreturn 2;\nelse if (c == '+' || c == '-')\nreturn 1;\nelse\nreturn 0;\n}\nvoid infixToPostfix(char infix[]) {\nchar postfix[MAX];\nint i, j = 0;\nchar c;\nfor (i = 0; infix[i] != '\\0'; i++) {\nc = infix[i];\nif (isalpha(c) || isdigit(c)) {\npostfix[j++] = c; // Operand directly to postfix\n}\nelse if (c == '(') {\npush(c);\n}\nelse if (c == ')') {\nwhile (top != -1 && stack[top] != '(') {\npostfix[j++] = pop();\n}\npop(); // pop '('\n}\nelse { // Operator\nwhile (top != -1 && precedence(stack[top]) >= precedence(c)) {\npostfix[j++] = pop();\n}\npush(c);\n}\n}\n// Pop any remaining operators\nwhile (top != -1) {\npostfix[j++] = pop();\n}\npostfix[j] = '\\0'; // End postfix expression\nprintf(\"Postfix Expression: %s\\n\", postfix);\n}\nint main() {\nchar infix[MAX];\nprintf(\"Enter an Infix Expression: \");\nscanf(\"%s\", infix);\ninfixToPostfix(infix);",
+    "content_hash": "49289bf550416f88a7e113143ba2e55ecf01b05be4144b78c3cd3eda8c52c09a",
+    "token_count": 269
+  },
+  {
+    "id": "5cb61c3b-7715-52f8-bd3a-60ec9e892111",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 47,
+    "page_end": 47,
+    "position": 46,
+    "content": "return 0;\n}\nOutput\nEnter an Infix Expression: (A+B)*(C-D)/F^E\nPostfix Expression: AB+CD-*FE^/\nEvaluate a Postfix Expression\nWe use a stack:\nAlgorithm Evaluation of Postfix Expression\n1.\u200b Scan the postfix expression left to right.\n2.\u200b For each symbol:\n\u25cb\u200b If it's an operand (number), push it onto the stack.\n\u25cb\u200b If it's an operator:\n\u25a0\u200b Pop the top two elements from the stack.\n\u25a0\u200b Apply the operator (second popped item operator first popped item).\n\u25a0\u200b Push the result back into the stack.\n3.\u200b At the end, the stack contains only one element \u2014 the final result.\nSimple Example: single digit\n7 8 + 3 2 + /\nStep-by-step:\nSymbol Stack Explanation\n7\n7\nPush 7\n8\n7, 8\nPush 8\n+\n15\n7 + 8 = 15\n3\n15, 3\nPush 3\n2\n15, 3, 2 Push 2\n+\n15, 5\n3 + 2 = 5\n/\n3\n15 / 5 = 3\nFinal result: 3\nExample Problems:\nInfix \u200b\n\u200b\nPostfix \u200b \u200b\n\u200b\n\u200b\nResult\n(5 * (6 + 2)) - (12 / 4)\n5 6 2 + * 12 4 / -\n\u200b\n37",
+    "content_hash": "64654f52384ce0a7dbe4615bfe884c40d8239ca6a62187abbbf7aabcfa502d81",
+    "token_count": 311
+  },
+  {
+    "id": "fcf03c3d-92a4-54c7-8aa9-7a5389b4220d",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 48,
+    "page_end": 48,
+    "position": 47,
+    "content": "(7 + 8) / (3 + 2) \u200b\n\u200b\n7 8 + 3 2 + /\n\u200b\n3\nNote\n\u25cf\u200b Always push operands.\n\u25cf\u200b Always pop two operands for an operator.\n\u25cf\u200b Order matters: second popped value is first operand, first popped value is second operand.\n\u25cf\u200b Use a stack to keep things simple.\nImplementation in C: single digit\n#include <stdio.h>\n#include <ctype.h> // For isdigit()\n#include <stdlib.h> // For atoi()\n#define MAX 100\nint stack[MAX];\nint top = -1;\n// Function to push into stack\nvoid push(int value) {\nstack[++top] = value;\n}\n// Function to pop from stack\nint pop() {\nreturn stack[top--];\n}\n// Function to evaluate postfix expression\nint evaluatePostfix(char postfix[]) {\nint i;\nchar ch;\nint val;\nfor (i = 0; postfix[i] != '\\0'; i++) {\nch = postfix[i];\nif (isdigit(ch)) {\n// If operand, push onto stack\npush(ch - '0'); // Convert char to int\n}\nelse if (ch == ' ') {\n// Ignore spaces\ncontinue;\n}\nelse {\n// Operator encountered\nint val2 = pop();\nint val1 = pop();",
+    "content_hash": "6d181250efc5a041462a09afd8b64c03be4d2686142f0041139d23beb9498819",
+    "token_count": 268
+  },
+  {
+    "id": "7ea9975a-abef-56c1-b8ef-1b61b50a4c18",
+    "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+    "page_start": 49,
+    "page_end": 49,
+    "position": 48,
+    "content": "switch (ch) {\ncase '+':\npush(val1 + val2);\nbreak;\ncase '-':\npush(val1 - val2);\nbreak;\ncase '*':\npush(val1 * val2);\nbreak;\ncase '/':\npush(val1 / val2);\nbreak;\ncase '^':\n{\nint result = 1;\nfor (int i = 0; i < val2; i++)\nresult *= val1;\npush(result);\nbreak;\n}\n}\n}\n}\nreturn pop();\n}\nint main() {\nchar postfix[MAX];\nprintf(\"Enter a Postfix Expression (single-digit numbers and operators without spaces, like 562+*): \");\nscanf(\"%s\", postfix);\nint result = evaluatePostfix(postfix);\nprintf(\"Result of Postfix Evaluation: %d\\n\", result);\nreturn 0;\n}\nOutput\nEnter a Postfix Expression (single-digit numbers and operators without spaces, like 562+*): 562+*\nResult of Postfix Evaluation: 40",
+    "content_hash": "418f01cb06f628604063cb1dc546e09962a9a0a82149aa8a8af01d4ea598d8bc",
+    "token_count": 195
+  }
+]

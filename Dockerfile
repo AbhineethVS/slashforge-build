@@ -7,10 +7,12 @@ RUN npm run build
 
 FROM python:3.14-slim AS runtime
 ENV LUMA_FRONTEND_DIST=/app/frontend/dist \
+    LUMA_DEMO_ASSETS_DIR=/app/demo_assets \
     PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY backend/ /app/backend/
 RUN python -m pip install --no-cache-dir /app/backend
+COPY demo_assets/ /app/demo_assets/
 COPY --from=frontend-build /build/frontend/dist /app/frontend/dist
 EXPOSE 8000
 CMD ["sh", "-c", "python -m uvicorn luma_api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -77,6 +77,29 @@ type PendingUpload = {
   action?: string
 }
 
+const UPLOAD_STAGE_COPY: Record<
+  Exclude<PendingUpload['status'], 'ready' | 'failed'>,
+  { label: string; detail: string }
+> = {
+  uploading: {
+    label: 'Uploading PDF',
+    detail: 'Sending the file to LUMA…',
+  },
+  extracting: {
+    label: 'Reading pages',
+    detail: 'Extracting text page by page…',
+  },
+  embedding: {
+    label: 'Indexing for chat',
+    detail: 'Building search embeddings. This can take a few seconds…',
+  },
+}
+
+function uploadStageCopy(status: PendingUpload['status']) {
+  if (status === 'failed' || status === 'ready') return null
+  return UPLOAD_STAGE_COPY[status]
+}
+
 export function WorkspacePage() {
   const [state, setState] = useState<WorkspaceState>({ status: 'loading' })
   const [isResetting, setIsResetting] = useState(false)
@@ -314,16 +337,20 @@ export function WorkspacePage() {
     const extractingTimer = window.setTimeout(
       () =>
         setPendingUpload((current) =>
-          current ? { ...current, status: 'extracting' } : current,
+          current && current.status !== 'failed'
+            ? { ...current, status: 'extracting' }
+            : current,
         ),
-      200,
+      450,
     )
     const embeddingTimer = window.setTimeout(
       () =>
         setPendingUpload((current) =>
-          current ? { ...current, status: 'embedding' } : current,
+          current && current.status !== 'failed'
+            ? { ...current, status: 'embedding' }
+            : current,
         ),
-      700,
+      1600,
     )
 
     try {
@@ -640,9 +667,18 @@ export function WorkspacePage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={pendingUpload !== null || uploadLimitReached}
+                aria-busy={pendingUpload !== null && pendingUpload.status !== 'failed'}
               >
-                <Icon name="plus" size={15} />
-                {uploadLimitReached ? '2 uploads added' : 'Add source'}
+                {pendingUpload && pendingUpload.status !== 'failed' ? (
+                  <span className="loading-mark add-source-spinner" aria-hidden="true" />
+                ) : (
+                  <Icon name="plus" size={15} />
+                )}
+                {uploadLimitReached
+                  ? '2 uploads added'
+                  : pendingUpload && pendingUpload.status !== 'failed'
+                    ? 'Indexing…'
+                    : 'Add source'}
               </button>
               <input
                 ref={fileInputRef}
@@ -662,7 +698,7 @@ export function WorkspacePage() {
                 </span>
                 <h2>No sources attached</h2>
                 <p>
-                  The bundled demo source could not be loaded. Restart the
+                  The bundled demo sources could not be loaded. Restart the
                   session or check the server logs.
                 </p>
               </div>
@@ -724,19 +760,30 @@ export function WorkspacePage() {
                   </li>
                 ))}
                 {pendingUpload && (
-                  <li className={`source-card source-${pendingUpload.status}`}>
+                  <li
+                    className={`source-card source-pending source-${pendingUpload.status}`}
+                  >
                     <div className="source-card-header">
-                      <span className="file-mark" aria-hidden="true">
-                        <Icon name="file" size={16} />
+                      <span className="file-mark file-mark-busy" aria-hidden="true">
+                        {pendingUpload.status === 'failed' ? (
+                          <Icon name="file" size={16} />
+                        ) : (
+                          <span className="loading-mark source-spinner" />
+                        )}
                       </span>
                       <div>
                         <strong>{pendingUpload.displayName}</strong>
                         <span className="source-kind">Temporary upload</span>
                       </div>
                     </div>
-                    <div className="source-progress" aria-hidden="true">
-                      <span />
-                    </div>
+                    {pendingUpload.status !== 'failed' && (
+                      <div
+                        className="source-progress source-progress-active"
+                        aria-hidden="true"
+                      >
+                        <span />
+                      </div>
+                    )}
                     <p
                       className="source-status"
                       role={pendingUpload.status === 'failed' ? 'alert' : 'status'}
@@ -744,8 +791,13 @@ export function WorkspacePage() {
                     >
                       {pendingUpload.status === 'failed'
                         ? pendingUpload.message
-                        : `${pendingUpload.status} PDF…`}
+                        : uploadStageCopy(pendingUpload.status)?.label}
                     </p>
+                    {pendingUpload.status !== 'failed' && (
+                      <p className="source-progress-detail">
+                        {uploadStageCopy(pendingUpload.status)?.detail}
+                      </p>
+                    )}
                     {pendingUpload.action && (
                       <p className="source-recovery">{pendingUpload.action}</p>
                     )}

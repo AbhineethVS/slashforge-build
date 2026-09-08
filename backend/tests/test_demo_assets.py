@@ -75,6 +75,28 @@ def test_unknown_source_id_is_rejected(client: TestClient) -> None:
     assert response.json()["error"]["code"] == "SOURCE_NOT_READY"
 
 
+def test_library_loads_economics_and_dsa_catalogs() -> None:
+    from luma_api.demo_assets import (
+        BUNDLED_DEMO_SOURCE_ID,
+        BUNDLED_DSA_SOURCE_ID,
+        DEFAULT_DEMO_DIR,
+        load_library,
+    )
+
+    if not (DEFAULT_DEMO_DIR / "library.json").is_file():
+        pytest.skip("Packaged demo library is unavailable in this environment.")
+
+    library = load_library(DEFAULT_DEMO_DIR)
+
+    assert [source.source_id for source in library.sources] == [
+        BUNDLED_DEMO_SOURCE_ID,
+        BUNDLED_DSA_SOURCE_ID,
+    ]
+    assert library.get(BUNDLED_DSA_SOURCE_ID) is not None
+    assert len(library.source_summaries()) == 2
+    assert len(library.suggested_questions()) >= 4
+
+
 def test_manifest_and_embeddings_stay_compatible(demo_catalog) -> None:
     reloaded = load_catalog(demo_catalog.root)
 

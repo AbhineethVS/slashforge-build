@@ -569,24 +569,78 @@ body.is-resizing-panels * {
 
 .source-progress span {
   display: block;
-  width: 25%;
+  width: 28%;
   height: 100%;
   background: var(--brand-gradient);
   border-radius: inherit;
-  transition: width 260ms ease;
+  transition: width 320ms ease;
+}
+
+.source-progress-active span {
+  animation: source-progress-pulse 1.35s ease-in-out infinite;
 }
 
 .source-extracting .source-progress span {
-  width: 55%;
+  width: 58%;
 }
 
 .source-embedding .source-progress span {
-  width: 85%;
+  width: 86%;
 }
 
 .source-failed .source-progress span {
   width: 100%;
   background: var(--danger);
+  animation: none;
+}
+
+.source-progress-detail {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.source-pending {
+  border-style: dashed;
+}
+
+.file-mark-busy {
+  background: var(--info-soft, var(--accent-soft));
+}
+
+.source-spinner,
+.add-source-spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.add-source-spinner {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes source-progress-pulse {
+  0% {
+    transform: translateX(-35%);
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(260%);
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source-progress-active span,
+  .source-spinner,
+  .add-source-spinner {
+    animation: none;
+  }
 }
 
 .source-failed .source-status,

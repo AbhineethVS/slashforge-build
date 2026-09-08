@@ -55,7 +55,13 @@ from .audio_overview import (
     retrieve_audio_overview_chunks,
 )
 from .chat import SelectedIndex, answer_from_sources, resolve_answer_format
-from .demo_assets import BundledDemoCatalog, load_catalog
+from .demo_assets import (
+    BUNDLED_DEMO_SOURCE_ID,
+    BundledDemoCatalog,
+    BundledDemoLibrary,
+    as_library,
+    load_library,
+)
 from .errors import ApiError, api_error_response
 from .learning import (
     AttemptRequest,
@@ -353,7 +359,7 @@ def create_app(
     *,
     session_store: SessionStore | None = None,
     frontend_dist: Path | None = None,
-    demo_catalog: BundledDemoCatalog | None = None,
+    demo_catalog: BundledDemoLibrary | BundledDemoCatalog | None = None,
     embedder_factory: Callable[[], Embedder] | None = None,
     answer_generator: (
         Callable[[str, Sequence[Chunk]], GroundedAnswer] | None
@@ -373,10 +379,10 @@ def create_app(
     voice_provider: VoiceProvider | None = None,
 ) -> FastAPI:
     store = session_store or SessionStore()
-    catalog = demo_catalog
+    catalog = as_library(demo_catalog)
     if catalog is None:
         try:
-            catalog = load_catalog()
+            catalog = load_library()
         except FileNotFoundError:
             catalog = None
     configured_voice_provider = voice_provider
@@ -388,7 +394,7 @@ def create_app(
     def attach_bundled_demo(session: DemoSession) -> None:
         if catalog is None:
             return
-        session.sources = [catalog.source_summary()]
+        session.sources = catalog.source_summaries()
 
     def session_payload(session: DemoSession) -> SessionResponse:
         uploaded = [
@@ -444,12 +450,13 @@ def create_app(
     ) -> list[SelectedIndex]:
         selected: list[SelectedIndex] = []
         for source_id in source_ids:
-            if catalog is not None and source_id == catalog.source_id:
+            bundled = catalog.get(source_id) if catalog is not None else None
+            if bundled is not None:
                 selected.append(
                     SelectedIndex(
                         source_id=source_id,
-                        source_name=catalog.manifest.display_name,
-                        index=catalog.index,
+                        source_name=bundled.manifest.display_name,
+                        index=bundled.index,
                     )
                 )
                 continue
@@ -554,13 +561,12 @@ def create_app(
         session: DemoSession,
         allow: bool = True,
     ) -> ArtifactResponse | None:
-        if (
-            not allow
-            or catalog is None
-            or request.source_ids != [catalog.source_id]
-        ):
+        if not allow or catalog is None or len(request.source_ids) != 1:
             return None
-        cached = catalog.fallback_artifact(kind)
+        bundled = catalog.get(request.source_ids[0])
+        if bundled is None:
+            return None
+        cached = bundled.fallback_artifact(kind)
         if cached is None:
             return None
         artifact = ArtifactResponse(
@@ -1284,10 +1290,13 @@ def create_app(
         session: DemoSession = Depends(current_session),
     ) -> ArtifactResponse:
         selected_indexes(session, request.source_ids)
+        economics = (
+            catalog.get(BUNDLED_DEMO_SOURCE_ID) if catalog is not None else None
+        )
         if (
-            catalog is None
-            or request.source_ids != [catalog.source_id]
-            or not catalog.visual_deck_fallback_path.is_file()
+            economics is None
+            or request.source_ids != [economics.source_id]
+            or not economics.visual_deck_fallback_path.is_file()
         ):
             raise ApiError(
                 status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -1647,10 +1656,14 @@ def create_app(
             stored_artifact = artifact.model_dump(mode="json")
             session.artifacts.append(stored_artifact)
         except (OpenAIError, InvalidArtifactError, ValueError) as error:
+            bundled = (
+                catalog.get(request.source_ids[0])
+                if catalog is not None and len(request.source_ids) == 1
+                else None
+            )
             cached = (
-                catalog.fallback_artifact("audio_overview")
-                if catalog is not None
-                and request.source_ids == [catalog.source_id]
+                bundled.fallback_artifact("audio_overview")
+                if bundled is not None
                 else None
             )
             if cached is None:
@@ -1828,7 +1841,8 @@ def create_app(
                 False,
                 "Select a ready source and try again.",
             )
-        if source_id != catalog.source_id:
+        bundled = catalog.get(source_id)
+        if bundled is None:
             raise ApiError(
                 status.HTTP_404_NOT_FOUND,
                 "SOURCE_NOT_READY",
@@ -1837,9 +1851,9 @@ def create_app(
                 "Select a ready source and try again.",
             )
         return FileResponse(
-            catalog.pdf_path,
+            bundled.pdf_path,
             media_type="application/pdf",
-            filename=catalog.manifest.display_name,
+            filename=bundled.manifest.display_name,
         )
 
     @application.get("/api/v1/visual-decks/{artifact_id}/file")
@@ -1864,8 +1878,17 @@ def create_app(
                 False,
                 "Return to Studio and generate the deck again.",
             )
+        economics = catalog.get(BUNDLED_DEMO_SOURCE_ID)
+        if economics is None or not economics.visual_deck_fallback_path.is_file():
+            raise ApiError(
+                status.HTTP_404_NOT_FOUND,
+                "SOURCE_NOT_READY",
+                "The visual deck is not available in this session.",
+                False,
+                "Return to Studio and generate the deck again.",
+            )
         return FileResponse(
-            catalog.visual_deck_fallback_path,
+            economics.visual_deck_fallback_path,
             media_type="application/pdf",
             filename="the-economic-blueprint.pdf",
         )

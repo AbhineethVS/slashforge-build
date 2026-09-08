@@ -1,0 +1,16 @@
+{
+  "version": "1",
+  "source_id": "c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47",
+  "display_name": "DSA - Data Structures.pdf",
+  "page_count": 49,
+  "chunk_count": 49,
+  "embedding_model": "text-embedding-3-small",
+  "extraction_version": "pymupdf-page-v1",
+  "embedding_version": "openai-text-embedding-3-small-v1",
+  "built_at": "2026-09-08T15:29:25.096846Z",
+  "suggested_questions": [
+    "What is asymptotic notation and why is it used in algorithm analysis?",
+    "How is a sparse matrix represented using arrays?",
+    "What is the difference between time complexity and space complexity?"
+  ]
+}

@@ -219,7 +219,7 @@ Stable user-facing error codes include:
 ### Session
 
 - `POST /api/v1/session`
-  - Creates a temporary session with the bundled demo source attached.
+  - Creates a temporary session with the bundled demo sources attached.
 - `GET /api/v1/session`
   - Returns current sources, messages, artifacts, learning memory, and expiry.
 - `DELETE /api/v1/session`
@@ -387,7 +387,7 @@ receives either provider key.
 - Recordings, transcripts, narrations, and Audio Overview artifacts are deleted
   on expiry, explicit reset, or process restart; raw recordings should be
   removed earlier after transcription completes.
-- The bundled demo PDF and precomputed index remain part of the deployment.
+- The bundled demo PDFs and precomputed indexes remain part of the deployment.
 - A cached bundled Audio Overview transcript and audio may be packaged only
   when the source, script, voice output, and redistribution terms permit it.
 - No database, account, or cross-device history exists.

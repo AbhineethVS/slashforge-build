@@ -26,8 +26,9 @@ until the product is further along. The repository now contains:
   reset behavior.
 - The LUMA landing page and responsive Sources–Chat–Studio workspace shell.
 - A bundled demo catalog (`demo_assets/`) with precomputed chunks and
-  embeddings for *Economics - Theory of Cost.pdf* (43 pages).
-- Session startup attachment of the ready bundled source, suggested questions,
+  embeddings for *Economics - Theory of Cost.pdf* and
+  *DSA - Data Structures.pdf*.
+- Session startup attachment of the ready bundled sources, suggested questions,
   and authenticated PDF serving at `/api/v1/sources/{source_id}/file`.
 - Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
   retryable failures, source deletion, and automatic temporary-file cleanup.
@@ -85,11 +86,12 @@ Overview defaults to `gpt-5` and can be changed with
 server-only `SARVAM_API_KEY`; `SARVAM_TTS_SPEAKER` selects the Bulbul voice.
 Neither key may be shipped to the browser.
 
-Rebuild bundled demo assets after changing the source PDF:
+Rebuild bundled demo assets after changing a source PDF:
 
 ```bash
 cd backend
-python -m luma_api.demo_assets ../demo.pdf
+python -m luma_api.demo_assets ../demo.pdf --output ../demo_assets/economics --display-name "Economics - Theory of Cost.pdf" --source-id 8f4d0f62-5b8a-4f1e-9c2d-6a7b1c3d4e5f
+python -m luma_api.demo_assets ../dsa.pdf --output ../demo_assets/dsa --display-name "DSA - Data Structures.pdf" --source-id c3e8a914-7f2b-4d91-9e55-2b6f0a8d1c47
 ```
 
 ## Documentation
@@ -117,7 +119,7 @@ python -m luma_api.demo_assets ../demo.pdf
 
 There is no database, account system, durable file storage, or separate
 frontend deployment in the hackathon release. Temporary session work may
-disappear after expiry or a server restart; the bundled demo source remains.
+disappear after expiry or a server restart; the bundled demo sources remain.
 
 ## Important API prerequisite
 

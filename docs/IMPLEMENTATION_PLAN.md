@@ -67,10 +67,19 @@ retrieved from memory, answered from, and opened at the cited page.
 │   ├── tests/
 │   └── pyproject.toml
 ├── demo_assets/
-│   ├── source.pdf
-│   ├── manifest.json
-│   ├── chunks.json
-│   └── embeddings.npy
+│   ├── library.json
+│   ├── economics/
+│   │   ├── source.pdf
+│   │   ├── manifest.json
+│   │   ├── chunks.json
+│   │   ├── embeddings.npy
+│   │   ├── fallback_artifacts.json
+│   │   └── economic-blueprint-fallback.pdf
+│   └── dsa/
+│       ├── source.pdf
+│       ├── manifest.json
+│       ├── chunks.json
+│       └── embeddings.npy
 ├── tests/evals/
 ├── docs/
 ├── .cursor/skills/

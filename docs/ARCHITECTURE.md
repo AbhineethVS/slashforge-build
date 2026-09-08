@@ -8,7 +8,7 @@ and page-cited answers.
 
 It supports:
 
-- One polished, pre-indexed demo source that works immediately.
+- Two polished, pre-indexed demo sources that work immediately.
 - Optional temporary PDF uploads during a browser session.
 - Page-aware retrieval and citation.
 - Grounded chat, summaries, flashcards, quizzes, and Teach-Back.
@@ -111,7 +111,7 @@ before judging; use student credits for a small paid tier if available.
 
 1. On first load, the browser requests a random opaque session ID.
 2. The API creates a bounded in-memory session with an expiry time.
-3. The bundled demo source is attached immediately.
+3. The bundled demo sources are attached immediately.
 4. Optional uploaded PDFs are written to a randomized temporary directory.
 5. Extracted chunks and embedding matrices live in that session's memory.
 6. Each request refreshes the expiry time.

@@ -469,10 +469,11 @@ export function restoreSelectedSourceIds(sources: SourceSummary[]): string[] {
   } catch {
     sessionStorage.removeItem(SELECTED_SOURCES_STORAGE_KEY)
   }
-  const bundled = sources.find(
-    (source) => source.kind === 'bundled' && source.status === 'ready',
-  )
-  return bundled ? [bundled.id] : [...readyIds].slice(0, 1)
+  const bundled = sources
+    .filter((source) => source.kind === 'bundled' && source.status === 'ready')
+    .map((source) => source.id)
+  if (bundled.length > 0) return bundled
+  return [...readyIds].slice(0, 1)
 }
 
 export function persistSelectedSourceIds(sourceIds: string[]): void {

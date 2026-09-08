@@ -132,7 +132,8 @@ Decision:
   files and process memory.
 - Use NumPy cosine similarity instead of a vector database.
 - Use a high-entropy temporary session ID instead of accounts.
-- Package one pre-indexed demo source and cached fallback artifacts.
+- Package two pre-indexed demo sources (economics and DSA) and cached
+  economics fallback artifacts.
 
 Reason: persistent infrastructure does not improve the judged hackathon flow
 enough to justify its setup, failure modes, and implementation time.
@@ -407,3 +408,31 @@ Consequences:
 - Workspace Chat still answers only from selected PDFs.
 - Chat tips are optional UX, never part of retrieval or citation validation.
 - The landing primary CTA remains Start studying.
+
+## ADR-019: Ship two bundled demo PDFs
+
+Status: accepted
+
+Date: 2026-09-08
+
+Decision: package two pre-indexed bundled sources under `demo_assets/`:
+
+- `economics/` — Theory of Cost (existing demo path, cached Studio fallbacks,
+  visual deck)
+- `dsa/` — Data Structures notes for a second, coding-oriented subject
+
+Deploy the Docker image with `LUMA_DEMO_ASSETS_DIR` and copy `demo_assets/` into
+the runtime image. New sessions attach both ready bundled sources; the client
+selects all ready bundled sources by default. Temporary uploads remain capped
+at two.
+
+Reason: the judged demo should open with useful material without upload friction,
+and contrasting subjects show multi-source selection and citation grounding.
+
+Consequences:
+
+- Image size grows with a second embedding matrix and PDF.
+- Economics-only cached artifacts (visual deck, fallback Studio packs) stay
+  scoped to the economics source ID.
+- Azure App Service remains the documented hosting target; Render is an
+  acceptable single-instance substitute for the hackathon demo.

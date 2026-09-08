@@ -179,11 +179,18 @@ describe('WorkspacePage', () => {
           headers: { 'Content-Type': 'application/json' },
         }),
       )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(uploadedSource), {
-          status: 201,
-          headers: { 'Content-Type': 'application/json' },
-        }),
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            window.setTimeout(() => {
+              resolve(
+                new Response(JSON.stringify(uploadedSource), {
+                  status: 201,
+                  headers: { 'Content-Type': 'application/json' },
+                }),
+              )
+            }, 50)
+          }),
       )
 
     render(
@@ -197,6 +204,12 @@ describe('WorkspacePage', () => {
         files: [new File(['%PDF-readable'], 'my-notes.pdf', { type: 'application/pdf' })],
       },
     })
+
+    expect(await screen.findByText('Uploading PDF')).toBeInTheDocument()
+    expect(
+      screen.getByText('Sending the file to LUMA…'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Indexing…' })).toBeDisabled()
 
     expect(await screen.findByText('Ready · 3 pages')).toBeInTheDocument()
     expect(screen.getByText('my-notes.pdf')).toBeInTheDocument()
