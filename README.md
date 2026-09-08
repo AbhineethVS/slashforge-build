@@ -1,92 +1,191 @@
-# LUMA
+<p align="center">
+  <img align="center" width="96" src="./frontend/public/luma-mark.png" alt="LUMA mark"/>
+</p>
 
-Documentation-first design for **LUMA**, a citation-grounded study assistant
-inspired by NotebookLM and Open Notebook.
+# <p align="center">LUMA</p>
 
-The application will let a student upload course PDFs, ask questions against
-those sources, open evidence at the cited page, generate revision material, and
-identify confident misconceptions through active recall.
+<h2 align="center">Source-grounded study desk for course PDFs</h2>
 
-The demo opens with a polished pre-indexed source and also accepts temporary
-PDF uploads. The root URL is a concise product landing page whose primary
-Start studying action opens `/workspace`. The desktop workspace uses Sources
-on the left, Chat in the center, and Studio on the right.
+<hr>
 
-## Current status
+<p align="center">
+  Ask your material with page citations, revise in Studio, and keep evidence one click away.
+</p>
 
-Phase 0 local feasibility work is complete and cloud deployment is deferred
-until the product is further along. The repository now contains:
+<p align="center">
+  <a href="https://luma-study.onrender.com"><b>Live demo</b></a>
+  &nbsp;|&nbsp;
+  <a href="./docs/PRODUCT_REQUIREMENTS.md"><b>Product docs</b></a>
+  &nbsp;|&nbsp;
+  <a href="./docs/ARCHITECTURE.md"><b>Architecture</b></a>
+</p>
 
-- Page-aware PyMuPDF extraction and page-bounded chunking spikes.
-- OpenAI embedding, NumPy retrieval, and structured citation spikes.
-- Deterministic tests for unsupported PDFs, source filtering, trusted page
-  mapping, and fabricated citation rejection.
-- A FastAPI service that serves the compiled React application.
-- A bounded temporary session lifecycle with restore, expiry, cleanup, and
-  reset behavior.
-- The LUMA landing page and responsive Sources–Chat–Studio workspace shell.
-- A bundled demo catalog (`demo_assets/`) with precomputed chunks and
-  embeddings for *Economics - Theory of Cost.pdf* and
-  *DSA - Data Structures.pdf*.
-- Session startup attachment of the ready bundled sources, suggested questions,
-  and authenticated PDF serving at `/api/v1/sources/{source_id}/file`.
-- Session-scoped PDF upload with page-aware extraction, OpenAI embeddings,
-  retryable failures, source deletion, and automatic temporary-file cleanup.
+## Complete description
 
-Phases 1–6 are complete locally. The workspace opens with a ready economics
-source, accepts up to two temporary PDF uploads, answers against selected
-sources with backend-validated page citations, and opens cited PDFs in an
-evidence sheet. Studio generates cited summaries plus focused Flashcard and
-Quiz practice experiences, records deterministic confidence-aware learning
-signals, recommends weak concepts, and provides cited Teach-Back feedback.
-The same attempt stream now feeds a session-scoped Learning memory map that
-Chat and Studio share. Cached demo artifacts keep the bundled source presentable during a live OpenAI
-generation outage.
+### Product
 
-Phase 6 adds English-India push-to-talk dictation with an editable transcript,
-narration of owned assistant answers, spoken Teach-Back input and narration of
-already validated feedback, and a 3–5 minute single-narrator Audio Overview
-with a transcript and backend-validated page citations. OpenAI remains
-responsible for selected-source retrieval and overview content; Sarvam Saaras
-v3 and Bulbul v3 are used only for speech-to-text and text-to-speech. Audio
-remains temporary, session-scoped, bounded, and optional, with text fallback on
-speech failure. The bundled demo includes a cached overview transcript; cached
-speech is intentionally unavailable until redistribution rights are confirmed.
+**LUMA** is a citation-grounded revision tool for college students. It turns course PDFs into a Sources-Chat-Studio workspace where answers stay tied to selected material, and study tools help surface weak understanding before an exam.
 
-## Phase 0 setup
+It is not a general chatbot and not a full adaptive-learning platform. The core promise:
+
+> Every factual answer should be traceable to the student's own material, and every study activity should help reveal what the student has not mastered.
+
+### Problem
+
+Students often have large, fragmented notes and little time to revise them. Ordinary summarizers compress content without checking learning. Generic chatbots can answer from outside knowledge, hide uncertainty, and give no fast path back to the source page.
+
+LUMA focuses on three frictions:
+
+1. Finding an answer across course PDFs.
+2. Verifying that answer against the exact source page.
+3. Discovering weak understanding before an exam.
+
+### Aim
+
+1. Keep every factual chat answer grounded in selected sources.
+2. Make page evidence one click away from any citation.
+3. Turn the same sources into summary, flashcards, quiz, teach-back, and optional voice study tools.
+4. Ship a reliable temporary demo without accounts, databases, or durable uploads.
+
+### Summary
+
+The desktop workspace opens with pre-indexed demo sources (Economics and DSA), accepts temporary PDF uploads, answers with backend-validated page citations, and opens the cited PDF in an evidence sheet. Studio generates revision tools from the same selected sources. English-India speech is optional through Sarvam STT/TTS, with text fallback if speech fails.
+
+## Screenshots
+
+Add the captures below under `screenshots/` when ready. The README will pick them up automatically.
+
+| Surface | File | Status |
+| --- | --- | --- |
+| Landing page | `screenshots/landing.png` | Placeholder |
+| Sources-Chat-Studio workspace | `screenshots/workspace.png` | Placeholder |
+| Cited grounded chat | `screenshots/chat.png` | Placeholder |
+| Studio summary / practice | `screenshots/studio.png` | Placeholder |
+
+```text
+screenshots/
+  landing.png
+  workspace.png
+  chat.png
+  studio.png
+```
+
+Recommended width: about 1400px from the live demo or local workspace.
+
+## Features implemented
+
+1. Concise landing page with Start studying into `/workspace`.
+2. Sources-Chat-Studio desktop workspace with responsive sheet layout.
+3. Two bundled demo PDFs with precomputed embeddings (Economics, DSA).
+4. Temporary PDF upload with page-aware extraction and indexing feedback.
+5. Grounded chat with backend-validated page citations and evidence viewer.
+6. Studio: cited summary, flashcards, quiz, teach-back, audio overview, and visual deck fallback for the economics demo.
+7. Deterministic confidence and mastery signals from practice attempts.
+8. Session-scoped learning memory shared by Chat and Studio.
+9. Optional English-India push-to-talk and narration via Sarvam Saaras v3 / Bulbul v3.
+10. Temporary sessions with expiry, reset, and cleanup. No login required.
+11. Explore Tools page for curated specialist learning sites.
+12. Single Docker deployment serving React and FastAPI together.
+
+## Tech stack
+
+### Frontend
+
+- React, Vite, TypeScript
+- Tailwind CSS and shadcn/ui patterns
+- React Router
+
+### Backend
+
+- FastAPI and Python
+- PyMuPDF for page-aware PDF extraction
+- NumPy cosine similarity for in-memory retrieval
+- Official OpenAI SDK (Responses API, embeddings, structured outputs)
+
+### Speech
+
+- Sarvam Saaras v3 for English-India speech-to-text
+- Sarvam Bulbul v3 for text-to-speech
+
+### Hosting and packaging
+
+- Docker image with compiled frontend served by FastAPI
+- Render web service for the live demo (single instance)
+- No database, object storage, queue, or account system in this release
+
+## Important URLs
+
+- **Live demo:** [https://luma-study.onrender.com](https://luma-study.onrender.com)
+- **Repository:** [https://github.com/AbhineethVS/slashforge-build](https://github.com/AbhineethVS/slashforge-build)
+
+## How to run
+
+### Prerequisites
+
+- Python 3.12+
+- Node.js 20+
+- `OPENAI_API_KEY` for embeddings and generation
+- `SARVAM_API_KEY` for optional voice features
+
+A ChatGPT subscription does not include OpenAI API usage. Create an OpenAI Platform API key with separate billing or prepaid credit.
+
+Copy `.env.example` to `.env` and fill in keys:
+
+```bash
+OPENAI_API_KEY=
+OPENAI_CHAT_MODEL=gpt-5-mini
+OPENAI_AUDIO_OVERVIEW_MODEL=gpt-5
+SARVAM_API_KEY=
+SARVAM_TTS_SPEAKER=ishita
+```
+
+### Backend
 
 ```bash
 cd backend
 python -m pip install -e ".[dev]"
 python -m pytest
+```
 
-cd ../frontend
+### Frontend
+
+```bash
+cd frontend
 npm install
 npm run build
 ```
 
-Run the combined local service after building the frontend:
+### Combined local app
+
+After building the frontend:
 
 ```bash
 cd backend
 python -m uvicorn luma_api.main:app --reload
 ```
 
-Run extraction against a representative PDF:
+Or run frontend and backend separately during development:
 
 ```bash
+# terminal 1
 cd backend
-python -m luma_spikes.cli extract ../path/to/source.pdf
+python -m uvicorn luma_api.main:app --reload --host 127.0.0.1 --port 8000
+
+# terminal 2
+cd frontend
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Live retrieval and answer commands require `OPENAI_API_KEY`. The answer model
-defaults to `gpt-5-mini` and can be changed with `OPENAI_CHAT_MODEL`; Audio
-Overview defaults to `gpt-5` and can be changed with
-`OPENAI_AUDIO_OVERVIEW_MODEL`. Phase 6 speech calls additionally require a
-server-only `SARVAM_API_KEY`; `SARVAM_TTS_SPEAKER` selects the Bulbul voice.
-Neither key may be shipped to the browser.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173) for Vite, or the FastAPI origin after `npm run build`.
 
-Rebuild bundled demo assets after changing a source PDF:
+### Docker
+
+```bash
+docker build -t luma .
+docker run --rm -p 8000:8000 --env-file .env luma
+```
+
+### Rebuild demo assets
 
 ```bash
 cd backend
@@ -106,36 +205,21 @@ python -m luma_api.demo_assets ../dsa.pdf --output ../demo_assets/dsa --display-
 - [Architecture decisions](docs/DECISIONS.md)
 - [References and licenses](docs/REFERENCES.md)
 
-## Proposed stack
+## Project notes
 
-- React, Vite, TypeScript, Tailwind CSS, and shadcn/ui
-- FastAPI and Python for PDF processing and AI orchestration
-- OpenAI Responses API, structured outputs, and `text-embedding-3-small`
-- Sarvam Saaras v3 for English-India STT and Bulbul v3 for TTS
-- PyMuPDF for page-aware PDF extraction
-- NumPy for in-memory vector similarity
-- Browser `sessionStorage`, backend memory, and temporary files
-- One Azure App Service deployment serving the frontend and API
+- Temporary uploads and session activity can disappear after expiry, reset, or a server restart. Bundled demo sources remain.
+- Page citations come from trusted chunk metadata, not model-written page numbers.
+- Uploaded source text is treated as untrusted data.
+- OpenAI and Sarvam keys stay on the server only.
 
-There is no database, account system, durable file storage, or separate
-frontend deployment in the hackathon release. Temporary session work may
-disappear after expiry or a server restart; the bundled demo sources remain.
+## Created and maintained by
 
-## Important API prerequisite
+**Abhineeth V S**
 
-A ChatGPT subscription does not include OpenAI API usage. Before implementation,
-create an OpenAI Platform API key and enable separate API billing or prepaid
-credits. The product will fail gracefully when the API key or available credit
-is missing.
+- GitHub: [AbhineethVS](https://github.com/AbhineethVS)
 
-## Project skills
+## Support
 
-Project-specific Cursor Agent Skills live in `.cursor/skills/`:
+If this project is useful, star the repository and open issues or pull requests when you find gaps.
 
-- `slashforge-frontend` for UI implementation and review
-- `slashforge-rag` for ingestion, retrieval, citations, and AI artifacts
-- `slashforge-quality` for tests, accessibility, privacy, and release gates
-
-These are deliberately small, project-specific instructions. They follow the
-Agent Skills pattern without copying the large knowledge bases from the
-reference repositories.
+<p align="center">Thank you for checking out LUMA</p>
