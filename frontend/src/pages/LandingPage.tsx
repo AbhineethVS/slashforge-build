@@ -4,24 +4,57 @@ import { BrandMark } from '../components/BrandMark'
 import { Icon, type IconName } from '../components/Icon'
 import { ThemeToggle } from '../components/ThemeToggle'
 
-const features: { icon: IconName; title: string; description: string }[] = [
+const steps: { icon: IconName; title: string; description: string }[] = [
   {
     icon: 'file',
-    title: 'Bring your sources',
+    title: 'Open with sources ready',
     description:
-      'Study from a ready demo or add readable course PDFs for the current session.',
+      'Start from the bundled economics and DSA demos, or add readable course PDFs for this session.',
   },
   {
     icon: 'quote',
-    title: 'Ask with evidence',
+    title: 'Ask with page evidence',
     description:
-      'Get focused answers tied to the exact source pages that support them.',
+      'Chat answers stay tied to selected material. Open the exact page behind any citation.',
   },
   {
     icon: 'target',
-    title: 'Practise actively',
+    title: 'Practise what you confuse',
     description:
-      'Turn selected material into quizzes, teach-back, and a session memory of what you still confuse.',
+      'Turn the same sources into summary, flashcards, quiz, and teach-back.',
+  },
+]
+
+const featureCards: { icon: IconName; title: string; description: string }[] = [
+  {
+    icon: 'spark-small',
+    title: 'Grounded chat',
+    description: 'Answers only from the sources you select.',
+  },
+  {
+    icon: 'book',
+    title: 'Cited summary',
+    description: 'A short revision brief with page links.',
+  },
+  {
+    icon: 'cards',
+    title: 'Flashcards & quiz',
+    description: 'Active recall from the same evidence.',
+  },
+  {
+    icon: 'teach',
+    title: 'Teach Back',
+    description: 'Explain a concept and spot the gaps.',
+  },
+  {
+    icon: 'audio',
+    title: 'Audio overview',
+    description: 'A cited walkthrough when you want voice.',
+  },
+  {
+    icon: 'compass',
+    title: 'Explore tools',
+    description: 'Jump to specialist sites when needed.',
   },
 ]
 
@@ -34,7 +67,7 @@ export function LandingPage() {
         </Link>
         <nav aria-label="Primary navigation">
           <a href="#how-it-works">How it works</a>
-          <a href="#trust">Why LUMA</a>
+          <a href="#features">Features</a>
           <Link to="/tools">Explore tools</Link>
           <ThemeToggle />
           <Link className="button button-small" to="/workspace">
@@ -46,17 +79,14 @@ export function LandingPage() {
       <main>
         <section className="hero-section" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="hero-badge">
-              <Icon name="spark-small" size={15} />
-              Your material. Clearer understanding.
-            </p>
+            <p className="hero-brand">LUMA</p>
             <h1 id="hero-title">
               Study what matters.
               <span className="gradient-text">Verify every answer.</span>
             </h1>
             <p className="hero-lede">
-              LUMA turns course PDFs into a source-grounded study desk for
-              questions, evidence, and active revision.
+              Ask course PDFs with citations, open the evidence page, then
+              revise in Studio—all in one temporary study desk.
             </p>
             <div className="hero-actions">
               <Link className="button" to="/workspace">
@@ -73,7 +103,7 @@ export function LandingPage() {
             </a>
             <p className="session-note">
               <Icon name="shield" size={14} />
-              No account required. Your workspace is temporary.
+              No account. Temporary session. Demo sources included.
             </p>
           </div>
 
@@ -90,28 +120,38 @@ export function LandingPage() {
             <div className="preview-grid">
               <div className="preview-sources">
                 <p>Sources</p>
+                <div className="preview-source is-active">
+                  <span className="file-mark">
+                    <Icon name="file" size={13} />
+                  </span>
+                  <span>
+                    Theory of Cost
+                    <small>Ready · 43 pages</small>
+                  </span>
+                </div>
                 <div className="preview-source">
                   <span className="file-mark">
                     <Icon name="file" size={13} />
                   </span>
                   <span>
-                    Course notes
-                    <small>Ready · 24 pages</small>
+                    Data Structures
+                    <small>Ready · 49 pages</small>
                   </span>
                 </div>
               </div>
               <div className="preview-chat">
                 <p className="preview-label">Grounded answer</p>
-                <h2>Why does this concept matter?</h2>
-                <div className="text-rule text-rule-long" />
-                <div className="text-rule" />
-                <div className="text-rule text-rule-short" />
-                <span className="citation-chip">1 · p. 14</span>
+                <h2>What is asymptotic notation?</h2>
+                <p className="preview-answer">
+                  It describes how an algorithm’s time or space grows as input
+                  size increases.
+                </p>
+                <span className="citation-chip preview-citation">[1] p. 1</span>
                 <div className="preview-composer">Ask your sources…</div>
               </div>
               <div className="preview-studio">
                 <p>Studio</p>
-                <span>
+                <span className="is-hot">
                   <Icon name="book" size={13} />
                   Summary
                 </span>
@@ -129,6 +169,14 @@ export function LandingPage() {
                 </span>
               </div>
             </div>
+            <div className="preview-evidence">
+              <span className="preview-evidence-kicker">Evidence</span>
+              <strong>DSA · page 1</strong>
+              <p>
+                Basic Concepts · Performance Analysis — Time &amp; Space
+                Complexity, Asymptotic Notations.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -138,36 +186,51 @@ export function LandingPage() {
           aria-labelledby="how-title"
         >
           <div className="section-intro">
-            <p className="eyebrow">A focused revision loop</p>
-            <h2 id="how-title">From scattered notes to active understanding.</h2>
+            <p className="eyebrow">How it works</p>
+            <h2 id="how-title">Three steps. One study desk.</h2>
           </div>
           <ol className="feature-list">
-            {features.map((feature) => (
-              <li key={feature.title}>
-                <span className="feature-icon" aria-hidden="true">
-                  <Icon name={feature.icon} size={19} />
+            {steps.map((step, index) => (
+              <li key={step.title}>
+                <span className="feature-step" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+                <span className="feature-icon" aria-hidden="true">
+                  <Icon name={step.icon} size={19} />
+                </span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className="trust-section" id="trust" aria-labelledby="trust-title">
-          <div>
-            <p className="eyebrow">Source before fluency</p>
-            <h2 id="trust-title">Evidence stays one click away.</h2>
+        <section
+          className="features-section"
+          id="features"
+          aria-labelledby="features-title"
+        >
+          <div className="section-intro">
+            <p className="eyebrow">Features</p>
+            <h2 id="features-title">What’s on the desk.</h2>
           </div>
-          <p>
-            Answers stay tied to the material you select. When the sources do
-            not contain enough evidence, LUMA says so instead of filling the
-            gap with a confident guess.
-          </p>
-          <Link className="button button-ghost" to="/workspace">
-            Open the workspace
-            <Icon name="arrow-right" size={17} />
-          </Link>
+          <ul className="landing-feature-cards">
+            {featureCards.map((feature) => (
+              <li key={feature.title}>
+                <span className="feature-icon" aria-hidden="true">
+                  <Icon name={feature.icon} size={18} />
+                </span>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="features-cta">
+            <Link className="button" to="/workspace">
+              Start studying
+              <Icon name="arrow-right" size={17} />
+            </Link>
+          </div>
         </section>
       </main>
 

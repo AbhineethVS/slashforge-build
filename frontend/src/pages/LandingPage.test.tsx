@@ -25,8 +25,15 @@ describe('LandingPage', () => {
     expect(
       screen.getAllByRole('link', { name: /explore tools/i })[0],
     ).toHaveAttribute('href', '/tools')
+    expect(
+      screen.getByRole('heading', { name: /three steps\. one study desk/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: /what.s on the desk/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Grounded chat')).toBeInTheDocument()
+    expect(screen.queryByText(/Why LUMA/i)).not.toBeInTheDocument()
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()
   })
 })
-
